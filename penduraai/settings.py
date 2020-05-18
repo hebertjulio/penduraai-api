@@ -19,9 +19,6 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.0/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = '^_*6niq$p$zd=1_ohk82hbkzhi(c-a&(v503q0e%i(#syt9)o0'
-
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
@@ -37,6 +34,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'accounts',
 ]
 
 MIDDLEWARE = [
@@ -68,17 +66,6 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'penduraai.wsgi.application'
-
-
-# Database
-# https://docs.djangoproject.com/en/3.0/ref/settings/#databases
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-    }
-}
 
 
 # Password validation
@@ -126,3 +113,21 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
 
 STATIC_URL = '/static/'
+
+
+# https://docs.djangoproject.com/en/3.0/ref/settings/#auth-user-model
+
+AUTH_USER_MODEL = 'accounts.User'
+
+
+# HERE STARTS DYNACONF EXTENSION LOAD (Keep at the very bottom of settings.py)
+# Read more at https://dynaconf.readthedocs.io/en/latest/guides/django.html
+
+import dynaconf  # noqa
+
+settings = dynaconf.DjangoDynaconf(__name__,
+    ROOT_PATH=BASE_DIR,
+    SECRETS=BASE_DIR,
+)  # noqa
+
+# HERE ENDS DYNACONF EXTENSION LOAD (No more code below this line)
