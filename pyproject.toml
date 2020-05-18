@@ -6,7 +6,7 @@ authors = ["Hebert <hebertjulio@yahoo.com.br>"]
 license = "MIT"
 
 [tool.poetry.dependencies]
-python = "3.8.2"
+python = "^3.8.0"
 django = "^3.0.6"
 djangorestframework-simplejwt = "^4.4.0"
 djangorestframework = "^3.11.0"
