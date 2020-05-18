@@ -12,8 +12,17 @@ class Transaction(TimeStampedModel):
         ('done', _('done')),
     )
 
+    TYPE = Choices(
+        ('credit', _('credit')),
+        ('debit', _('debit')),
+    )
+
     description = models.TextField(('description'), blank=True)
     value = models.DecimalField(_('value'), max_digits=10,  decimal_places=2)
+
+    type = models.CharField(
+        _('type'), max_length=30, db_index=True, choices=TYPE
+    )
 
     debtor = models.ForeignKey(
         'accounts.User', related_name='debtor', on_delete=models.CASCADE
