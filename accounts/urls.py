@@ -23,7 +23,7 @@ urlpatterns = [
         views.LoggedUserDeactivateView.as_view(),
         name='logged_user_deactivate'),
     path(
-        'token',
+        'token-obtain-pair',
         views.TokenObtainPairView.as_view(),
         name='token_obtain_pair'),
     path(
