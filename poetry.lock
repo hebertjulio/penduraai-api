@@ -10,7 +10,7 @@ version = "3.2.7"
 tests = ["pytest (>=4.3.0,<4.4.0)", "pytest-asyncio (>=0.10.0,<0.11.0)"]
 
 [[package]]
-category = "dev"
+category = "main"
 description = "Composable command line interface toolkit"
 name = "click"
 optional = false
@@ -35,7 +35,7 @@ argon2 = ["argon2-cffi (>=16.1.0)"]
 bcrypt = ["bcrypt"]
 
 [[package]]
-category = "dev"
+category = "main"
 description = "Django-filter is a reusable Django application for allowing users to filter querysets dynamically."
 name = "django-filter"
 optional = false
@@ -46,7 +46,7 @@ version = "2.2.0"
 Django = ">=1.11"
 
 [[package]]
-category = "dev"
+category = "main"
 description = "Django model mixins and utilities"
 name = "django-model-utils"
 optional = false
@@ -68,7 +68,7 @@ version = "3.11.0"
 django = ">=1.11"
 
 [[package]]
-category = "dev"
+category = "main"
 description = "API key permissions for the Django REST Framework"
 name = "djangorestframework-api-key"
 optional = false
@@ -96,7 +96,7 @@ python-jose = ["python-jose (3.0.0)"]
 test = ["cryptography", "pytest-cov", "pytest-django", "pytest-xdist", "pytest", "tox"]
 
 [[package]]
-category = "dev"
+category = "main"
 description = "The dynamic configurator for your Python Project"
 name = "dynaconf"
 optional = false
@@ -119,6 +119,26 @@ vault = ["hvac"]
 yaml = ["pyyaml"]
 
 [[package]]
+category = "dev"
+description = "Faker is a Python package that generates fake data for you."
+name = "faker"
+optional = false
+python-versions = ">=3.4"
+version = "4.1.0"
+
+[package.dependencies]
+python-dateutil = ">=2.4"
+text-unidecode = "1.3"
+
+[[package]]
+category = "main"
+description = "psycopg2 - Python-PostgreSQL Database Adapter"
+name = "psycopg2"
+optional = false
+python-versions = ">=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*"
+version = "2.8.5"
+
+[[package]]
 category = "main"
 description = "JSON Web Token implementation in Python"
 name = "pyjwt"
@@ -132,7 +152,7 @@ flake8 = ["flake8", "flake8-import-order", "pep8-naming"]
 test = ["pytest (>=4.0.1,<5.0.0)", "pytest-cov (>=2.6.0,<3.0.0)", "pytest-runner (>=4.2,<5.0.0)"]
 
 [[package]]
-category = "dev"
+category = "main"
 description = "Advanced Python dictionaries with dot notation access"
 name = "python-box"
 optional = false
@@ -144,6 +164,17 @@ testing = ["pytest", "coverage (>=3.6)", "pytest-cov"]
 
 [[package]]
 category = "dev"
+description = "Extensions to the standard Python datetime module"
+name = "python-dateutil"
+optional = false
+python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,>=2.7"
+version = "2.8.1"
+
+[package.dependencies]
+six = ">=1.5"
+
+[[package]]
+category = "main"
 description = "Add .env support to your django/flask apps in development and deployments"
 name = "python-dotenv"
 optional = false
@@ -162,6 +193,14 @@ python-versions = "*"
 version = "2020.1"
 
 [[package]]
+category = "dev"
+description = "Python 2 and 3 compatibility utilities"
+name = "six"
+optional = false
+python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*"
+version = "1.14.0"
+
+[[package]]
 category = "main"
 description = "Non-validating SQL parser"
 name = "sqlparse"
@@ -171,6 +210,14 @@ version = "0.3.1"
 
 [[package]]
 category = "dev"
+description = "The most basic Text::Unidecode port"
+name = "text-unidecode"
+optional = false
+python-versions = "*"
+version = "1.3"
+
+[[package]]
+category = "main"
 description = "Python Library for Tom's Obvious, Minimal Language"
 name = "toml"
 optional = false
@@ -178,8 +225,8 @@ python-versions = "*"
 version = "0.10.1"
 
 [metadata]
-content-hash = "c045e1ab48ca1e5fe85ad35281d85650a51677bb7ba7b3d47a5c1a9515411b5e"
-python-versions = "3.6.10"
+content-hash = "e53c611fd670a4ce57b7b8a0af775dcc39b74fdf7dfe524975d5f738e09ca1d9"
+python-versions = "3.8.2"
 
 [metadata.files]
 asgiref = [
@@ -218,6 +265,25 @@ dynaconf = [
     {file = "dynaconf-2.2.3-py2.py3-none-any.whl", hash = "sha256:e803cdab2d7addd539c4ee8d121f15ab0b63a83a5b723150e1746aa7e8063adb"},
     {file = "dynaconf-2.2.3.tar.gz", hash = "sha256:26b84f2b234a203f6005463d954c9f007181c09345eaaab3fc38503acbdadc7d"},
 ]
+faker = [
+    {file = "Faker-4.1.0-py3-none-any.whl", hash = "sha256:34ae397aef03a0a17910452f1e8430d57fa59e2d67b20e9b637218e8f7dd22b3"},
+    {file = "Faker-4.1.0.tar.gz", hash = "sha256:103c46b9701a151299c5bffe6fefcd4fb5fb04c3b5d06bee4952d36255d44ea2"},
+]
+psycopg2 = [
+    {file = "psycopg2-2.8.5-cp27-cp27m-win32.whl", hash = "sha256:a0984ff49e176062fcdc8a5a2a670c9bb1704a2f69548bce8f8a7bad41c661bf"},
+    {file = "psycopg2-2.8.5-cp27-cp27m-win_amd64.whl", hash = "sha256:acf56d564e443e3dea152efe972b1434058244298a94348fc518d6dd6a9fb0bb"},
+    {file = "psycopg2-2.8.5-cp34-cp34m-win32.whl", hash = "sha256:440a3ea2c955e89321a138eb7582aa1d22fe286c7d65e26a2c5411af0a88ae72"},
+    {file = "psycopg2-2.8.5-cp34-cp34m-win_amd64.whl", hash = "sha256:6b306dae53ec7f4f67a10942cf8ac85de930ea90e9903e2df4001f69b7833f7e"},
+    {file = "psycopg2-2.8.5-cp35-cp35m-win32.whl", hash = "sha256:d3b29d717d39d3580efd760a9a46a7418408acebbb784717c90d708c9ed5f055"},
+    {file = "psycopg2-2.8.5-cp35-cp35m-win_amd64.whl", hash = "sha256:6a471d4d2a6f14c97a882e8d3124869bc623f3df6177eefe02994ea41fd45b52"},
+    {file = "psycopg2-2.8.5-cp36-cp36m-win32.whl", hash = "sha256:27c633f2d5db0fc27b51f1b08f410715b59fa3802987aec91aeb8f562724e95c"},
+    {file = "psycopg2-2.8.5-cp36-cp36m-win_amd64.whl", hash = "sha256:2df2bf1b87305bd95eb3ac666ee1f00a9c83d10927b8144e8e39644218f4cf81"},
+    {file = "psycopg2-2.8.5-cp37-cp37m-win32.whl", hash = "sha256:ac5b23d0199c012ad91ed1bbb971b7666da651c6371529b1be8cbe2a7bf3c3a9"},
+    {file = "psycopg2-2.8.5-cp37-cp37m-win_amd64.whl", hash = "sha256:2c0afb40cfb4d53487ee2ebe128649028c9a78d2476d14a67781e45dc287f080"},
+    {file = "psycopg2-2.8.5-cp38-cp38-win32.whl", hash = "sha256:2327bf42c1744a434ed8ed0bbaa9168cac7ee5a22a9001f6fc85c33b8a4a14b7"},
+    {file = "psycopg2-2.8.5-cp38-cp38-win_amd64.whl", hash = "sha256:132efc7ee46a763e68a815f4d26223d9c679953cd190f1f218187cb60decf535"},
+    {file = "psycopg2-2.8.5.tar.gz", hash = "sha256:f7d46240f7a1ae1dd95aab38bd74f7428d46531f69219954266d669da60c0818"},
+]
 pyjwt = [
     {file = "PyJWT-1.7.1-py2.py3-none-any.whl", hash = "sha256:5c6eca3c2940464d106b99ba83b00c6add741c9becaec087fb7ccdefea71350e"},
     {file = "PyJWT-1.7.1.tar.gz", hash = "sha256:8d59a976fb773f3e6a39c85636357c4f0e242707394cadadd9814f5cbaa20e96"},
@@ -225,6 +291,10 @@ pyjwt = [
 python-box = [
     {file = "python-box-3.4.6.tar.gz", hash = "sha256:694a7555e3ff9fbbce734bbaef3aad92b8e4ed0659d3ed04d56b6a0a0eff26a9"},
     {file = "python_box-3.4.6-py2.py3-none-any.whl", hash = "sha256:a71d3dc9dbaa34c8597d3517c89a8041bd62fa875f23c0f3dad55e1958e3ce10"},
+]
+python-dateutil = [
+    {file = "python-dateutil-2.8.1.tar.gz", hash = "sha256:73ebfe9dbf22e832286dafa60473e4cd239f8592f699aa5adaf10050e6e1823c"},
+    {file = "python_dateutil-2.8.1-py2.py3-none-any.whl", hash = "sha256:75bb3f31ea686f1197762692a9ee6a7550b59fc6ca3a1f4b5d7e32fb98e2da2a"},
 ]
 python-dotenv = [
     {file = "python-dotenv-0.13.0.tar.gz", hash = "sha256:3b9909bc96b0edc6b01586e1eed05e71174ef4e04c71da5786370cebea53ad74"},
@@ -234,9 +304,17 @@ pytz = [
     {file = "pytz-2020.1-py2.py3-none-any.whl", hash = "sha256:a494d53b6d39c3c6e44c3bec237336e14305e4f29bbf800b599253057fbb79ed"},
     {file = "pytz-2020.1.tar.gz", hash = "sha256:c35965d010ce31b23eeb663ed3cc8c906275d6be1a34393a1d73a41febf4a048"},
 ]
+six = [
+    {file = "six-1.14.0-py2.py3-none-any.whl", hash = "sha256:8f3cd2e254d8f793e7f3d6d9df77b92252b52637291d0f0da013c76ea2724b6c"},
+    {file = "six-1.14.0.tar.gz", hash = "sha256:236bdbdce46e6e6a3d61a337c0f8b763ca1e8717c03b369e87a7ec7ce1319c0a"},
+]
 sqlparse = [
     {file = "sqlparse-0.3.1-py2.py3-none-any.whl", hash = "sha256:022fb9c87b524d1f7862b3037e541f68597a730a8843245c349fc93e1643dc4e"},
     {file = "sqlparse-0.3.1.tar.gz", hash = "sha256:e162203737712307dfe78860cc56c8da8a852ab2ee33750e33aeadf38d12c548"},
+]
+text-unidecode = [
+    {file = "text-unidecode-1.3.tar.gz", hash = "sha256:bad6603bb14d279193107714b288be206cac565dfa49aa5b105294dd5c4aab93"},
+    {file = "text_unidecode-1.3-py2.py3-none-any.whl", hash = "sha256:1311f10e8b895935241623731c2ba64f4c455287888b18189350b67134a822e8"},
 ]
 toml = [
     {file = "toml-0.10.1-py2.py3-none-any.whl", hash = "sha256:bda89d5935c2eac546d648028b9901107a595863cb36bae0c73ac804a9b4ce88"},

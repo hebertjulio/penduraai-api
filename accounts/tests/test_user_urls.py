@@ -1,0 +1,63 @@
+import random
+import string
+
+from django.test import TestCase
+from django.urls import reverse, resolve
+
+from faker import Faker
+
+from ..views import (
+    UserListView, UserDetailView, LoggedUserDetailView,
+    LoggedUserDeactivateView, TokenObtainPairView, TokenRefreshView
+)
+
+from ..models import User
+
+
+class UserUrlsTestCase(TestCase):
+
+    @classmethod
+    def setUpTestData(cls):
+        faker = Faker(['pt_BR'])
+        user = User(name=faker.name(), email=faker.email(), is_active=True)
+        user.set_password(
+            ''.join(random.sample(string.ascii_lowercase*10, 10)))
+        user.save()
+        cls.user = user
+
+    def test_resolves(self):
+        self.resolve_user_list_url()
+        self.resolve_user_detail_url()
+        self.resolve_logged_user_detail_url()
+        self.resolve_logged_user_deactivate_url()
+        self.resolve_token_obtain_pair_url()
+        self.resolve_token_refresh_url()
+
+    def resolve_user_list_url(self):
+        resolve = self.resolve_by_name('accounts:user_list')
+        self.assertEqual(resolve.func.cls, UserListView)
+
+    def resolve_user_detail_url(self):
+        resolve = self.resolve_by_name(
+            'accounts:user_detail', pk=UserUrlsTestCase.user.id)
+        self.assertEqual(resolve.func.cls, UserDetailView)
+
+    def resolve_logged_user_detail_url(self):
+        resolve = self.resolve_by_name('accounts:logged_user_detail')
+        self.assertEqual(resolve.func.cls, LoggedUserDetailView)
+
+    def resolve_logged_user_deactivate_url(self):
+        resolve = self.resolve_by_name('accounts:logged_user_deactivate')
+        self.assertEqual(resolve.func.cls, LoggedUserDeactivateView)
+
+    def resolve_token_obtain_pair_url(self):
+        resolve = self.resolve_by_name('accounts:token_obtain_pair')
+        self.assertEqual(resolve.func.cls, TokenObtainPairView)
+
+    def resolve_token_refresh_url(self):
+        resolve = self.resolve_by_name('accounts:token_refresh')
+        self.assertEqual(resolve.func.cls, TokenRefreshView)
+
+    def resolve_by_name(self, name, **kwargs):
+        url = reverse(name, kwargs=kwargs)
+        return resolve(url)
