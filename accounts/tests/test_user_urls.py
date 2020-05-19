@@ -34,30 +34,31 @@ class UserUrlsTestCase(TestCase):
         self.resolve_token_refresh_url()
 
     def resolve_user_list_url(self):
-        resolve = self.resolve_by_name('accounts:user_list')
-        self.assertEqual(resolve.func.cls, UserListView)
+        r = UserUrlsTestCase.resolve_by_name('accounts:user_list')
+        self.assertEqual(r.func.cls, UserListView)
 
     def resolve_user_detail_url(self):
-        resolve = self.resolve_by_name(
-            'accounts:user_detail', pk=UserUrlsTestCase.user.id)
-        self.assertEqual(resolve.func.cls, UserDetailView)
+        pk = UserUrlsTestCase.user.id
+        r = UserUrlsTestCase.resolve_by_name('accounts:user_detail', pk=pk)
+        self.assertEqual(r.func.cls, UserDetailView)
 
     def resolve_logged_user_detail_url(self):
-        resolve = self.resolve_by_name('accounts:logged_user_detail')
-        self.assertEqual(resolve.func.cls, LoggedUserDetailView)
+        r = UserUrlsTestCase.resolve_by_name('accounts:logged_user_detail')
+        self.assertEqual(r.func.cls, LoggedUserDetailView)
 
     def resolve_logged_user_deactivate_url(self):
-        resolve = self.resolve_by_name('accounts:logged_user_deactivate')
-        self.assertEqual(resolve.func.cls, LoggedUserDeactivateView)
+        r = UserUrlsTestCase.resolve_by_name('accounts:logged_user_deactivate')
+        self.assertEqual(r.func.cls, LoggedUserDeactivateView)
 
     def resolve_token_obtain_pair_url(self):
-        resolve = self.resolve_by_name('accounts:token_obtain_pair')
-        self.assertEqual(resolve.func.cls, TokenObtainPairView)
+        r = UserUrlsTestCase.resolve_by_name('accounts:token_obtain_pair')
+        self.assertEqual(r.func.cls, TokenObtainPairView)
 
     def resolve_token_refresh_url(self):
-        resolve = self.resolve_by_name('accounts:token_refresh')
-        self.assertEqual(resolve.func.cls, TokenRefreshView)
+        r = UserUrlsTestCase.resolve_by_name('accounts:token_refresh')
+        self.assertEqual(r.func.cls, TokenRefreshView)
 
-    def resolve_by_name(self, name, **kwargs):
+    @staticmethod
+    def resolve_by_name(name, **kwargs):
         url = reverse(name, kwargs=kwargs)
         return resolve(url)
