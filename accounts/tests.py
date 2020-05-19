@@ -24,11 +24,11 @@ class UserUrlsTestCase(TestCase):
     @classmethod
     def setUpTestData(cls):
         faker = Faker(['pt_BR'])
-
-        cls.user = User.objects.create(
-            name=faker.name(), email=faker.email(),
-            password=''.join(random.sample(string.ascii_lowercase*10, 10))
-        )
+        user = User(name=faker.name(), email=faker.email(), is_active=True)
+        user.set_password(
+            ''.join(random.sample(string.ascii_lowercase*10, 10)))
+        user.save()
+        cls.user = user
 
     def test_resolves(self):
         self.resolve_user_list_url()
