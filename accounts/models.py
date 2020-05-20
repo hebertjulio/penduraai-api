@@ -22,6 +22,7 @@ class User(AbstractBaseUser, PermissionsMixin, TimeStampedModel):
         help_text=_(
             'Designates whether the user can log into this admin site.'),
     )
+
     is_active = models.BooleanField(
         _('active status'),
         default=True,
@@ -72,9 +73,14 @@ class Profile(TimeStampedModel):
     pin = models.CharField(_('pin'), max_length=4)
 
     accountable = models.ForeignKey(
-        'User', related_name='accountable', on_delete=models.CASCADE)
+        'User', related_name='accountable',
+        on_delete=models.CASCADE
+    )
+
     role = models.CharField(
-        _('role'), max_length=30, db_index=True, choices=ROLE)
+        _('role'), max_length=30, db_index=True,
+        choices=ROLE
+    )
 
     def __str__(self):
         return self.name
@@ -87,32 +93,4 @@ class Profile(TimeStampedModel):
         verbose_name_plural = _('profiles')
         unique_together = [
             ['accountable', 'pin']
-        ]
-
-
-class Whitelist(TimeStampedModel):
-
-    STATUS = Choices(
-        ('authorized', _('authorized')),
-        ('unauthorized', _('unauthorized')),
-    )
-
-    owner = models.ForeignKey(
-        'User', related_name='owner', on_delete=models.CASCADE)
-    guest = models.ForeignKey(
-        'User', related_name='guest', on_delete=models.CASCADE)
-    status = models.CharField(
-        _('status'), max_length=30, db_index=True, choices=STATUS)
-
-    def __str__(self):
-        return self.guest.name
-
-    def __repr__(self):
-        return self.guest.name
-
-    class Meta:
-        verbose_name = _('whitelist')
-        verbose_name_plural = _('whitelists')
-        unique_together = [
-            ['owner', 'guest']
         ]
