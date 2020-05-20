@@ -23,6 +23,14 @@ urlpatterns = [
         views.LoggedUserDeactivateView.as_view(),
         name='logged_user_deactivate'),
     path(
+        'logged-user/profiles',
+        views.ProfileListView.as_view(),
+        name='profile_list'),
+    path(
+        'logged-user/profiles/<int:pk>',
+        views.ProfileDetailView.as_view(),
+        name='profile_detail'),
+    path(
         'token-obtain-pair',
         views.TokenObtainPairView.as_view(),
         name='token_obtain_pair'),
