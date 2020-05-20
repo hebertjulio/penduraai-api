@@ -1,4 +1,4 @@
-from django.db.models import Q
+from django.db.models import Q, Sum, Case, When, F, DecimalField
 
 from rest_framework import generics
 
@@ -27,7 +27,12 @@ class CreditorListView(generics.ListAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        qs = Transaction.objects.select_related().filter(debtor=user)
+        c = Sum(Case(When(operation='credit', then=F('value')),
+                output_field=DecimalField(), default=0))
+        d = Sum(Case(When(operation='debit', then=F('value')),
+                output_field=DecimalField(), default=0))
+        qs = Transaction.objects.annotate(credit_sum=c, debit_sum=d)
+        qs = qs.select_related('creditor').filter(debtor=user)
         return qs
 
 
@@ -37,7 +42,12 @@ class DebtorListView(generics.ListAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        qs = Transaction.objects.select_related().filter(creditor=user)
+        c = Sum(Case(When(operation='credit', then=F('value')),
+                output_field=DecimalField(), default=0))
+        d = Sum(Case(When(operation='debit', then=F('value')),
+                output_field=DecimalField(), default=0))
+        qs = Transaction.objects.annotate(credit_sum=c, debit_sum=d)
+        qs = qs.select_related('debtor').filter(creditor=user)
         return qs
 
 

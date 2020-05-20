@@ -29,6 +29,8 @@ class CreditorSerializar(serializers.BaseSerializer):
     def to_representation(self, instance):
         serializer = UserSerializer(instance.creditor)
         return {
+            'debit_sum': instance.debit_sum,
+            'credit_sum': instance.credit_sum,
             'user': serializer.data,
         }
 
@@ -38,6 +40,8 @@ class DebtorSerializar(serializers.BaseSerializer):
     def to_representation(self, instance):
         serializer = UserSerializer(instance.debtor)
         return {
+            'debit_sum': instance.debit_sum,
+            'credit_sum': instance.credit_sum,
             'user': serializer.data,
         }
 
