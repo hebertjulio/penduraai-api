@@ -24,14 +24,22 @@ class TransactionSerializer(serializers.ModelSerializer):
         read_only_fields = ('debtor',)
 
 
-class CreditorSerializar(serializers.Serializer):
+class CreditorSerializar(serializers.BaseSerializer):
 
-    creditor = UserSerializer(read_only=True)
+    def to_representation(self, instance):
+        serializer = UserSerializer(instance.creditor)
+        return {
+            'user': serializer.data,
+        }
 
 
-class DebtorSerializar(serializers.Serializer):
+class DebtorSerializar(serializers.BaseSerializer):
 
-    debtor = UserSerializer(read_only=True)
+    def to_representation(self, instance):
+        serializer = UserSerializer(instance.debtor)
+        return {
+            'user': serializer.data,
+        }
 
 
 class WhitelistSerializer(serializers.ModelSerializer):

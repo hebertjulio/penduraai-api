@@ -27,9 +27,9 @@ class UserAdmin(BaseUserAdmin):
     )
     add_fieldsets = (
         (None, {
-            'fields': ('name', 'email',),
+            'fields': ('name', 'email', 'password1', 'password2'),
         }),
-    ) + BaseUserAdmin.add_fieldsets
+    )
     ordering = (
         'name',
     )
