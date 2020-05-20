@@ -7,12 +7,7 @@ from model_utils import Choices
 
 class Transaction(TimeStampedModel):
 
-    STATUS = Choices(
-        ('done', _('done')),
-        ('fail', _('fail')),
-    )
-
-    TYPE = Choices(
+    OPERATION = Choices(
         ('credit', _('credit')),
         ('debit', _('debit')),
     )
@@ -20,29 +15,16 @@ class Transaction(TimeStampedModel):
     description = models.TextField(('description'))
     value = models.DecimalField(_('value'), max_digits=10,  decimal_places=2)
 
-    type = models.CharField(
-        _('type'), max_length=30, db_index=True, choices=TYPE
-    )
-
+    operation = models.CharField(
+        _('operation'), max_length=30, db_index=True, choices=OPERATION)
     creditor = models.ForeignKey(
-        'accounts.User', related_name='creditor', on_delete=models.CASCADE
-    )
-
+        'accounts.User', related_name='creditor', on_delete=models.CASCADE)
     debtor = models.ForeignKey(
-        'accounts.User', related_name='debtor', on_delete=models.CASCADE
-    )
-
+        'accounts.User', related_name='debtor', on_delete=models.CASCADE)
     requester = models.ForeignKey(
-        'accounts.Profile', related_name='requester', on_delete=models.CASCADE
-    )
-
+        'accounts.Profile', related_name='requester', on_delete=models.CASCADE)
     signature = models.ForeignKey(
-        'accounts.Profile', related_name='signature', on_delete=models.CASCADE
-    )
-
-    status = models.CharField(
-        _('status'), max_length=30, db_index=True, choices=STATUS
-    )
+        'accounts.Profile', related_name='signature', on_delete=models.CASCADE)
 
     def __str__(self):
         return self.id

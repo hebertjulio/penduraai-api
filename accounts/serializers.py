@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import User, Profile
+from .models import User, Profile, Whitelist
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -35,13 +35,20 @@ class UserSerializer(serializers.ModelSerializer):
 class ProfileSerializer(serializers.ModelSerializer):
 
     accountable = serializers.HiddenField(
-        default=serializers.CurrentUserDefault()
-    )
-
+        default=serializers.CurrentUserDefault())
     pin = serializers.RegexField(
-        regex=r'\d{4}', required=True, max_length=4
-    )
+        regex=r'\d{4}', required=True, max_length=4)
 
     class Meta:
         model = Profile
+        fields = '__all__'
+
+
+class WhitelistSerializer(serializers.ModelSerializer):
+
+    user = serializers.HiddenField(
+        default=serializers.CurrentUserDefault())
+
+    class Meta:
+        model = Whitelist
         fields = '__all__'

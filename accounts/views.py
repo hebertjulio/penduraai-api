@@ -8,8 +8,8 @@ from rest_framework_api_key.permissions import HasAPIKey
 
 from rest_framework_simplejwt import views as simplejwt_views
 
-from .models import User, Profile
-from .serializers import UserSerializer, ProfileSerializer
+from .models import User, Profile, Whitelist
+from .serializers import UserSerializer, ProfileSerializer, WhitelistSerializer
 
 
 class UserListView(generics.CreateAPIView):
@@ -73,4 +73,25 @@ class ProfileDetailView(generics.RetrieveUpdateDestroyAPIView):
     def get_queryset(self):
         user = self.request.user
         qs = Profile.objects.filter(accountable=user)
+        return qs
+
+
+class WhitelistListView(generics.ListCreateAPIView):
+
+    serializer_class = WhitelistSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        qs = Whitelist.objects.filter(user=user)
+        return qs
+
+
+class WhitelistDetailView(generics.RetrieveUpdateDestroyAPIView):
+
+    lookup_field = 'pk'
+    serializer_class = WhitelistSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        qs = Whitelist.objects.filter(user=user)
         return qs
