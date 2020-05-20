@@ -95,3 +95,25 @@ class WhitelistDetailView(generics.RetrieveUpdateDestroyAPIView):
         user = self.request.user
         qs = Whitelist.objects.filter(user=user)
         return qs
+
+
+class CreditorListView(generics.ListAPIView):
+
+    serializer_class = UserSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        qs = User.objects.filter(
+            id__in=user.debtor.values_list('creditor').distinct())
+        return qs
+
+
+class DebtorListView(generics.ListAPIView):
+
+    serializer_class = UserSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        qs = User.objects.filter(
+            id__in=user.creditor.values_list('debtor').distinct())
+        return qs
