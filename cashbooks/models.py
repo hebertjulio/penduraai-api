@@ -17,7 +17,6 @@ class Transaction(TimeStampedModel):
         ('debit', _('debit')),
     )
 
-    uuid = models.UUIDField(unique=True, editable=False)
     description = models.TextField(('description'))
     value = models.DecimalField(_('value'), max_digits=10,  decimal_places=2)
 
@@ -46,10 +45,10 @@ class Transaction(TimeStampedModel):
     )
 
     def __str__(self):
-        return self.value
+        return self.id
 
     def __repr__(self):
-        return self.value
+        return self.id
 
     class Meta:
         verbose_name = _('transaction')

@@ -39,7 +39,7 @@ INSTALLED_APPS = [
     'rest_framework_api_key',
     'django_filters',
     'accounts',
-    'cash_book',
+    'cashbooks',
 ]
 
 MIDDLEWARE = [
