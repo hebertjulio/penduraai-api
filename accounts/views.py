@@ -25,7 +25,7 @@ class UserDetailView(generics.RetrieveAPIView):
     serializer_class = UserSerializer
 
 
-class LoggedUserDetailView(generics.RetrieveUpdateAPIView):
+class UserChangeView(generics.UpdateAPIView):
 
     serializer_class = UserSerializer
 
@@ -34,7 +34,7 @@ class LoggedUserDetailView(generics.RetrieveUpdateAPIView):
         return user
 
 
-class LoggedUserDeactivateView(APIView):
+class UserDeactivateView(APIView):
 
     def patch(self, request, *args, **kwargs):
         obj = self.request.user

@@ -15,13 +15,13 @@ urlpatterns = [
         views.UserDetailView.as_view(),
         name='user_detail'),
     path(
-        'logged-user',
-        views.LoggedUserDetailView.as_view(),
-        name='logged_user_detail'),
+        'users/change',
+        views.UserChangeView.as_view(),
+        name='user_change'),
     path(
-        'logged-user/deactivate',
-        views.LoggedUserDeactivateView.as_view(),
-        name='logged_user_deactivate'),
+        'users/deactivate',
+        views.UserDeactivateView.as_view(),
+        name='user_deactivate'),
     path(
         'profiles',
         views.ProfileListView.as_view(),
