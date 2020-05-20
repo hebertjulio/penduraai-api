@@ -25,7 +25,7 @@ class UserDetailView(generics.RetrieveAPIView):
     serializer_class = UserSerializer
 
 
-class LoggedUserDetailView(generics.RetrieveUpdateAPIView):
+class UserChangeView(generics.UpdateAPIView):
 
     serializer_class = UserSerializer
 
@@ -34,7 +34,7 @@ class LoggedUserDetailView(generics.RetrieveUpdateAPIView):
         return user
 
 
-class LoggedUserDeactivateView(APIView):
+class UserDeactivateView(APIView):
 
     def patch(self, request, *args, **kwargs):
         obj = self.request.user
@@ -94,4 +94,26 @@ class WhitelistDetailView(generics.RetrieveUpdateDestroyAPIView):
     def get_queryset(self):
         user = self.request.user
         qs = Whitelist.objects.filter(user=user)
+        return qs
+
+
+class CreditorListView(generics.ListAPIView):
+
+    serializer_class = UserSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        qs = User.objects.filter(
+            id__in=user.debtor.values_list('creditor').distinct())
+        return qs
+
+
+class DebtorListView(generics.ListAPIView):
+
+    serializer_class = UserSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        qs = User.objects.filter(
+            id__in=user.creditor.values_list('debtor').distinct())
         return qs

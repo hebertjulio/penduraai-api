@@ -6,8 +6,8 @@ from .models import Transaction
 @admin.register(Transaction)
 class TransactionAdmin(admin.ModelAdmin):
     list_display = (
-        'creditor', 'debtor', 'description', 'operation',
-        'value',
+        'creditor', 'debtor', 'operation', 'value',
+        'requester', 'signature',
     )
     search_fields = (
         'creditor__name', 'creditor__email', 'debtor__name',
