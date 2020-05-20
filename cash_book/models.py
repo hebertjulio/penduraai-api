@@ -8,8 +8,8 @@ from model_utils import Choices
 class Transaction(TimeStampedModel):
 
     STATUS = Choices(
-        ('pending', _('pending')),
         ('done', _('done')),
+        ('fail', _('fail')),
     )
 
     TYPE = Choices(
@@ -17,19 +17,28 @@ class Transaction(TimeStampedModel):
         ('debit', _('debit')),
     )
 
-    description = models.TextField(('description'), blank=True)
+    uuid = models.UUIDField(unique=True, editable=False)
+    description = models.TextField(('description'))
     value = models.DecimalField(_('value'), max_digits=10,  decimal_places=2)
 
     type = models.CharField(
         _('type'), max_length=30, db_index=True, choices=TYPE
     )
 
+    creditor = models.ForeignKey(
+        'accounts.User', related_name='creditor', on_delete=models.CASCADE
+    )
+
     debtor = models.ForeignKey(
         'accounts.User', related_name='debtor', on_delete=models.CASCADE
     )
 
-    creditor = models.ForeignKey(
-        'accounts.User', related_name='creditor', on_delete=models.CASCADE
+    requester = models.ForeignKey(
+        'accounts.Profile', related_name='requester', on_delete=models.CASCADE
+    )
+
+    signature = models.ForeignKey(
+        'accounts.Profile', related_name='signature', on_delete=models.CASCADE
     )
 
     status = models.CharField(
