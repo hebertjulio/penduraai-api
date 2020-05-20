@@ -8,7 +8,7 @@ from .models import Transaction
 class TransactionSerializer(serializers.ModelSerializer):
 
     requester = ProfileField()
-    signature = ProfileField()
+    subscriber = ProfileField()
 
     def create(self, validated_data):
         request = self.context['request']

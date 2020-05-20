@@ -82,7 +82,7 @@ class WhitelistListView(generics.ListCreateAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        qs = Whitelist.objects.filter(user=user)
+        qs = Whitelist.objects.filter(owner=user)
         return qs
 
 
@@ -93,7 +93,7 @@ class WhitelistDetailView(generics.RetrieveUpdateDestroyAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        qs = Whitelist.objects.filter(user=user)
+        qs = Whitelist.objects.filter(owner=user)
         return qs
 
 
