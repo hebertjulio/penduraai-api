@@ -26,6 +26,12 @@ class TransactionSerializer(serializers.ModelSerializer):
 
 class CreditorSerializar(serializers.BaseSerializer):
 
+    def create(self, validated_data):
+        pass
+
+    def update(self, instance, validated_data):
+        pass
+
     def to_representation(self, instance):
         serializer = UserSerializer(instance.creditor)
         return {
@@ -36,6 +42,12 @@ class CreditorSerializar(serializers.BaseSerializer):
 
 
 class DebtorSerializar(serializers.BaseSerializer):
+
+    def create(self, validated_data):
+        pass
+
+    def update(self, instance, validated_data):
+        pass
 
     def to_representation(self, instance):
         serializer = UserSerializer(instance.debtor)
