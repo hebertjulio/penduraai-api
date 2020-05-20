@@ -15,13 +15,16 @@ class ProfileOf:
             message = _('%s is not supported field.' % field_name.title())
             raise serializers.ValidationError(message)
 
+        accountable_fields = {'requester': 'creditor', 'signature': 'debtor'}
+        accountable_field = accountable_fields[field_name]
+
         if field_name == 'requester':
-            user_id = request.data.get('creditor')
+            user_id = int(request.data.get('creditor', 0))
         else:
-            user_id = request.user
+            user_id = request.user.id
 
         if profile.accountable_id != user_id:
             message = _(
                 '%s is not accountable of %s.' % (
-                    field_name.title(), profile.name))
+                    accountable_field.title(), profile.name))
             raise serializers.ValidationError(message)
