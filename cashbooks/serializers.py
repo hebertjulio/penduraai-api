@@ -40,6 +40,9 @@ class CreditorSerializar(serializers.BaseSerializer):
             'user': serializer.data,
         }
 
+    def to_internal_value(self, data):
+        pass
+
 
 class DebtorSerializar(serializers.BaseSerializer):
 
@@ -56,6 +59,9 @@ class DebtorSerializar(serializers.BaseSerializer):
             'credit_sum': instance.credit_sum,
             'user': serializer.data,
         }
+
+    def to_internal_value(self, data):
+        pass
 
 
 class WhitelistSerializer(serializers.ModelSerializer):
