@@ -39,14 +39,6 @@ urlpatterns = [
         views.WhitelistDetailView.as_view(),
         name='whitelist_detail'),
     path(
-        'creditors',
-        views.CreditorListView.as_view(),
-        name='creditor_list'),
-    path(
-        'debtors',
-        views.DebtorListView.as_view(),
-        name='debtor_list'),
-    path(
         'token-obtain-pair',
         views.TokenObtainPairView.as_view(),
         name='token_obtain_pair'),
