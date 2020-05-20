@@ -17,16 +17,13 @@ class UserAdmin(BaseUserAdmin):
                 'user_permissions',),
         }),
         (_('Important dates'), {
-            'fields': ('last_login', 'created', 'modified',)}),
+            'fields': ('last_login',)}),
     )
     list_display = (
         'name', 'email', 'is_active', 'is_staff', 'is_superuser',
     )
     search_fields = (
         'name', 'email',
-    )
-    readonly_fields = (
-        'last_login', 'created', 'modified',
     )
     add_fieldsets = (
         (None, {
@@ -45,9 +42,6 @@ class ProfileAdmin(admin.ModelAdmin):
     )
     search_fields = (
         'accountable__name', 'accountable__email', 'name',
-    )
-    readonly_fields = (
-        'created', 'modified', 'accountable',
     )
     list_filter = (
         'role',
