@@ -3,7 +3,7 @@ from django.utils.translation import gettext_lazy as _
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 
-from .models import User, Profile, Whitelist
+from .models import User, Profile
 
 
 @admin.register(User)
@@ -51,23 +51,4 @@ class ProfileAdmin(admin.ModelAdmin):
     )
     ordering = (
         'accountable__id', 'name',
-    )
-
-
-@admin.register(Whitelist)
-class WhitelistAdmin(admin.ModelAdmin):
-    list_display = (
-        'owner', 'guest', 'status',
-    )
-    search_fields = (
-        'owner__name', 'owner__email', 'guest__name', 'guest__email',
-    )
-    autocomplete_fields = (
-        'owner', 'guest',
-    )
-    list_filter = (
-        'status',
-    )
-    ordering = (
-        'owner__id', 'guest__name',
     )

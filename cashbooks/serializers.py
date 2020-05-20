@@ -3,7 +3,7 @@ from rest_framework import serializers
 from accounts.fields import ProfileField
 from accounts.serializers import UserSerializer
 
-from .models import Transaction
+from .models import Transaction, Whitelist
 
 
 class TransactionSerializer(serializers.ModelSerializer):
@@ -32,3 +32,14 @@ class CreditorSerializar(serializers.Serializer):
 class DebtorSerializar(serializers.Serializer):
 
     debtor = UserSerializer(read_only=True)
+
+
+class WhitelistSerializer(serializers.ModelSerializer):
+
+    user = serializers.HiddenField(
+        default=serializers.CurrentUserDefault()
+    )
+
+    class Meta:
+        model = Whitelist
+        fields = '__all__'

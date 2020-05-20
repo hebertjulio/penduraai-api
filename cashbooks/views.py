@@ -2,9 +2,10 @@ from django.db.models import Q
 
 from rest_framework import generics
 
-from .models import Transaction
+from .models import Transaction, Whitelist
 from .serializers import (
-    TransactionSerializer, CreditorSerializar, DebtorSerializar)
+    TransactionSerializer, CreditorSerializar, DebtorSerializar,
+    WhitelistSerializer)
 
 
 class TransactionListView(generics.ListCreateAPIView):
@@ -37,4 +38,25 @@ class DebtorListView(generics.ListAPIView):
     def get_queryset(self):
         user = self.request.user
         qs = Transaction.objects.select_related().filter(creditor=user)
+        return qs
+
+
+class WhitelistListView(generics.ListCreateAPIView):
+
+    serializer_class = WhitelistSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        qs = Whitelist.objects.filter(owner=user)
+        return qs
+
+
+class WhitelistDetailView(generics.RetrieveUpdateDestroyAPIView):
+
+    lookup_field = 'pk'
+    serializer_class = WhitelistSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        qs = Whitelist.objects.filter(owner=user)
         return qs

@@ -14,19 +14,38 @@ class Transaction(TimeStampedModel):
     )
 
     description = models.TextField(('description'))
+
     value = models.DecimalField(
-        _('value'), max_digits=10,  decimal_places=2, validators=[
-                MinValueValidator(0.01)])
+        _('value'), max_digits=10, decimal_places=2,
+        validators=[
+            MinValueValidator(0.01)
+        ]
+    )
+
     operation = models.CharField(
-        _('operation'), max_length=30, db_index=True, choices=OPERATION)
+        _('operation'), max_length=30, db_index=True,
+        choices=OPERATION
+    )
+
     creditor = models.ForeignKey(
-        'accounts.User', related_name='creditor', on_delete=models.CASCADE)
+        'accounts.User', related_name='creditor',
+        on_delete=models.CASCADE
+    )
+
     debtor = models.ForeignKey(
-        'accounts.User', related_name='debtor', on_delete=models.CASCADE)
+        'accounts.User', related_name='debtor',
+        on_delete=models.CASCADE
+    )
+
     requester = models.ForeignKey(
-        'accounts.Profile', related_name='requester', on_delete=models.CASCADE)
+        'accounts.Profile', related_name='requester',
+        on_delete=models.CASCADE
+    )
+
     subscriber = models.ForeignKey(
-        'accounts.Profile', related_name='subscriber', on_delete=models.CASCADE)
+        'accounts.Profile', related_name='subscriber',
+        on_delete=models.CASCADE
+    )
 
     def __str__(self):
         return '%s %s %s' % (
@@ -39,3 +58,39 @@ class Transaction(TimeStampedModel):
     class Meta:
         verbose_name = _('transaction')
         verbose_name_plural = _('transactions')
+
+
+class Whitelist(TimeStampedModel):
+
+    STATUS = Choices(
+        ('authorized', _('authorized')),
+        ('unauthorized', _('unauthorized')),
+    )
+
+    owner = models.ForeignKey(
+        'accounts.User', related_name='owner',
+        on_delete=models.CASCADE
+    )
+
+    guest = models.ForeignKey(
+        'accounts.User', related_name='guest',
+        on_delete=models.CASCADE
+    )
+
+    status = models.CharField(
+        _('status'), max_length=30, db_index=True,
+        choices=STATUS
+    )
+
+    def __str__(self):
+        return self.guest.name
+
+    def __repr__(self):
+        return self.guest.name
+
+    class Meta:
+        verbose_name = _('whitelist')
+        verbose_name_plural = _('whitelists')
+        unique_together = [
+            ['owner', 'guest']
+        ]

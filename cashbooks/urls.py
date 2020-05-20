@@ -18,4 +18,12 @@ urlpatterns = [
         'debtors',
         views.DebtorListView.as_view(),
         name='debtor_list'),
+    path(
+        'whitelists',
+        views.WhitelistListView.as_view(),
+        name='whitelist_list'),
+    path(
+        'whitelists/<int:pk>',
+        views.WhitelistDetailView.as_view(),
+        name='whitelist_detail'),
 ]
