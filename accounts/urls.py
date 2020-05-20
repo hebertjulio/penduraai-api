@@ -31,6 +31,14 @@ urlpatterns = [
         views.ProfileDetailView.as_view(),
         name='profile_detail'),
     path(
+        'whitelists',
+        views.WhitelistListView.as_view(),
+        name='whitelist_list'),
+    path(
+        'whitelists/<int:pk>',
+        views.WhitelistDetailView.as_view(),
+        name='whitelist_detail'),
+    path(
         'token-obtain-pair',
         views.TokenObtainPairView.as_view(),
         name='token_obtain_pair'),
