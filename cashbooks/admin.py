@@ -7,14 +7,14 @@ from .models import Transaction
 class TransactionAdmin(admin.ModelAdmin):
     list_display = (
         'creditor', 'debtor', 'operation', 'value',
-        'requester', 'signature',
+        'requester', 'subscriber',
     )
     search_fields = (
         'creditor__name', 'creditor__email', 'debtor__name',
         'debtor__email', 'description',
     )
     autocomplete_fields = (
-        'creditor', 'debtor', 'requester', 'signature',
+        'creditor', 'debtor', 'requester', 'subscriber',
     )
     list_filter = (
         'operation',

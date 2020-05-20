@@ -97,22 +97,22 @@ class Whitelist(TimeStampedModel):
         ('unauthorized', _('unauthorized')),
     )
 
-    user = models.ForeignKey(
-        'User', related_name='user', on_delete=models.CASCADE)
+    owner = models.ForeignKey(
+        'User', related_name='owner', on_delete=models.CASCADE)
     guest = models.ForeignKey(
         'User', related_name='guest', on_delete=models.CASCADE)
     status = models.CharField(
         _('status'), max_length=30, db_index=True, choices=STATUS)
 
     def __str__(self):
-        return self.guest
+        return self.guest.name
 
     def __repr__(self):
-        return self.guest
+        return self.guest.name
 
     class Meta:
         verbose_name = _('whitelist')
         verbose_name_plural = _('whitelists')
         unique_together = [
-            ['user', 'guest']
+            ['owner', 'guest']
         ]

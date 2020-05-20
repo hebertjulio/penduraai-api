@@ -57,17 +57,17 @@ class ProfileAdmin(admin.ModelAdmin):
 @admin.register(Whitelist)
 class WhitelistAdmin(admin.ModelAdmin):
     list_display = (
-        'user', 'guest', 'status',
+        'owner', 'guest', 'status',
     )
     search_fields = (
-        'user__name', 'user__email', 'guest__name', 'guest__email',
+        'owner__name', 'owner__email', 'guest__name', 'guest__email',
     )
     autocomplete_fields = (
-        'user', 'guest',
+        'owner', 'guest',
     )
     list_filter = (
         'status',
     )
     ordering = (
-        'user__id', 'guest__name',
+        'owner__id', 'guest__name',
     )

@@ -25,8 +25,8 @@ class Transaction(TimeStampedModel):
         'accounts.User', related_name='debtor', on_delete=models.CASCADE)
     requester = models.ForeignKey(
         'accounts.Profile', related_name='requester', on_delete=models.CASCADE)
-    signature = models.ForeignKey(
-        'accounts.Profile', related_name='signature', on_delete=models.CASCADE)
+    subscriber = models.ForeignKey(
+        'accounts.Profile', related_name='subscriber', on_delete=models.CASCADE)
 
     def __str__(self):
         return '%s %s %s' % (
