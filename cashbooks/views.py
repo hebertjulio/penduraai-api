@@ -9,9 +9,11 @@ from .serializers import TransactionSerializer
 class TransactionListView(generics.ListCreateAPIView):
 
     serializer_class = TransactionSerializer
+    filterset_fields = (
+        'creditor', 'debtor',
+    )
 
     def get_queryset(self):
         user = self.request.user
-        qs = Transaction.objects.filter(
-            Q(creditor=user) | Q(debtor=user), status=Transaction.STATUS.done)
+        qs = Transaction.objects.filter(Q(creditor=user) | Q(debtor=user))
         return qs
