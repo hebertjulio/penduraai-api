@@ -35,12 +35,9 @@ class UserSerializer(serializers.ModelSerializer):
 class ProfileSerializer(serializers.ModelSerializer):
 
     accountable = serializers.HiddenField(
-        default=serializers.CurrentUserDefault()
-    )
-
+        default=serializers.CurrentUserDefault())
     pin = serializers.RegexField(
-        regex=r'\d{4}', required=True, max_length=4
-    )
+        regex=r'\d{4}', required=True, max_length=4)
 
     class Meta:
         model = Profile
