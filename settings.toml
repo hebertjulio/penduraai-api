@@ -4,7 +4,6 @@ DEBUG = true
 # https://docs.djangoproject.com/en/3.0/ref/settings/#databases
 DATABASES__default__ENGINE = 'django.db.backends.sqlite3'
 DATABASES__default__NAME = 'db.sqlite3'
-DATABASES__default__TEST_NAME = 'test.sqlite3'
 
 [production]
 DEBUG = false

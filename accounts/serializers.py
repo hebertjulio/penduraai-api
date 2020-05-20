@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import User
+from .models import User, Profile
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -30,3 +30,18 @@ class UserSerializer(serializers.ModelSerializer):
                 'write_only': True
             }
         }
+
+
+class ProfileSerializer(serializers.ModelSerializer):
+
+    accountable = serializers.HiddenField(
+        default=serializers.CurrentUserDefault()
+    )
+
+    pin = serializers.RegexField(
+        regex=r'\d{4}', required=True, max_length=4
+    )
+
+    class Meta:
+        model = Profile
+        fields = '__all__'

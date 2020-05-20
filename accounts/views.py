@@ -8,8 +8,8 @@ from rest_framework_api_key.permissions import HasAPIKey
 
 from rest_framework_simplejwt import views as simplejwt_views
 
-from .models import User
-from .serializers import UserSerializer
+from .models import User, Profile
+from .serializers import UserSerializer, ProfileSerializer
 
 
 class UserListView(generics.CreateAPIView):
@@ -30,7 +30,8 @@ class LoggedUserDetailView(generics.RetrieveUpdateAPIView):
     serializer_class = UserSerializer
 
     def get_object(self):
-        return self.request.user
+        user = self.request.user
+        return user
 
 
 class LoggedUserDeactivateView(APIView):
@@ -40,7 +41,8 @@ class LoggedUserDeactivateView(APIView):
         obj.is_active = False
         obj.save()
         serializer = UserSerializer(obj)
-        return Response(serializer.data, HTTP_200_OK)
+        res = Response(serializer.data, HTTP_200_OK)
+        return res
 
 
 class TokenObtainPairView(simplejwt_views.TokenObtainPairView):
@@ -51,3 +53,24 @@ class TokenObtainPairView(simplejwt_views.TokenObtainPairView):
 class TokenRefreshView(simplejwt_views.TokenRefreshView):
 
     permission_classes = [HasAPIKey]
+
+
+class ProfileListView(generics.ListCreateAPIView):
+
+    serializer_class = ProfileSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        qs = Profile.objects.filter(accountable=user)
+        return qs
+
+
+class ProfileDetailView(generics.RetrieveUpdateDestroyAPIView):
+
+    lookup_field = 'pk'
+    serializer_class = ProfileSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        qs = Profile.objects.filter(accountable=user)
+        return qs
