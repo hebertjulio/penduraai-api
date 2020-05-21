@@ -9,18 +9,20 @@ class RecordSerializer(serializers.ModelSerializer):
 
     def validate_buyer(self, buyer):
         debtor = self.context['request'].user
-        if debtor is not None:
-            if debtor.id != buyer.accountable.id:
-                message = _('Debtor isn\'t accountable of buyer.')
-                raise serializers.ValidationError(message)
+        if debtor.id != buyer.accountable.id:
+            message = _('Debtor isn\'t accountable of buyer.')
+            raise serializers.ValidationError(message)
         return buyer
 
     def validate_seller(self, seller):
         creditor = self.context['request'].data.get('creditor')
-        if creditor is not None:
-            if int(creditor) != seller.accountable.id:
-                message = _('Creditor isn\'t accountable of seller.')
-                raise serializers.ValidationError(message)
+        debtor = self.context['request'].user
+        if creditor and int(creditor) != debtor.id:
+            message = _('Creditor and debtor are same user.')
+            raise serializers.ValidationError(message)
+        if creditor and int(creditor) != seller.accountable.id:
+            message = _('Creditor isn\'t accountable of seller.')
+            raise serializers.ValidationError(message)
         return seller
 
     def create(self, validated_data):
