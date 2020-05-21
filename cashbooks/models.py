@@ -6,11 +6,11 @@ from model_utils.models import TimeStampedModel
 from model_utils import Choices
 
 
-class Transaction(TimeStampedModel):
+class Record(TimeStampedModel):
 
-    OPERATION = Choices(
-        ('credit', _('credit')),
-        ('debit', _('debit')),
+    TYPE = Choices(
+        ('payment', _('payment')),
+        ('debt', _('debt')),
     )
 
     description = models.TextField(('description'))
@@ -22,42 +22,40 @@ class Transaction(TimeStampedModel):
         ]
     )
 
-    operation = models.CharField(
-        _('operation'), max_length=30, db_index=True,
-        choices=OPERATION
+    type = models.CharField(
+        _('type'), max_length=30, db_index=True,
+        choices=TYPE
     )
 
     creditor = models.ForeignKey(
         'accounts.User', on_delete=models.CASCADE,
-        related_name='transactions_creditor',
+        related_name='records_creditor',
     )
 
     debtor = models.ForeignKey(
         'accounts.User', on_delete=models.CASCADE,
-        related_name='transactions_debtor',
+        related_name='records_debtor',
     )
 
-    requester = models.ForeignKey(
+    seller = models.ForeignKey(
         'accounts.Profile', on_delete=models.CASCADE,
-        related_name='transactions_requester',
+        related_name='records_seller',
     )
 
-    signatory = models.ForeignKey(
+    buyer = models.ForeignKey(
         'accounts.Profile', on_delete=models.CASCADE,
-        related_name='transactions_signatory',
+        related_name='records_buyer',
     )
 
     def __str__(self):
-        return '%s %s %s' % (
-            self.creditor, self.value, self.operation.upper(),)
+        return '%s %s' % (self.value, self.operation,)
 
     def __repr__(self):
-        return '%s %s %s' % (
-            self.creditor, self.value, self.operation.upper(),)
+        return '%s %s' % (self.value, self.operation,)
 
     class Meta:
-        verbose_name = _('transaction')
-        verbose_name_plural = _('transactions')
+        verbose_name = _('record')
+        verbose_name_plural = _('records')
 
 
 class Whitelist(TimeStampedModel):
@@ -67,14 +65,14 @@ class Whitelist(TimeStampedModel):
         ('unauthorized', _('unauthorized')),
     )
 
-    owner = models.ForeignKey(
+    creditor = models.ForeignKey(
         'accounts.User', on_delete=models.CASCADE,
-        related_name='whitelists_owner',
+        related_name='whitelists_creditor',
     )
 
-    customer = models.ForeignKey(
+    debtor = models.ForeignKey(
         'accounts.User', on_delete=models.CASCADE,
-        related_name='whitelists_customer',
+        related_name='whitelists_debtor',
     )
 
     status = models.CharField(
@@ -83,14 +81,14 @@ class Whitelist(TimeStampedModel):
     )
 
     def __str__(self):
-        return self.guest.name
+        return self.creditor.name
 
     def __repr__(self):
-        return self.guest.name
+        return self.creditor.name
 
     class Meta:
         verbose_name = _('whitelist')
         verbose_name_plural = _('whitelists')
         unique_together = [
-            ['owner', 'customer']
+            ['creditor', 'debtor']
         ]

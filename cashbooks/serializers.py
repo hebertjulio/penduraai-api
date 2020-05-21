@@ -1,25 +1,37 @@
+from django.utils.translation import gettext_lazy as _
+
 from rest_framework import serializers
 
-from accounts.fields import ProfileField
-from accounts.serializers import UserSerializer
-
-from .models import Transaction, Whitelist
+from .models import Record, Whitelist
 
 
-class TransactionSerializer(serializers.ModelSerializer):
+class RecordSerializer(serializers.ModelSerializer):
 
-    requester = ProfileField()
-    signatory = ProfileField()
+    def validate_buyer(self, buyer):
+        debtor = self.context['request'].user
+        if debtor is not None:
+            if debtor.id != buyer.accountable.id:
+                message = _('Debtor isn\'t accountable of buyer.')
+                raise serializers.ValidationError(message)
+        return buyer
+
+    def validate_seller(self, seller):
+        creditor = self.context['request'].data.get('creditor')
+        if creditor is not None:
+            if int(creditor) != seller.accountable.id:
+                message = _('Creditor isn\'t accountable of seller.')
+                raise serializers.ValidationError(message)
+        return seller
 
     def create(self, validated_data):
         request = self.context['request']
-        obj = Transaction(**validated_data)
+        obj = Record(**validated_data)
         obj.debtor = request.user
         obj.save()
         return obj
 
     class Meta:
-        model = Transaction
+        model = Record
         fields = '__all__'
         read_only_fields = ('debtor',)
 
@@ -29,15 +41,15 @@ class CreditorSerializar(serializers.BaseSerializer):
     def create(self, validated_data):
         pass
 
-    def update(self, instance, validated_data):
+    def update(self, record, validated_data):
         pass
 
-    def to_representation(self, instance):
-        serializer = UserSerializer(instance.creditor)
+    def to_representation(self, record):
+        balance = record['payments'] - record['debts']
         return {
-            'debit_sum': instance.debit_sum,
-            'credit_sum': instance.credit_sum,
-            'user': serializer.data,
+            'id': record['creditor__id'],
+            'name': record['creditor__name'],
+            'balance': balance,
         }
 
     def to_internal_value(self, data):
@@ -49,15 +61,15 @@ class DebtorSerializar(serializers.BaseSerializer):
     def create(self, validated_data):
         pass
 
-    def update(self, instance, validated_data):
+    def update(self, record, validated_data):
         pass
 
-    def to_representation(self, instance):
-        serializer = UserSerializer(instance.debtor)
+    def to_representation(self, record):
+        balance = record['payments'] - record['debts']
         return {
-            'debit_sum': instance.debit_sum,
-            'credit_sum': instance.credit_sum,
-            'user': serializer.data,
+            'id': record['debtor__id'],
+            'name': record['debtor__name'],
+            'balance': balance,
         }
 
     def to_internal_value(self, data):
@@ -66,7 +78,7 @@ class DebtorSerializar(serializers.BaseSerializer):
 
 class WhitelistSerializer(serializers.ModelSerializer):
 
-    user = serializers.HiddenField(
+    creditor = serializers.HiddenField(
         default=serializers.CurrentUserDefault()
     )
 

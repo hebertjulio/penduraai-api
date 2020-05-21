@@ -60,5 +60,5 @@ class ProfileAuthenticateSerializer(serializers.Serializer):
     def create(self, validated_data):
         pass
 
-    def update(self, instance, validated_data):
+    def update(self, profile, validated_data):
         pass

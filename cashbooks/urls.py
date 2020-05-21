@@ -7,9 +7,9 @@ app_name = 'cashbooks'
 
 urlpatterns = [
     path(
-        'transactions',
-        views.TransactionListView.as_view(),
-        name='transaction_list'),
+        'records',
+        views.RecordListView.as_view(),
+        name='record_list'),
     path(
         'creditors',
         views.CreditorListView.as_view(),
