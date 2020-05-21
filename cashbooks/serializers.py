@@ -17,7 +17,7 @@ class RecordSerializer(serializers.ModelSerializer):
     def validate_seller(self, seller):
         creditor = self.context['request'].data.get('creditor')
         debtor = self.context['request'].user
-        if creditor and int(creditor) != debtor.id:
+        if creditor and int(creditor) == debtor.id:
             message = _('Creditor and debtor are same user.')
             raise serializers.ValidationError(message)
         if creditor and int(creditor) != seller.accountable.id:
