@@ -73,8 +73,8 @@ class Profile(TimeStampedModel):
     pin = models.CharField(_('pin'), max_length=4)
 
     accountable = models.ForeignKey(
-        'User', related_name='accountable',
-        on_delete=models.CASCADE
+        'User', on_delete=models.CASCADE,
+        related_name='profiles_accountable',
     )
 
     role = models.CharField(

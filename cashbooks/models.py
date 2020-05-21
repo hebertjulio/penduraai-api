@@ -28,23 +28,23 @@ class Transaction(TimeStampedModel):
     )
 
     creditor = models.ForeignKey(
-        'accounts.User', related_name='creditor',
-        on_delete=models.CASCADE
+        'accounts.User', on_delete=models.CASCADE,
+        related_name='transactions_creditor',
     )
 
     debtor = models.ForeignKey(
-        'accounts.User', related_name='debtor',
-        on_delete=models.CASCADE
+        'accounts.User', on_delete=models.CASCADE,
+        related_name='transactions_debtor',
     )
 
     requester = models.ForeignKey(
-        'accounts.Profile', related_name='requester',
-        on_delete=models.CASCADE
+        'accounts.Profile', on_delete=models.CASCADE,
+        related_name='transactions_requester',
     )
 
-    subscriber = models.ForeignKey(
-        'accounts.Profile', related_name='subscriber',
-        on_delete=models.CASCADE
+    signatory = models.ForeignKey(
+        'accounts.Profile', on_delete=models.CASCADE,
+        related_name='transactions_signatory',
     )
 
     def __str__(self):
@@ -68,13 +68,13 @@ class Whitelist(TimeStampedModel):
     )
 
     owner = models.ForeignKey(
-        'accounts.User', related_name='owner',
-        on_delete=models.CASCADE
+        'accounts.User', on_delete=models.CASCADE,
+        related_name='whitelists_owner',
     )
 
-    guest = models.ForeignKey(
-        'accounts.User', related_name='guest',
-        on_delete=models.CASCADE
+    customer = models.ForeignKey(
+        'accounts.User', on_delete=models.CASCADE,
+        related_name='whitelists_customer',
     )
 
     status = models.CharField(
@@ -92,5 +92,5 @@ class Whitelist(TimeStampedModel):
         verbose_name = _('whitelist')
         verbose_name_plural = _('whitelists')
         unique_together = [
-            ['owner', 'guest']
+            ['owner', 'customer']
         ]
