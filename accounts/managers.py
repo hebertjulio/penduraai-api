@@ -1,7 +1,8 @@
-from django.contrib.auth.models import UserManager
+from django.contrib.auth.base_user import BaseUserManager
+# from django.contrib.auth.models import UserManager
 
 
-class CustomUserManager(UserManager):
+class CustomUserManager(BaseUserManager):
 
     def _create_user(self, email, password, **extra_fields):
         email = self.normalize_email(email)
@@ -25,3 +26,11 @@ class CustomUserManager(UserManager):
             raise ValueError('Superuser must have is_superuser=True.')
 
         return self._create_user(email, password, **extra_fields)
+
+    # def with_perm(
+    #         self, perm, is_active=True, include_superusers=True,
+    #         backend=None, obj=None):
+    #     manager = UserManager()
+    #     return manager.with_perm(
+    #         perm, is_active=True, include_superusers=True,
+    #         backend=None, obj=None)
