@@ -7,14 +7,16 @@ from .models import Transaction, Whitelist
 class TransactionAdmin(admin.ModelAdmin):
     list_display = (
         'creditor', 'debtor', 'operation', 'value',
-        'requester', 'subscriber',
+        'requester', 'signatory',
     )
     search_fields = (
-        'creditor__name', 'creditor__email', 'debtor__name',
-        'debtor__email', 'description',
+        'creditor__name', 'creditor__email',
+        'debtor__name', 'debtor__email',
+        'description',
     )
     autocomplete_fields = (
-        'creditor', 'debtor', 'requester', 'subscriber',
+        'creditor', 'debtor', 'requester',
+        'signatory',
     )
     list_filter = (
         'operation',
@@ -27,17 +29,18 @@ class TransactionAdmin(admin.ModelAdmin):
 @admin.register(Whitelist)
 class WhitelistAdmin(admin.ModelAdmin):
     list_display = (
-        'owner', 'guest', 'status',
+        'owner', 'customer', 'status',
     )
     search_fields = (
-        'owner__name', 'owner__email', 'guest__name', 'guest__email',
+        'owner__name', 'owner__email',
+        'customer__name','customer__email',
     )
     autocomplete_fields = (
-        'owner', 'guest',
+        'owner', 'customer',
     )
     list_filter = (
         'status',
     )
     ordering = (
-        'owner__id', 'guest__name',
+        'owner__id', 'customer__name',
     )

@@ -11,7 +11,7 @@ class ProfileOf:
         request = serializer_field.parent.context['request']
         field_name = serializer_field.field_name
 
-        accountable_fields = {'requester': 'creditor', 'subscriber': 'debtor'}
+        accountable_fields = {'requester': 'creditor', 'signatory': 'debtor'}
         accountable_field = accountable_fields[field_name]
 
         if field_name == 'requester':

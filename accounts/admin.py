@@ -13,21 +13,26 @@ class UserAdmin(BaseUserAdmin):
             'name', 'email', 'password',)}),
         (_('Permissions'), {
             'fields': (
-                'is_active', 'is_staff', 'is_superuser',
-                'user_permissions',),
+                'is_active', 'is_staff',
+                'is_superuser', 'user_permissions',
+            ),
         }),
         (_('Important dates'), {
             'fields': ('last_login',)}),
     )
     list_display = (
-        'name', 'email', 'is_active', 'is_staff', 'is_superuser',
+        'name', 'email', 'is_active', 'is_staff',
+        'is_superuser',
     )
     search_fields = (
         'name', 'email',
     )
     add_fieldsets = (
         (None, {
-            'fields': ('name', 'email', 'password1', 'password2'),
+            'fields': (
+                'name', 'email', 'password1',
+                'password2'
+            ),
         }),
     )
     ordering = (
@@ -41,7 +46,8 @@ class ProfileAdmin(admin.ModelAdmin):
         'accountable', 'name', 'role', 'pin',
     )
     search_fields = (
-        'accountable__name', 'accountable__email', 'name',
+        'accountable__name', 'accountable__email',
+        'name',
     )
     autocomplete_fields = (
         'accountable',
