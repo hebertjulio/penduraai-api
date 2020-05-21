@@ -9,7 +9,7 @@ from .models import Transaction, Whitelist
 class TransactionSerializer(serializers.ModelSerializer):
 
     requester = ProfileField()
-    subscriber = ProfileField()
+    signatory = ProfileField()
 
     def create(self, validated_data):
         request = self.context['request']
