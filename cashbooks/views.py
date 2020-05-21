@@ -2,22 +2,24 @@ from django.db.models import Q, Sum, Case, When, F, DecimalField
 
 from rest_framework import generics
 
-from .models import Transaction, Whitelist
+from .models import Record, Whitelist
+
 from .serializers import (
-    TransactionSerializer, CreditorSerializar, DebtorSerializar,
-    WhitelistSerializer)
+    RecordSerializer, CreditorSerializar, DebtorSerializar,
+    WhitelistSerializer
+)
 
 
-class TransactionListView(generics.ListCreateAPIView):
+class RecordListView(generics.ListCreateAPIView):
 
-    serializer_class = TransactionSerializer
+    serializer_class = RecordSerializer
     filterset_fields = (
         'creditor', 'debtor',
     )
 
     def get_queryset(self):
         user = self.request.user
-        qs = Transaction.objects.filter(Q(creditor=user) | Q(debtor=user))
+        qs = Record.objects.filter(Q(creditor=user) | Q(debtor=user))
         return qs
 
 
@@ -26,13 +28,16 @@ class CreditorListView(generics.ListAPIView):
     serializer_class = CreditorSerializar
 
     def get_queryset(self):
+        payment = Sum(Case(When(
+            type='payment', then=F('value')), output_field=DecimalField(),
+            default=0))
+        debt = Sum(Case(When(
+            type='debt', then=F('value')), output_field=DecimalField(),
+            default=0))
         user = self.request.user
-        c = Sum(Case(When(operation='credit', then=F('value')),
-                output_field=DecimalField(), default=0))
-        d = Sum(Case(When(operation='debit', then=F('value')),
-                output_field=DecimalField(), default=0))
-        qs = Transaction.objects.annotate(credit_sum=c, debit_sum=d)
-        qs = qs.select_related('creditor').filter(debtor=user)
+        qs = Record.objects.values('creditor__id', 'creditor__name')
+        qs = qs.annotate(payments=payment, debts=debt)
+        qs = qs.filter(debtor=user)
         return qs
 
 
@@ -41,13 +46,16 @@ class DebtorListView(generics.ListAPIView):
     serializer_class = DebtorSerializar
 
     def get_queryset(self):
+        payment = Sum(Case(When(
+            type='payment', then=F('value')), output_field=DecimalField(),
+            default=0))
+        debt = Sum(Case(When(
+            type='debt', then=F('value')), output_field=DecimalField(),
+            default=0))
         user = self.request.user
-        c = Sum(Case(When(operation='credit', then=F('value')),
-                output_field=DecimalField(), default=0))
-        d = Sum(Case(When(operation='debit', then=F('value')),
-                output_field=DecimalField(), default=0))
-        qs = Transaction.objects.annotate(credit_sum=c, debit_sum=d)
-        qs = qs.select_related('debtor').filter(creditor=user)
+        qs = Record.objects.values('debtor__id', 'debtor__name')
+        qs = qs.annotate(payments=payment, debts=debt)
+        qs = qs.filter(creditor=user)
         return qs
 
 
@@ -57,7 +65,7 @@ class WhitelistListView(generics.ListCreateAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        qs = Whitelist.objects.filter(owner=user)
+        qs = Whitelist.objects.filter(creditor=user)
         return qs
 
 
@@ -68,5 +76,5 @@ class WhitelistDetailView(generics.RetrieveUpdateDestroyAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        qs = Whitelist.objects.filter(owner=user)
+        qs = Whitelist.objects.filter(creditor=user)
         return qs

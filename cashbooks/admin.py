@@ -1,13 +1,13 @@
 from django.contrib import admin
 
-from .models import Transaction, Whitelist
+from .models import Record, Whitelist
 
 
-@admin.register(Transaction)
-class TransactionAdmin(admin.ModelAdmin):
+@admin.register(Record)
+class RecordAdmin(admin.ModelAdmin):
     list_display = (
-        'creditor', 'debtor', 'operation', 'value',
-        'requester', 'signatory',
+        'creditor', 'debtor', 'type', 'value',
+        'seller', 'buyer',
     )
     search_fields = (
         'creditor__name', 'creditor__email',
@@ -15,11 +15,11 @@ class TransactionAdmin(admin.ModelAdmin):
         'description',
     )
     autocomplete_fields = (
-        'creditor', 'debtor', 'requester',
-        'signatory',
+        'creditor', 'debtor', 'seller',
+        'buyer',
     )
     list_filter = (
-        'operation',
+        'type',
     )
     ordering = (
         'created',
@@ -29,18 +29,18 @@ class TransactionAdmin(admin.ModelAdmin):
 @admin.register(Whitelist)
 class WhitelistAdmin(admin.ModelAdmin):
     list_display = (
-        'owner', 'customer', 'status',
+        'creditor', 'debtor', 'status',
     )
     search_fields = (
-        'owner__name', 'owner__email',
-        'customer__name','customer__email',
+        'creditor__name', 'creditor__email',
+        'debtor__name', 'debtor__email',
     )
     autocomplete_fields = (
-        'owner', 'customer',
+        'creditor', 'debtor',
     )
     list_filter = (
         'status',
     )
     ordering = (
-        'owner__id', 'customer__name',
+        'creditor__id', 'debtor__name',
     )

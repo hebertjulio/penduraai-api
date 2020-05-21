@@ -1,5 +1,5 @@
 from rest_framework.status import HTTP_200_OK
-from rest_framework import exceptions
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import generics
@@ -83,12 +83,11 @@ class ProfileAuthenticateView(APIView):
         serializer = ProfileAuthenticateSerializer(
             data=request.data, context={'request': request})
         serializer.is_valid(raise_exception=True)
-        pin = request.data['pin']
         try:
-            obj = self.request.user.profiles_accountable.get(pin=pin)
-            serializer = ProfileSerializer(obj)
+            pin = request.data['pin']
+            profile = self.request.user.profiles_accountable.get(pin=pin)
+            serializer = ProfileSerializer(profile)
             res = Response(serializer.data, HTTP_200_OK)
             return res
         except Profile.DoesNotExist:
-            pass
-        raise exceptions.PermissionDenied()
+            raise PermissionDenied()
