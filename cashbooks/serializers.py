@@ -7,27 +7,18 @@ from .models import Record, Whitelist
 
 class RecordSerializer(serializers.ModelSerializer):
 
-    def validate_buyer(self, value):
-        debtor = self.context['request'].user
-        if debtor.id != value.accountable.id:
+    def validate(self, attrs):
+        user = self.context['request'].user
+        if user.id != attrs['buyer'].accountable.id:
             message = _('Debtor isn\'t accountable of buyer.')
             raise serializers.ValidationError(message)
-        return value
-
-    def validate_seller(self, value):
-        creditor = self.context['request'].data.get('creditor')
-        if creditor and int(creditor) != value.accountable.id:
+        if attrs['creditor'].id != attrs['seller'].accountable.id:
             message = _('Creditor isn\'t accountable of seller.')
             raise serializers.ValidationError(message)
-        return value
-
-    def validate(self, data):
-        creditor = self.context['request'].data.get('creditor')
-        debtor = self.context['request'].user
-        if creditor and int(creditor) == debtor.id:
+        if user.id == attrs['creditor'].id:
             message = _('Creditor and debtor are the same user.')
             raise serializers.ValidationError(message)
-        return data
+        return attrs
 
     def create(self, validated_data):
         request = self.context['request']
