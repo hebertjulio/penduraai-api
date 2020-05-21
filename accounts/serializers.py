@@ -45,3 +45,20 @@ class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
         fields = '__all__'
+
+
+class ProfileAuthenticateSerializer(serializers.Serializer):
+
+    accountable = serializers.HiddenField(
+        default=serializers.CurrentUserDefault()
+    )
+
+    pin = serializers.RegexField(
+        regex=r'\d{4}', required=True, max_length=4
+    )
+
+    def create(self, validated_data):
+        pass
+
+    def update(self, instance, validated_data):
+        pass

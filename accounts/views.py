@@ -1,5 +1,5 @@
 from rest_framework.status import HTTP_200_OK
-
+from rest_framework import exceptions
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import generics
@@ -9,7 +9,8 @@ from rest_framework_api_key.permissions import HasAPIKey
 from rest_framework_simplejwt import views as simplejwt_views
 
 from .models import User, Profile
-from .serializers import UserSerializer, ProfileSerializer
+from .serializers import (
+    UserSerializer, ProfileSerializer, ProfileAuthenticateSerializer)
 
 
 class UserListView(generics.CreateAPIView):
@@ -74,3 +75,20 @@ class ProfileDetailView(generics.RetrieveUpdateDestroyAPIView):
         user = self.request.user
         qs = Profile.objects.filter(accountable=user)
         return qs
+
+
+class ProfileAuthenticateView(APIView):
+
+    def post(self, request, *args, **kwargs):
+        serializer = ProfileAuthenticateSerializer(
+            data=request.data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        pin = request.data['pin']
+        try:
+            obj = self.request.user.profiles_accountable.get(pin=pin)
+            serializer = ProfileSerializer(obj)
+            res = Response(serializer.data, HTTP_200_OK)
+            return res
+        except Profile.DoesNotExist:
+            pass
+        raise exceptions.PermissionDenied()
