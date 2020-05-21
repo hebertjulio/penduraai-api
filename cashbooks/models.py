@@ -10,7 +10,7 @@ class Record(TimeStampedModel):
 
     TYPE = Choices(
         ('payment', _('payment')),
-        ('debt', _('debt')),
+        ('sale', _('sale')),
     )
 
     id = models.UUIDField(primary_key=True)
