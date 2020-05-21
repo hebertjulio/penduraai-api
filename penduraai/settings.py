@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_api_key',
     'django_filters',
+    'channels',
     'accounts',
     'cashbooks',
 ]
@@ -70,7 +71,22 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'penduraai.wsgi.application'
+
+# https://channels.readthedocs.io/en/latest/installation.html
+
+ASGI_APPLICATION = 'penduraai.channels_routing.application'
+
+
+# https://channels.readthedocs.io/en/latest/topics/channel_layers.html
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            'hosts': [('localhost', 6379)],
+        },
+    },
+}
 
 
 # Password validation

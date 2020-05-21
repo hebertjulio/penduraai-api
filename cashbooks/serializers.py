@@ -1,11 +1,18 @@
 from django.utils.translation import gettext_lazy as _
+from django.db import transaction
 
 from rest_framework import serializers
+
+from channels.layers import get_channel_layer
+
+from asgiref.sync import async_to_sync
 
 from .models import Record, Whitelist
 
 
 class RecordSerializer(serializers.ModelSerializer):
+
+    channel_name = serializers.CharField(required=True, write_only=True)
 
     def validate(self, attrs):
         user = self.context['request'].user
@@ -20,11 +27,20 @@ class RecordSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(message)
         return attrs
 
+    @transaction.atomic
     def create(self, validated_data):
+        channel_name = validated_data.pop('channel_name')
         request = self.context['request']
         obj = Record(**validated_data)
         obj.debtor = request.user
         obj.save()
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.send)(
+            channel_name, {
+                'type': 'websocket.message',
+                'text': 'ACCEPTED',
+            },
+        )
         return obj
 
     class Meta:
