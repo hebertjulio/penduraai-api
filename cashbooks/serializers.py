@@ -43,14 +43,14 @@ class CreditorSerializar(serializers.BaseSerializer):
     def create(self, validated_data):
         pass
 
-    def update(self, record, validated_data):
+    def update(self, instance, validated_data):
         pass
 
-    def to_representation(self, record):
-        balance = record['payments'] - record['debts']
+    def to_representation(self, instance):
+        balance = instance['payments'] - instance['debts']
         return {
-            'id': record['creditor__id'],
-            'name': record['creditor__name'],
+            'id': instance['creditor__id'],
+            'name': instance['creditor__name'],
             'balance': balance,
         }
 
@@ -63,14 +63,14 @@ class DebtorSerializar(serializers.BaseSerializer):
     def create(self, validated_data):
         pass
 
-    def update(self, record, validated_data):
+    def update(self, instance, validated_data):
         pass
 
-    def to_representation(self, record):
-        balance = record['payments'] - record['debts']
+    def to_representation(self, instance):
+        balance = instance['payments'] - instance['debts']
         return {
-            'id': record['debtor__id'],
-            'name': record['debtor__name'],
+            'id': instance['debtor__id'],
+            'name': instance['debtor__name'],
             'balance': balance,
         }
 
