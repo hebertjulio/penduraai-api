@@ -48,10 +48,10 @@ class Record(TimeStampedModel):
     )
 
     def __str__(self):
-        return '%s %s' % (self.value, self.operation,)
+        return '%s %s' % (self.value, self.type,)
 
     def __repr__(self):
-        return '%s %s' % (self.value, self.operation,)
+        return '%s %s' % (self.value, self.type,)
 
     class Meta:
         verbose_name = _('record')
