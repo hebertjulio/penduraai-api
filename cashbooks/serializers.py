@@ -7,23 +7,18 @@ from .models import Record, Whitelist
 
 class RecordSerializer(serializers.ModelSerializer):
 
-    def validate_buyer(self, buyer):
-        debtor = self.context['request'].user
-        if debtor.id != buyer.accountable.id:
+    def validate(self, attrs):
+        user = self.context['request'].user
+        if user.id != attrs['buyer'].accountable.id:
             message = _('Debtor isn\'t accountable of buyer.')
             raise serializers.ValidationError(message)
-        return buyer
-
-    def validate_seller(self, seller):
-        creditor = self.context['request'].data.get('creditor')
-        debtor = self.context['request'].user
-        if creditor and int(creditor) == debtor.id:
-            message = _('Creditor and debtor are same user.')
-            raise serializers.ValidationError(message)
-        if creditor and int(creditor) != seller.accountable.id:
+        if attrs['creditor'].id != attrs['seller'].accountable.id:
             message = _('Creditor isn\'t accountable of seller.')
             raise serializers.ValidationError(message)
-        return seller
+        if user.id == attrs['creditor'].id:
+            message = _('Creditor and debtor are the same user.')
+            raise serializers.ValidationError(message)
+        return attrs
 
     def create(self, validated_data):
         request = self.context['request']
@@ -47,7 +42,7 @@ class CreditorSerializar(serializers.BaseSerializer):
         pass
 
     def to_representation(self, instance):
-        balance = instance['payments'] - instance['debts']
+        balance = instance['payments'] - instance['sales']
         return {
             'id': instance['creditor__id'],
             'name': instance['creditor__name'],
@@ -67,7 +62,7 @@ class DebtorSerializar(serializers.BaseSerializer):
         pass
 
     def to_representation(self, instance):
-        balance = instance['payments'] - instance['debts']
+        balance = instance['payments'] - instance['sales']
         return {
             'id': instance['debtor__id'],
             'name': instance['debtor__name'],
