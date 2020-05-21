@@ -13,7 +13,8 @@ class Record(TimeStampedModel):
         ('debt', _('debt')),
     )
 
-    description = models.TextField(('description'))
+    id = models.UUIDField(primary_key=True)
+    description = models.CharField(('description'), max_length=255)
 
     value = models.DecimalField(
         _('value'), max_digits=10, decimal_places=2,
@@ -48,10 +49,10 @@ class Record(TimeStampedModel):
     )
 
     def __str__(self):
-        return '%s %s' % (self.value, self.type,)
+        return str(self.id)
 
     def __repr__(self):
-        return '%s %s' % (self.value, self.type,)
+        return str(self.id)
 
     class Meta:
         verbose_name = _('record')

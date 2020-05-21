@@ -6,13 +6,13 @@ from .models import Record, Whitelist
 @admin.register(Record)
 class RecordAdmin(admin.ModelAdmin):
     list_display = (
-        'creditor', 'debtor', 'type', 'value',
+        'id', 'creditor', 'debtor', 'type', 'value',
         'seller', 'buyer',
     )
     search_fields = (
         'creditor__name', 'creditor__email',
         'debtor__name', 'debtor__email',
-        'description',
+        'id',
     )
     autocomplete_fields = (
         'creditor', 'debtor', 'seller',
