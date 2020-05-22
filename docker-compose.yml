@@ -1,0 +1,35 @@
+version: '3.4'
+
+services:
+
+  redis:
+    image: redis:5.0.5
+    volumes:
+      - penduraai-redis:/data
+    entrypoint: redis-server --requirepass penduraai --appendonly yes
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -h redis -a penduraai PING"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    network_mode: host
+
+  api:
+    image: python:3.8.2
+    stdin_open: true
+    tty: true
+    ports:
+      - "8000:8000"
+    working_dir: /usr/app
+    volumes:
+      - .:/usr/app:z
+    depends_on:
+      - redis
+    command: bash -c "
+      pip install -r requirements.txt;
+      python manage.py migrate;
+      python manage.py runserver"
+    network_mode: host
+
+volumes:
+  penduraai-redis:
