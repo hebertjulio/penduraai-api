@@ -6,7 +6,7 @@ from .models import Record, Whitelist
 @admin.register(Record)
 class RecordAdmin(admin.ModelAdmin):
     list_display = (
-        'id', 'creditor', 'debtor', 'type', 'value',
+        'id', 'creditor', 'debtor', 'operation', 'value',
         'seller', 'buyer',
     )
     search_fields = (
@@ -19,7 +19,7 @@ class RecordAdmin(admin.ModelAdmin):
         'buyer',
     )
     list_filter = (
-        'type',
+        'operation',
     )
     ordering = (
         'created',
