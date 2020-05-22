@@ -15,11 +15,13 @@ class RecordAwaitingAcceptConsumer(AsyncConsumer):
             'text': self.channel_name,
         })
 
-    async def websocket_message(self, event):
-        await self.send({
-            'type': 'websocket.send',
-            'text': event['text'],
-        })
-
     async def websocket_disconnect(self, event):
+        if 'text'in event:
+            await self.send({
+                'type': 'websocket.send',
+                'text': event['text'],
+            })
+        await self.send({
+            'type': 'websocket.close'
+        })
         raise StopConsumer()

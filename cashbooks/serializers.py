@@ -37,7 +37,7 @@ class RecordSerializer(serializers.ModelSerializer):
         channel_layer = get_channel_layer()
         async_to_sync(channel_layer.send)(
             channel_name, {
-                'type': 'websocket.message',
+                'type': 'websocket.disconnect',
                 'text': 'ACCEPTED',
             },
         )

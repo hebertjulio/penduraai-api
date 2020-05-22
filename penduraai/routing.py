@@ -1,10 +1,10 @@
 from channels.routing import ProtocolTypeRouter, URLRouter
 
-from cashbooks.routing import paths as cashbooks_paths
+from cashbooks import routing as cashbooks
 
 
 application = ProtocolTypeRouter({
     'websocket': URLRouter(
-        cashbooks_paths
+        cashbooks.urlpatterns
     )
 })

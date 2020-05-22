@@ -74,7 +74,7 @@ TEMPLATES = [
 
 # https://channels.readthedocs.io/en/latest/installation.html
 
-ASGI_APPLICATION = 'penduraai.channels.application'
+ASGI_APPLICATION = 'penduraai.routing.application'
 
 
 # https://channels.readthedocs.io/en/latest/topics/channel_layers.html
