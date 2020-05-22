@@ -5,6 +5,6 @@ from cashbooks import routing as cashbooks
 
 application = ProtocolTypeRouter({
     'websocket': URLRouter(
-        cashbooks.urlpatterns
+        cashbooks.routing
     )
 })

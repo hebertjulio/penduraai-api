@@ -3,7 +3,7 @@ from django.urls import path
 from .consumers import RecordAwaitingAcceptConsumer
 
 
-urlpatterns = [
+routing = [
     path(
         'records/awaiting-accept',
         RecordAwaitingAcceptConsumer
