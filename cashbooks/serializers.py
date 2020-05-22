@@ -58,7 +58,7 @@ class CreditorSerializar(serializers.BaseSerializer):
         pass
 
     def to_representation(self, instance):
-        balance = instance['credits'] - instance['debits']
+        balance = instance['credit_sum'] - instance['debit_sum']
         return {
             'id': instance['creditor__id'],
             'name': instance['creditor__name'],
@@ -78,7 +78,7 @@ class DebtorSerializar(serializers.BaseSerializer):
         pass
 
     def to_representation(self, instance):
-        balance = instance['credits'] - instance['debits']
+        balance = instance['credit_sum'] - instance['debit_sum']
         return {
             'id': instance['debtor__id'],
             'name': instance['debtor__name'],
