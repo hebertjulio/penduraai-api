@@ -1,10 +1,10 @@
+from channels.exceptions import StopConsumer
 from channels.consumer import AsyncConsumer
 
 
 class RecordAwaitingAcceptConsumer(AsyncConsumer):
 
     http_user = False
-    strict_ordering = False
 
     async def websocket_connect(self, event):
         await self.send({
@@ -22,4 +22,4 @@ class RecordAwaitingAcceptConsumer(AsyncConsumer):
         })
 
     async def websocket_disconnect(self, event):
-        pass
+        raise StopConsumer()
