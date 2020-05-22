@@ -283,7 +283,7 @@ vault = ["hvac"]
 yaml = ["pyyaml"]
 
 [[package]]
-category = "dev"
+category = "main"
 description = "Faker is a Python package that generates fake data for you."
 name = "faker"
 optional = false
@@ -424,7 +424,7 @@ version = "3.4.6"
 testing = ["pytest", "coverage (>=3.6)", "pytest-cov"]
 
 [[package]]
-category = "dev"
+category = "main"
 description = "Extensions to the standard Python datetime module"
 name = "python-dateutil"
 optional = false
@@ -490,7 +490,7 @@ python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 version = "0.3.1"
 
 [[package]]
-category = "dev"
+category = "main"
 description = "The most basic Text::Unidecode port"
 name = "text-unidecode"
 optional = false
@@ -587,7 +587,7 @@ test = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 testing = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 
 [metadata]
-content-hash = "6c78350cc95b0fa10ea0aef26baac608c1a3955461dfb870783e7d2610584a70"
+content-hash = "b5cc501f43b5ce5b740cbe6b10c2e14fa9221ea5c529e5f6949765260e392bc4"
 python-versions = "3.8.2"
 
 [metadata.files]
