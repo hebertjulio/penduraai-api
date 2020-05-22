@@ -82,11 +82,13 @@ ASGI_APPLICATION = 'penduraai.routing.application'
 
 # https://channels.readthedocs.io/en/latest/topics/channel_layers.html
 
+CHANNEL_LAYERS_HOSTS = []
+
 CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels_redis.core.RedisChannelLayer',
         'CONFIG': {
-            'hosts': [('localhost', 6379)],
+            'hosts': CHANNEL_LAYERS_HOSTS,
         },
     },
 }
