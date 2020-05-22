@@ -6,7 +6,7 @@ class RecordAwaitingAcceptConsumer(AsyncConsumer):
 
     http_user = False
 
-    async def websocket_connect(self, event):
+    async def websocket_connect(self, _):
         await self.send({
             'type': 'websocket.accept',
         })
