@@ -1,2 +1,2 @@
 release: python manage.py migrate
-web: daphne penduraai.asgi:application --port 8888 --bind 0.0.0.0 -v2
+web: daphne penduraai.asgi:application --port 80 --bind 0.0.0.0 -v2
