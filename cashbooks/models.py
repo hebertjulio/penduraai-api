@@ -10,9 +10,9 @@ from model_utils import Choices
 
 class Record(TimeStampedModel):
 
-    TYPE = Choices(
-        ('payment', _('payment')),
-        ('sale', _('sale')),
+    OPERATION = Choices(
+        ('credit', _('credit')),
+        ('debit', _('debit')),
     )
 
     id = models.UUIDField(primary_key=True, editable=False, default=uuid.uuid4)
@@ -25,9 +25,9 @@ class Record(TimeStampedModel):
         ]
     )
 
-    type = models.CharField(
-        _('type'), max_length=30, db_index=True,
-        choices=TYPE
+    operation = models.CharField(
+        _('operation'), max_length=30, db_index=True,
+        choices=OPERATION
     )
 
     creditor = models.ForeignKey(

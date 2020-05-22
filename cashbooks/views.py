@@ -28,15 +28,15 @@ class CreditorListView(generics.ListAPIView):
     serializer_class = CreditorSerializar
 
     def get_queryset(self):
-        payments = Sum(Case(When(
-            type='payment', then=F('value')), output_field=DecimalField(),
+        credits = Sum(Case(When(
+            operation='credit', then=F('value')), output_field=DecimalField(),
             default=0))
-        sales = Sum(Case(When(
-            type='sale', then=F('value')), output_field=DecimalField(),
+        debits = Sum(Case(When(
+            operation='debit', then=F('value')), output_field=DecimalField(),
             default=0))
         user = self.request.user
         qs = Record.objects.values('creditor__id', 'creditor__name')
-        qs = qs.annotate(payments=payments, sales=sales)
+        qs = qs.annotate(credits=credits, debits=debits)
         qs = qs.filter(debtor=user)
         return qs
 
@@ -46,15 +46,15 @@ class DebtorListView(generics.ListAPIView):
     serializer_class = DebtorSerializar
 
     def get_queryset(self):
-        payments = Sum(Case(When(
-            type='payment', then=F('value')), output_field=DecimalField(),
+        credits = Sum(Case(When(
+            operation='credit', then=F('value')), output_field=DecimalField(),
             default=0))
-        sales = Sum(Case(When(
-            type='sale', then=F('value')), output_field=DecimalField(),
+        debits = Sum(Case(When(
+            operation='debit', then=F('value')), output_field=DecimalField(),
             default=0))
         user = self.request.user
         qs = Record.objects.values('debtor__id', 'debtor__name')
-        qs = qs.annotate(payments=payments, sales=sales)
+        qs = qs.annotate(credits=credits, debits=debits)
         qs = qs.filter(creditor=user)
         return qs
 
