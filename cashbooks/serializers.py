@@ -1,5 +1,8 @@
+from datetime import timedelta
+
 from django.utils.translation import gettext_lazy as _
 from django.db import transaction
+from django.utils import timezone
 
 from rest_framework import serializers
 
@@ -7,7 +10,7 @@ from channels.layers import get_channel_layer
 
 from asgiref.sync import async_to_sync
 
-from .models import Record, Whitelist
+from .models import Record, Transaction, Whitelist
 
 
 class RecordSerializer(serializers.ModelSerializer):
@@ -98,3 +101,17 @@ class WhitelistSerializer(serializers.ModelSerializer):
     class Meta:
         model = Whitelist
         fields = '__all__'
+
+
+class TransactionSerializer(serializers.ModelSerializer):
+
+    def create(self, validated_data):
+        obj = Transaction()
+        obj.expired_at = timezone.now() + timedelta(days=1)
+        obj.save()
+        return obj
+
+    class Meta:
+        model = Transaction
+        fields = '__all__'
+        read_only_fields = ('expired_at', 'finished',)

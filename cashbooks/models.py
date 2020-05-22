@@ -95,3 +95,14 @@ class Whitelist(TimeStampedModel):
         unique_together = [
             ['creditor', 'debtor']
         ]
+
+
+class Transaction(TimeStampedModel):
+
+    id = models.UUIDField(primary_key=True, editable=False, default=uuid.uuid4)
+    finished = models.BooleanField(_('finished'), default=False)
+    expired_at = models.DateTimeField(_('expired at'), db_index=True)
+
+    class Meta:
+        verbose_name = _('transaction')
+        verbose_name_plural = _('transactions')

@@ -26,4 +26,8 @@ urlpatterns = [
         'whitelists/<int:pk>',
         views.WhitelistDetailView.as_view(),
         name='whitelist_detail'),
+    path(
+        'transactions',
+        views.TransactionListView.as_view(),
+        name='transaction_list'),
 ]

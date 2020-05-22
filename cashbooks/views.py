@@ -6,7 +6,7 @@ from .models import Record, Whitelist
 
 from .serializers import (
     RecordSerializer, CreditorSerializar, DebtorSerializar,
-    WhitelistSerializer
+    WhitelistSerializer, TransactionSerializer
 )
 
 
@@ -78,3 +78,8 @@ class WhitelistDetailView(generics.RetrieveUpdateDestroyAPIView):
         user = self.request.user
         qs = Whitelist.objects.filter(creditor=user)
         return qs
+
+
+class TransactionListView(generics.CreateAPIView):
+
+    serializer_class = TransactionSerializer
