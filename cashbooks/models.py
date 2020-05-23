@@ -11,8 +11,8 @@ from model_utils import Choices
 class Record(TimeStampedModel):
 
     OPERATION = Choices(
-        ('credit', _('credit')),
-        ('debit', _('debit')),
+        ('payment', _('payment')),
+        ('debt', _('debt')),
     )
 
     id = models.UUIDField(primary_key=True, editable=False, default=uuid.uuid4)
@@ -61,27 +61,19 @@ class Record(TimeStampedModel):
         verbose_name_plural = _('records')
 
 
-class Whitelist(TimeStampedModel):
-
-    STATUS = Choices(
-        ('authorized', _('authorized')),
-        ('unauthorized', _('unauthorized')),
-    )
+class AllowedDebtor(TimeStampedModel):
 
     creditor = models.ForeignKey(
         'accounts.User', on_delete=models.CASCADE,
-        related_name='whitelists_creditor',
+        related_name='alloweddebtor_creditor',
     )
 
     debtor = models.ForeignKey(
         'accounts.User', on_delete=models.CASCADE,
-        related_name='whitelists_debtor',
+        related_name='alloweddebtor_debtor',
     )
 
-    status = models.CharField(
-        _('status'), max_length=30, db_index=True,
-        choices=STATUS
-    )
+    is_active = models.BooleanField(_('is active'))
 
     def __str__(self):
         return self.creditor.name
@@ -90,8 +82,8 @@ class Whitelist(TimeStampedModel):
         return self.creditor.name
 
     class Meta:
-        verbose_name = _('whitelist')
-        verbose_name_plural = _('whitelists')
+        verbose_name = _('allowed debtor')
+        verbose_name_plural = _('allowed debtors')
         unique_together = [
             ['creditor', 'debtor']
         ]

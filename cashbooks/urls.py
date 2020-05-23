@@ -19,13 +19,13 @@ urlpatterns = [
         views.DebtorListView.as_view(),
         name='debtor_list'),
     path(
-        'whitelists',
-        views.WhitelistListView.as_view(),
-        name='whitelist_list'),
+        'allowed-debtors',
+        views.AllowedDebtorListView.as_view(),
+        name='allowed_debtor_list'),
     path(
-        'whitelists/<int:pk>',
-        views.WhitelistDetailView.as_view(),
-        name='whitelist_detail'),
+        'allowed-debtors/<int:pk>',
+        views.AllowedDebtorDetailView.as_view(),
+        name='allowed_debtor_detail'),
     path(
         'transactions',
         views.TransactionListView.as_view(),

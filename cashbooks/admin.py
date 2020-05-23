@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Record, Whitelist
+from .models import Record, AllowedDebtor
 
 
 @admin.register(Record)
@@ -26,10 +26,10 @@ class RecordAdmin(admin.ModelAdmin):
     )
 
 
-@admin.register(Whitelist)
-class WhitelistAdmin(admin.ModelAdmin):
+@admin.register(AllowedDebtor)
+class AllowedDebtorAdmin(admin.ModelAdmin):
     list_display = (
-        'creditor', 'debtor', 'status',
+        'creditor', 'debtor', 'is_active',
     )
     search_fields = (
         'creditor__name', 'creditor__email',
@@ -39,7 +39,7 @@ class WhitelistAdmin(admin.ModelAdmin):
         'creditor', 'debtor',
     )
     list_filter = (
-        'status',
+        'is_active',
     )
     ordering = (
         'creditor__id', 'debtor__name',

@@ -10,7 +10,7 @@ from channels.layers import get_channel_layer
 
 from asgiref.sync import async_to_sync
 
-from .models import Record, Transaction, Whitelist
+from .models import Record, Transaction, AllowedDebtor
 
 
 class RecordSerializer(serializers.ModelSerializer):
@@ -61,7 +61,7 @@ class CreditorSerializar(serializers.BaseSerializer):
         pass
 
     def to_representation(self, instance):
-        balance = instance['credit_sum'] - instance['debit_sum']
+        balance = instance['payment_sum'] - instance['debt_sum']
         return {
             'id': instance['creditor__id'],
             'name': instance['creditor__name'],
@@ -81,7 +81,7 @@ class DebtorSerializar(serializers.BaseSerializer):
         pass
 
     def to_representation(self, instance):
-        balance = instance['credit_sum'] - instance['debit_sum']
+        balance = instance['payment_sum'] - instance['debt_sum']
         return {
             'id': instance['debtor__id'],
             'name': instance['debtor__name'],
@@ -92,14 +92,14 @@ class DebtorSerializar(serializers.BaseSerializer):
         pass
 
 
-class WhitelistSerializer(serializers.ModelSerializer):
+class AllowedDebtorSerializer(serializers.ModelSerializer):
 
     creditor = serializers.HiddenField(
         default=serializers.CurrentUserDefault()
     )
 
     class Meta:
-        model = Whitelist
+        model = AllowedDebtor
         fields = '__all__'
 
 
