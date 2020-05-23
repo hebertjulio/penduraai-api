@@ -2,11 +2,11 @@ from django.db.models import Q, Sum, Case, When, F, DecimalField
 
 from rest_framework import generics
 
-from .models import Record, AllowedDebtor
+from .models import Record, Customer
 
 from .serializers import (
     RecordSerializer, CreditorSerializar, DebtorSerializar,
-    AllowedDebtorSerializer, TransactionSerializer
+    CustomerSerializer, TransactionSerializer
 )
 
 
@@ -59,24 +59,24 @@ class DebtorListView(generics.ListAPIView):
         return qs
 
 
-class AllowedDebtorListView(generics.ListCreateAPIView):
+class CustomerListView(generics.ListCreateAPIView):
 
-    serializer_class = AllowedDebtorSerializer
+    serializer_class = CustomerSerializer
 
     def get_queryset(self):
         user = self.request.user
-        qs = AllowedDebtor.objects.filter(creditor=user)
+        qs = Customer.objects.filter(creditor=user)
         return qs
 
 
-class AllowedDebtorDetailView(generics.RetrieveUpdateDestroyAPIView):
+class CustomerDetailView(generics.RetrieveUpdateDestroyAPIView):
 
     lookup_field = 'pk'
-    serializer_class = AllowedDebtorSerializer
+    serializer_class = CustomerSerializer
 
     def get_queryset(self):
         user = self.request.user
-        qs = AllowedDebtor.objects.filter(creditor=user)
+        qs = Customer.objects.filter(creditor=user)
         return qs
 
 

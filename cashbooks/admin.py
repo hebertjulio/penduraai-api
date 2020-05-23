@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Record, AllowedDebtor
+from .models import Record, Customer
 
 
 @admin.register(Record)
@@ -26,10 +26,10 @@ class RecordAdmin(admin.ModelAdmin):
     )
 
 
-@admin.register(AllowedDebtor)
-class AllowedDebtorAdmin(admin.ModelAdmin):
+@admin.register(Customer)
+class CustomerAdmin(admin.ModelAdmin):
     list_display = (
-        'creditor', 'debtor', 'is_active',
+        'creditor', 'debtor', 'authorized',
     )
     search_fields = (
         'creditor__name', 'creditor__email',
@@ -39,7 +39,7 @@ class AllowedDebtorAdmin(admin.ModelAdmin):
         'creditor', 'debtor',
     )
     list_filter = (
-        'is_active',
+        'authorized',
     )
     ordering = (
         'creditor__id', 'debtor__name',

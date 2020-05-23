@@ -10,7 +10,7 @@ from channels.layers import get_channel_layer
 
 from asgiref.sync import async_to_sync
 
-from .models import Record, Transaction, AllowedDebtor
+from .models import Record, Transaction, Customer
 
 
 class RecordSerializer(serializers.ModelSerializer):
@@ -92,14 +92,14 @@ class DebtorSerializar(serializers.BaseSerializer):
         pass
 
 
-class AllowedDebtorSerializer(serializers.ModelSerializer):
+class CustomerSerializer(serializers.ModelSerializer):
 
     creditor = serializers.HiddenField(
         default=serializers.CurrentUserDefault()
     )
 
     class Meta:
-        model = AllowedDebtor
+        model = Customer
         fields = '__all__'
 
 

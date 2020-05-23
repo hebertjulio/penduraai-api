@@ -61,7 +61,7 @@ class Record(TimeStampedModel):
         verbose_name_plural = _('records')
 
 
-class AllowedDebtor(TimeStampedModel):
+class Customer(TimeStampedModel):
 
     creditor = models.ForeignKey(
         'accounts.User', on_delete=models.CASCADE,
@@ -73,7 +73,7 @@ class AllowedDebtor(TimeStampedModel):
         related_name='alloweddebtor_debtor',
     )
 
-    is_active = models.BooleanField(_('is active'))
+    authorized = models.BooleanField(_('authorized'))
 
     def __str__(self):
         return self.creditor.name
@@ -82,8 +82,8 @@ class AllowedDebtor(TimeStampedModel):
         return self.creditor.name
 
     class Meta:
-        verbose_name = _('allowed debtor')
-        verbose_name_plural = _('allowed debtors')
+        verbose_name = _('customer')
+        verbose_name_plural = _('customers')
         unique_together = [
             ['creditor', 'debtor']
         ]
