@@ -8,7 +8,7 @@ class Storage(ABC):
 
     PREFIX = 'storage'
 
-    def __init__(self, key, value=None):
+    def __init__(self, key):
         host = settings.DICTDB_REDIS_HOST
         port = settings.DICTDB_REDIS_PORT
         db = settings.DICTDB_REDIS_DB
