@@ -1,4 +1,5 @@
 from django.core.mail import send_mail
+from django.core.validators import RegexValidator
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
@@ -69,8 +70,10 @@ class Profile(TimeStampedModel):
         ('guest', _('guest')),
     )
 
+    pin_validator = RegexValidator(r'\d{4}')
+
     name = models.CharField(_('name'), max_length=30)
-    pin = models.CharField(_('pin'), max_length=4)
+    pin = models.CharField(_('pin'), max_length=4, validators=[pin_validator])
 
     accountable = models.ForeignKey(
         'User', on_delete=models.CASCADE,

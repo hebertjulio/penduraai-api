@@ -3,7 +3,7 @@ from django.urls import path
 from . import views
 
 
-app_name = 'cashbooks'
+app_name = 'books'
 
 urlpatterns = [
     path(
@@ -19,11 +19,11 @@ urlpatterns = [
         views.DebtorListView.as_view(),
         name='debtor_list'),
     path(
-        'whitelists',
-        views.WhitelistListView.as_view(),
-        name='whitelist_list'),
+        'customers',
+        views.CustomerListView.as_view(),
+        name='customer_list'),
     path(
-        'whitelists/<int:pk>',
-        views.WhitelistDetailView.as_view(),
-        name='whitelist_detail'),
+        'customers/<int:pk>',
+        views.CustomerDetailView.as_view(),
+        name='customer_detail'),
 ]

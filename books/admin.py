@@ -1,13 +1,13 @@
 from django.contrib import admin
 
-from .models import Record, Whitelist
+from .models import Record, Customer
 
 
 @admin.register(Record)
 class RecordAdmin(admin.ModelAdmin):
     list_display = (
-        'id', 'creditor', 'debtor', 'operation', 'value',
-        'seller', 'buyer',
+        'id', 'creditor', 'seller', 'debtor', 'buyer',
+        'value', 'operation',
     )
     search_fields = (
         'creditor__name', 'creditor__email',
@@ -26,10 +26,10 @@ class RecordAdmin(admin.ModelAdmin):
     )
 
 
-@admin.register(Whitelist)
-class WhitelistAdmin(admin.ModelAdmin):
+@admin.register(Customer)
+class CustomerAdmin(admin.ModelAdmin):
     list_display = (
-        'creditor', 'debtor', 'status',
+        'creditor', 'debtor', 'authorized',
     )
     search_fields = (
         'creditor__name', 'creditor__email',
@@ -39,7 +39,7 @@ class WhitelistAdmin(admin.ModelAdmin):
         'creditor', 'debtor',
     )
     list_filter = (
-        'status',
+        'authorized',
     )
     ordering = (
         'creditor__id', 'debtor__name',

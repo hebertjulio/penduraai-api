@@ -1,5 +1,3 @@
-import uuid
-
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.core.validators import MinValueValidator
@@ -11,17 +9,19 @@ from model_utils import Choices
 class Record(TimeStampedModel):
 
     OPERATION = Choices(
-        ('credit', _('credit')),
-        ('debit', _('debit')),
+        ('payment', _('payment')),
+        ('debt', _('debt')),
     )
 
-    id = models.UUIDField(primary_key=True, editable=False, default=uuid.uuid4)
+    MIN_VALUE = 0.01
+
+    id = models.UUIDField(primary_key=True)
     description = models.CharField(('description'), max_length=255)
 
     value = models.DecimalField(
         _('value'), max_digits=10, decimal_places=2,
         validators=[
-            MinValueValidator(0.01)
+            MinValueValidator(MIN_VALUE)
         ]
     )
 
@@ -61,27 +61,19 @@ class Record(TimeStampedModel):
         verbose_name_plural = _('records')
 
 
-class Whitelist(TimeStampedModel):
-
-    STATUS = Choices(
-        ('authorized', _('authorized')),
-        ('unauthorized', _('unauthorized')),
-    )
+class Customer(TimeStampedModel):
 
     creditor = models.ForeignKey(
         'accounts.User', on_delete=models.CASCADE,
-        related_name='whitelists_creditor',
+        related_name='customer_creditor',
     )
 
     debtor = models.ForeignKey(
         'accounts.User', on_delete=models.CASCADE,
-        related_name='whitelists_debtor',
+        related_name='customer_debtor',
     )
 
-    status = models.CharField(
-        _('status'), max_length=30, db_index=True,
-        choices=STATUS
-    )
+    authorized = models.BooleanField(_('authorized'))
 
     def __str__(self):
         return self.creditor.name
@@ -90,8 +82,8 @@ class Whitelist(TimeStampedModel):
         return self.creditor.name
 
     class Meta:
-        verbose_name = _('whitelist')
-        verbose_name_plural = _('whitelists')
+        verbose_name = _('customer')
+        verbose_name_plural = _('customers')
         unique_together = [
             ['creditor', 'debtor']
         ]
