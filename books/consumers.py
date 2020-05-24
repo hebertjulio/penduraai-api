@@ -5,7 +5,7 @@ from asgiref.sync import sync_to_async
 from channels.exceptions import StopConsumer
 from channels.consumer import AsyncConsumer
 
-from .serializers import TransactionSerializer
+from .serializers import RecordTransactionSerializer
 
 
 class TransactionConsumer(AsyncConsumer):
@@ -21,7 +21,7 @@ class TransactionConsumer(AsyncConsumer):
 
         @sync_to_async
         def persist(data):
-            serializer = TransactionSerializer(data=data)
+            serializer = RecordTransactionSerializer(data=data)
             if serializer.is_valid():
                 return serializer.save()
             return serializer.errors

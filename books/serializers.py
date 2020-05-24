@@ -9,7 +9,7 @@ from accounts.relations import BuyerField, SellerField, CreditorField
 
 from .models import Record, Customer
 from .services import transaction_response
-from .storages import Transaction
+from .dictdb import Storage
 
 from .validators import (
     CreditorAndDebtorSameUserValidator, TransactionIdValidator
@@ -40,7 +40,7 @@ class RecordSerializer(serializers.ModelSerializer):
         ]
 
 
-class TransactionSerializer(serializers.Serializer):
+class RecordTransactionSerializer(serializers.Serializer):
 
     description = serializers.CharField(max_length=255)
     operation = serializers.ChoiceField(choices=Record.OPERATION)
@@ -56,11 +56,10 @@ class TransactionSerializer(serializers.Serializer):
 
     def create(self, validated_data):
         data = self.data.copy()
-        channel_name = data.pop('channel_name')
         data.update({'id': str(uuid.uuid4())})
-        t = Transaction(data['id'])
-        t.channel_name = channel_name
-        t.record = json.dumps(data)
+        db = Storage(data['id'])
+        db['channel_name'] = data.pop('channel_name')
+        db['record'] = json.dumps(data)
         return data
 
     def update(self, instance, validated_data):
