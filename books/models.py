@@ -65,12 +65,12 @@ class Customer(TimeStampedModel):
 
     creditor = models.ForeignKey(
         'accounts.User', on_delete=models.CASCADE,
-        related_name='customer_creditor',
+        related_name='customers_creditor',
     )
 
     debtor = models.ForeignKey(
         'accounts.User', on_delete=models.CASCADE,
-        related_name='customer_debtor',
+        related_name='customers_debtor',
     )
 
     authorized = models.BooleanField(_('authorized'))
