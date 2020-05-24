@@ -1,12 +1,12 @@
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 
-from .storages import Transaction
+from .dictdb import Storage
 
 
 def transaction_response(key, message):
-    t = Transaction(key)
-    channel_name = t.channel_name.decode()
+    db = Storage(key)
+    channel_name = db['channel_name'].decode()
     channel_layer = get_channel_layer()
     async_to_sync(channel_layer.send)(
         channel_name, {
@@ -19,5 +19,4 @@ def transaction_response(key, message):
             'type': 'websocket.disconnect',
         },
     )
-    del t.channel_name
-    del t.record
+    del db

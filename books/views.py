@@ -5,7 +5,8 @@ from django.db.models import Q, Sum, Case, When, F, DecimalField
 from rest_framework import generics
 
 from .models import Record, Customer
-from .storages import Transaction
+from .dictdb import Storage
+
 from .serializers import (
     RecordSerializer, CreditorSerializar, DebtorSerializar,
     CustomerSerializer
@@ -25,8 +26,8 @@ class RecordListView(generics.ListCreateAPIView):
         return qs
 
     def perform_create(self, serializer):
-        t = Transaction(self.request.data['id'])
-        data = json.loads(t.record)
+        db = Storage(self.request.data['id'])
+        data = json.loads(db['record'])
         data.update({'debtor': self.request.user})
         field = {
             'creditor': 'creditor_id',
