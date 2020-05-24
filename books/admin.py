@@ -22,7 +22,7 @@ class RecordAdmin(admin.ModelAdmin):
         'operation',
     )
     ordering = (
-        'created',
+        '-created',
     )
 
 

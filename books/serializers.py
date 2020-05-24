@@ -58,8 +58,10 @@ class RecordTransactionSerializer(serializers.Serializer):
         data = self.data.copy()
         data.update({'id': str(uuid.uuid4())})
         db = Storage(data['id'])
-        db['channel_name'] = data.pop('channel_name')
-        db['record'] = json.dumps(data)
+        channel_name = Storage.Item(data.pop('channel_name'), 86460)
+        record = Storage.Item(json.dumps(data), 86400)
+        db['channel_name'] = channel_name
+        db['record'] = record
         return data
 
     def update(self, instance, validated_data):

@@ -6,6 +6,21 @@ from django.conf import settings
 
 class Storage(ABC):
 
+    class Item:
+
+        def __init__(self, value, expire=60):
+            self.value = value
+            self.expire = expire
+
+        def __getattr__(self, instance):
+            return self.value
+
+        def __str__(self):
+            return self.value
+
+        def __repr__(self):
+            return self.value
+
     PREFIX = 'storage'
 
     def __init__(self, uuid):
@@ -16,8 +31,10 @@ class Storage(ABC):
         self.uuid = uuid
 
     def __setitem__(self, key, value):
+        if not isinstance(value, Storage.Item):
+            raise TypeError('value must be Storage.Item')
         name = ':'.join([self.PREFIX, self.uuid, key])
-        self.db.set(name, value)
+        self.db.set(name, str(value), ex=value.expire)
 
     def __getitem__(self, key):
         name = ':'.join([self.PREFIX, self.uuid, key])
