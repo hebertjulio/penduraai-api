@@ -27,17 +27,17 @@ class RecordListView(generics.ListCreateAPIView):
     def perform_create(self, serializer):
         t = Transaction(self.request.data['id'])
         data = json.loads(t.record)
-        # change dict keys
-        fields = {
+        data.update({'debtor': self.request.user})
+        field = {
             'creditor': 'creditor_id',
             'seller': 'seller_id',
-            'description': 'description',
-            'id': 'id',
-            'value': 'value',
-            'operation': 'operation',
         }
-        data = dict((fields[key], value) for (key, value) in data.items())
-        data.update({'debtor': self.request.user})
+        data = {
+            **{field[k]: v for k, v in data.items()
+                if k in field.keys()},
+            **{k: v for k, v in data.items()
+                if k not in field.keys()}
+        }
         serializer.save(**data)
 
 
