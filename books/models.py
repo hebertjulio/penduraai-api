@@ -1,5 +1,3 @@
-import uuid
-
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.core.validators import MinValueValidator
@@ -15,13 +13,15 @@ class Record(TimeStampedModel):
         ('debt', _('debt')),
     )
 
-    id = models.UUIDField(primary_key=True, editable=False, default=uuid.uuid4)
+    MIN_VALUE = 0.01
+
+    id = models.UUIDField(primary_key=True)
     description = models.CharField(('description'), max_length=255)
 
     value = models.DecimalField(
         _('value'), max_digits=10, decimal_places=2,
         validators=[
-            MinValueValidator(0.01)
+            MinValueValidator(MIN_VALUE)
         ]
     )
 
@@ -65,12 +65,12 @@ class Customer(TimeStampedModel):
 
     creditor = models.ForeignKey(
         'accounts.User', on_delete=models.CASCADE,
-        related_name='alloweddebtor_creditor',
+        related_name='customer_creditor',
     )
 
     debtor = models.ForeignKey(
         'accounts.User', on_delete=models.CASCADE,
-        related_name='alloweddebtor_debtor',
+        related_name='customer_debtor',
     )
 
     authorized = models.BooleanField(_('authorized'))
@@ -87,14 +87,3 @@ class Customer(TimeStampedModel):
         unique_together = [
             ['creditor', 'debtor']
         ]
-
-
-class Transaction(TimeStampedModel):
-
-    id = models.UUIDField(primary_key=True, editable=False, default=uuid.uuid4)
-    finished = models.BooleanField(_('finished'), default=False)
-    expired_at = models.DateTimeField(_('expired at'), db_index=True)
-
-    class Meta:
-        verbose_name = _('transaction')
-        verbose_name_plural = _('transactions')

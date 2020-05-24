@@ -6,8 +6,8 @@ from .models import Record, Customer
 @admin.register(Record)
 class RecordAdmin(admin.ModelAdmin):
     list_display = (
-        'id', 'creditor', 'debtor', 'operation', 'value',
-        'seller', 'buyer',
+        'id', 'creditor', 'seller', 'debtor', 'buyer',
+        'value', 'operation',
     )
     search_fields = (
         'creditor__name', 'creditor__email',

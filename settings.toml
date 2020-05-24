@@ -1,11 +1,14 @@
 [development]
+
 DEBUG = true
 
-# https://docs.djangoproject.com/en/3.0/ref/settings/#databases
 DATABASES__default__ENGINE = "django.db.backends.sqlite3"
 DATABASES__default__NAME = "db.sqlite3"
 
-CHANNEL_LAYERS_HOSTS = "@merge [('localhost', 6379)]"
+CHANNEL_LAYERS__default__CONFIG__hosts = ["redis://localhost:6379/0"]
 
-[production]
-DEBUG = false
+CACHES__default__LOCATION = "redis://localhost:6379/1"
+
+DICTDB_REDIS_HOST = 'localhost'
+DICTDB_REDIS_PORT = 6379
+DICTDB_REDIS_DB = 2

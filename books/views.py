@@ -1,12 +1,14 @@
+import json
+
 from django.db.models import Q, Sum, Case, When, F, DecimalField
 
 from rest_framework import generics
 
 from .models import Record, Customer
-
+from .storages import Transaction
 from .serializers import (
     RecordSerializer, CreditorSerializar, DebtorSerializar,
-    CustomerSerializer, TransactionSerializer
+    CustomerSerializer
 )
 
 
@@ -21,6 +23,22 @@ class RecordListView(generics.ListCreateAPIView):
         user = self.request.user
         qs = Record.objects.filter(Q(creditor=user) | Q(debtor=user))
         return qs
+
+    def perform_create(self, serializer):
+        t = Transaction(self.request.data['id'])
+        data = json.loads(t.record)
+        # change dict keys
+        fields = {
+            'creditor': 'creditor_id',
+            'seller': 'seller_id',
+            'description': 'description',
+            'id': 'id',
+            'value': 'value',
+            'operation': 'operation',
+        }
+        data = dict((fields[key], value) for (key, value) in data.items())
+        data.update({'debtor': self.request.user})
+        serializer.save(**data)
 
 
 class CreditorListView(generics.ListAPIView):
@@ -78,8 +96,3 @@ class CustomerDetailView(generics.RetrieveUpdateDestroyAPIView):
         user = self.request.user
         qs = Customer.objects.filter(creditor=user)
         return qs
-
-
-class TransactionListView(generics.CreateAPIView):
-
-    serializer_class = TransactionSerializer

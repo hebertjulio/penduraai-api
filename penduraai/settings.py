@@ -32,7 +32,7 @@ INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
-    'django.contrib.sessions',
+    # 'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
@@ -40,7 +40,7 @@ INSTALLED_APPS = [
     'django_filters',
     'channels',
     'accounts',
-    'cashbooks',
+    'books',
 ]
 
 MIDDLEWARE = [
@@ -82,13 +82,13 @@ ASGI_APPLICATION = 'penduraai.routing.application'
 
 # https://channels.readthedocs.io/en/latest/topics/channel_layers.html
 
-CHANNEL_LAYERS_HOSTS = []
-
 CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels_redis.core.RedisChannelLayer',
         'CONFIG': {
-            'hosts': CHANNEL_LAYERS_HOSTS,
+            'hosts': [],
+            'prefix': 'channels',
+            'symmetric_encryption_keys': []
         },
     },
 }
@@ -177,6 +177,25 @@ SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': datetime.timedelta(days=1),
     'REFRESH_TOKEN_LIFETIME': datetime.timedelta(days=60),
 }
+
+
+# http://jazzband.github.io/django-redis/latest/
+
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
+    }
+}
+
+
+# https://docs.djangoproject.com/en/3.0/topics/http/sessions/
+
+SESSION_ENGINE = "django.contrib.sessions.backends.cache"
+SESSION_CACHE_ALIAS = "default"
 
 
 # HERE STARTS DYNACONF EXTENSION LOAD (Keep at the very bottom of settings.py)
