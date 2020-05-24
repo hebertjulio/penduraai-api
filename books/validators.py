@@ -14,7 +14,7 @@ class TransactionIdValidator:
     def __call__(self, value, serializer_field):
         request = serializer_field.context['request']
         db = Storage(request.data['id'])
-        if hasattr(db, 'record'):
+        if 'record' in db:
             message = _('id is a non-existent transaction.')
             raise serializers.ValidationError(message)
 
