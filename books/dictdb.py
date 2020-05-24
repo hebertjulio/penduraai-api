@@ -1,10 +1,9 @@
-from abc import ABC
 from redis import Redis
 
 from django.conf import settings
 
 
-class Storage(ABC):
+class Storage:
 
     class Item:
 
