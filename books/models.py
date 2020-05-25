@@ -1,5 +1,3 @@
-import uuid
-
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.core.validators import MinValueValidator
@@ -17,7 +15,7 @@ class Record(TimeStampedModel):
 
     MIN_VALUE = 0.01
 
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    id = models.UUIDField(primary_key=True)
     description = models.CharField(('description'), max_length=255)
 
     value = models.DecimalField(
