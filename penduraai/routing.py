@@ -1,10 +1,10 @@
 from channels.routing import ProtocolTypeRouter, URLRouter
 
-from books.routing import urlpatterns as books_urlpatterns
+from books import routing as books
 
 
 application = ProtocolTypeRouter({
     'websocket': URLRouter(
-        books_urlpatterns
+        books.routing
     )
 })

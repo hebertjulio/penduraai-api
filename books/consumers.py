@@ -1,4 +1,5 @@
 import json
+import uuid
 
 from asgiref.sync import sync_to_async
 
@@ -6,9 +7,10 @@ from channels.exceptions import StopConsumer
 from channels.consumer import AsyncConsumer
 
 from .serializers import RecordTransactionSerializer
+from .storages import Transaction
 
 
-class TransactionConsumer(AsyncConsumer):
+class RecordTransactionConsumer(AsyncConsumer):
 
     http_user = False
 
@@ -20,16 +22,19 @@ class TransactionConsumer(AsyncConsumer):
     async def websocket_receive(self, event):
 
         @sync_to_async
-        def persist(data):
+        def persist(data, channel_name):
             serializer = RecordTransactionSerializer(data=data)
             if serializer.is_valid():
-                return serializer.save()
+                tran = Transaction(str(uuid.uuid4()))
+                tran.channel_name = channel_name
+                tran.data = json.dumps(data)
+                serializer.save()
+                return {'transaction': tran.key}
             return serializer.errors
 
         if 'text' in event and event['text']:
             data = json.loads(event['text'])
-            data.update({'channel_name': self.channel_name})
-            data = await persist(data)
+            data = await persist(data, self.channel_name)
             await self.send({
                 'type': 'websocket.send',
                 'text': json.dumps(data),

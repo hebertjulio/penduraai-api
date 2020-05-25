@@ -1,30 +1,28 @@
-import uuid
-import json
-
-from django.db import transaction
+from django.db.transaction import atomic
 
 from rest_framework import serializers
 
-from accounts.relations import BuyerField, SellerField, CreditorField
+from accounts.relations import BuyerField, SellerField
 
 from .models import Record, Customer
 from .services import transaction_response
-from .dictdb import Storage
 
 from .validators import (
-    CreditorAndDebtorSameUserValidator, TransactionIdValidator
+    CreditorAndDebtorSameUserValidator, TransactionExistValidator
 )
 
 
 class RecordSerializer(serializers.ModelSerializer):
 
+    transaction = serializers.CharField(max_length=255, write_only=True)
     buyer = BuyerField()
 
-    @transaction.atomic
+    @atomic
     def create(self, validated_data):
+        transaction = validated_data.pop('transaction')
         obj = Record(**validated_data)
         obj.save()
-        transaction_response(str(obj.id), 'ACCEPTED')
+        transaction_response(transaction, 'ACCEPTED')
         return obj
 
     class Meta:
@@ -35,37 +33,23 @@ class RecordSerializer(serializers.ModelSerializer):
             'description', 'value',
         ]
         validators = [
-            TransactionIdValidator(),
+            TransactionExistValidator(),
             CreditorAndDebtorSameUserValidator(),
         ]
 
 
-class RecordTransactionSerializer(serializers.Serializer):
+class RecordTransactionSerializer(serializers.ModelSerializer):
 
-    description = serializers.CharField(max_length=255)
-    operation = serializers.ChoiceField(choices=Record.OPERATION)
-
-    creditor = CreditorField()
     seller = SellerField()
 
-    value = serializers.DecimalField(
-        max_digits=10, decimal_places=2, min_value=Record.MIN_VALUE
-    )
-
-    channel_name = serializers.CharField()
-
     def create(self, validated_data):
-        data = self.data.copy()
-        data.update({'id': str(uuid.uuid4())})
-        db = Storage(data['id'])
-        channel_name = Storage.Item(data.pop('channel_name'), 86460)
-        record = Storage.Item(json.dumps(data), 86400)
-        db['channel_name'] = channel_name
-        db['record'] = record
-        return data
+        return validated_data
 
-    def update(self, instance, validated_data):
-        pass
+    class Meta:
+        model = Record
+        exclude = [
+            'debtor', 'buyer'
+        ]
 
 
 class CreditorSerializar(serializers.BaseSerializer):
