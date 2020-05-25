@@ -4,18 +4,18 @@ from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers
 
-from .dictdb import Storage
+from .storages import Transaction
 
 
-class TransactionIdValidator:
+class TransactionExistValidator:
 
     requires_context = True
 
     def __call__(self, value, serializer_field):
         request = serializer_field.context['request']
-        db = Storage(request.data['id'])
-        if 'record' in db:
-            message = _('id is a non-existent transaction.')
+        tran = Transaction(request.data['transaction'])
+        if not tran.exist():
+            message = _('transaction non-existent.')
             raise serializers.ValidationError(message)
 
 
@@ -25,8 +25,8 @@ class CreditorAndDebtorSameUserValidator:
 
     def __call__(self, value, serializer_field):
         request = serializer_field.context['request']
-        db = Storage(request.data['id'])
-        record = json.loads(db['record'])
-        if int(record['creditor']) == request.user.id:
+        tran = Transaction(request.data['transaction'])
+        data = json.loads(tran.data)
+        if int(data['creditor_id']) == request.user.id:
             message = _('creditor and debtor are the same user.')
             raise serializers.ValidationError(message)

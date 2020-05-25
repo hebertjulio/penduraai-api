@@ -3,6 +3,6 @@ from django.urls import path
 from .consumers import TransactionConsumer
 
 
-urlpatterns = [
+routing = [
     path('transactions', TransactionConsumer),
 ]
