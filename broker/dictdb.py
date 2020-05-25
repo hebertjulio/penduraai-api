@@ -13,11 +13,13 @@ class Storage:
         db=settings.DICTDB_REDIS_DB
     )
 
+    expire = None
     key = None
     values = {}
 
     def __init__(self, key, expire=60):
         self.key = key
+        self.expire = expire
 
     def __setattr__(self, attr, value):
         if attr in Storage.__dict__.keys():
