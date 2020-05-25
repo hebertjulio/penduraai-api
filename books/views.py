@@ -29,16 +29,6 @@ class RecordListView(generics.ListCreateAPIView):
         tran = Transaction(self.request.data['transaction'])
         data = json.loads(tran.data)
         data.update({'debtor': self.request.user})
-        field = {
-            'creditor': 'creditor_id',
-            'seller': 'seller_id',
-        }
-        data = {
-            **{field[k]: v for k, v in data.items()
-                if k in field.keys()},
-            **{k: v for k, v in data.items()
-                if k not in field.keys()}
-        }
         serializer.save(**data)
 
 

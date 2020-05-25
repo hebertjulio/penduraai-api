@@ -38,7 +38,7 @@ class RecordSerializer(serializers.ModelSerializer):
         ]
 
 
-class RecordTransactionSerializer(serializers.ModelSerializer):
+class RecordCreateSerializer(serializers.ModelSerializer):
 
     seller = SellerField()
 

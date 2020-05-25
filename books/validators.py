@@ -27,6 +27,6 @@ class CreditorAndDebtorSameUserValidator:
         request = serializer_field.context['request']
         tran = Transaction(request.data['transaction'])
         data = json.loads(tran.data)
-        if int(data['creditor']) == request.user.id:
+        if int(data['creditor_id']) == request.user.id:
             message = _('creditor and debtor are the same user.')
             raise serializers.ValidationError(message)

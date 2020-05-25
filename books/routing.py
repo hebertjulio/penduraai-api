@@ -1,8 +1,8 @@
 from django.urls import path
 
-from .consumers import RecordTransactionConsumer
+from .consumers import TransactionConsumer
 
 
 routing = [
-    path('record-transaction', RecordTransactionConsumer),
+    path('transactions', TransactionConsumer),
 ]
