@@ -18,6 +18,9 @@ class TransactionConsumer(AsyncConsumer):
         })
 
     async def websocket_receive(self, event):
+        if ('text' not in event
+                or not event['text'].strip()):
+            return
 
         @sync_to_async
         def persist(data):
@@ -27,21 +30,23 @@ class TransactionConsumer(AsyncConsumer):
                 return data
             return serializer.errors
 
-        if 'text' in event and event['text']:
-            data = json.loads(event['text'])
-            data.update({'channel_name': self.channel_name})
-            data = await persist(data)
-            await self.send({
-                'type': 'websocket.send',
-                'text': json.dumps(data),
-            })
+        data = json.loads(event['text'])
+        data.update({'channel_name': self.channel_name})
+        data = await persist(data)
+        await self.send({
+            'type': 'websocket.send',
+            'text': json.dumps(data),
+        })
 
     async def websocket_send(self, event):
-        if 'text' in event and event['text']:
-            await self.send({
-                'type': 'websocket.send',
-                'text': event['text'],
-            })
+        if ('text' not in event
+                or not event['text'].strip()):
+            return
+
+        await self.send({
+            'type': 'websocket.send',
+            'text': event['text'],
+        })
 
     async def websocket_disconnect(self, event):
         await self.send({
