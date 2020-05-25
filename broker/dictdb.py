@@ -3,9 +3,9 @@ import redis
 from django.conf import settings
 
 
-class Storage:
+class Transaction:
 
-    PREFIX = 'storage'
+    PREFIX = 'transaction'
 
     db = redis.Redis(
         host=settings.DICTDB_REDIS_HOST,
@@ -13,47 +13,45 @@ class Storage:
         db=settings.DICTDB_REDIS_DB
     )
 
-    expire = None
-    key = None
+    code = None
     values = {}
 
-    def __init__(self, key, expire=60):
-        self.key = key
-        self.expire = expire
+    def __init__(self, code):
+        self.code = code
 
     def __setattr__(self, attr, value):
-        if attr in Storage.__dict__.keys():
+        if attr in Transaction.__dict__.keys():
             self.__dict__[attr] = value
         else:
             self.values[attr] = value
 
     def __getattr__(self, attr):
-        if attr in Storage.__dict__.keys():
+        if attr in Transaction.__dict__.keys():
             return self.__dict__[attr]
-        name = ':'.join([self.PREFIX, self.key, attr])
+        name = ':'.join([self.PREFIX, self.code, attr])
         value = self.db.get(name)
         return value
 
     def __delattr__(self, attr):
-        name = ':'.join([self.PREFIX, self.key, attr])
+        name = ':'.join([self.PREFIX, self.code, attr])
         self.db.delete(*[name])
 
     def __del__(self):
-        names = [':'.join([self.PREFIX, self.key])]
+        names = [':'.join([self.PREFIX, self.code])]
         self.db.delete(*names)
 
     @property
     def ttl(self, attr='*'):
-        pattern = ':'.join([self.PREFIX, self.key, attr])
+        pattern = ':'.join([self.PREFIX, self.code, attr])
         names = self.db.keys(pattern)
         return min(*[self.db.ttl(name) for name in names])
 
     def exist(self, attr='*'):
-        pattern = ':'.join([self.PREFIX, self.key, attr])
+        pattern = ':'.join([self.PREFIX, self.code, attr])
         count = len(self.db.keys(pattern))
         return count > 0
 
     def save(self):
         for attr, value in self.values.items():
-            name = ':'.join([self.PREFIX, self.key, attr])
-            self.db.set(name, value, ex=self.expire)
+            name = ':'.join([self.PREFIX, self.code, attr])
+            self.db.set(name, value, ex=60*10)

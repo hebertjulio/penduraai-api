@@ -26,13 +26,11 @@ class TransactionConsumer(AsyncConsumer):
         def persist(data):
             serializer = TransactionSerializer(data=data)
             if serializer.is_valid():
-                data = serializer.save()
-                return data
+                return serializer.save()
             return serializer.errors
 
-        data = json.loads(event['text'])
-        data.update({'channel_name': self.channel_name})
-        data = await persist(data)
+        data = await persist(json.loads(event['text']))
+
         await self.send({
             'type': 'websocket.send',
             'text': json.dumps(data),
