@@ -34,6 +34,10 @@ class Storage:
         value = self.db.get(name)
         return value
 
+    def __delattr__(self, attr):
+        name = ':'.join([self.PREFIX, self.key, attr])
+        self.db.delete(*[name])
+
     def __del__(self):
         names = [':'.join([self.PREFIX, self.key])]
         self.db.delete(*names)
