@@ -14,8 +14,8 @@ class TransactionExistValidator:
     def __call__(self, value, serializer_field):
         request = serializer_field.context['request']
         tran = Transaction(request.data['transaction'])
-        if tran.exist():
-            message = _('id is a non-existent transaction.')
+        if not tran.exist():
+            message = _('transaction non-existent.')
             raise serializers.ValidationError(message)
 
 
