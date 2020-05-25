@@ -6,7 +6,7 @@ from model_utils import Choices
 
 from books.serializers import RecordCreateSerializer
 
-from .storages import Transaction
+from .dictdb import Storage
 from .services import translate_fk_names
 
 
@@ -22,13 +22,14 @@ class TransactionSerializer(serializers.Serializer):
     channel_name = serializers.CharField(max_length=255, write_only=True)
 
     def create(self, validated_data):
-        transaction = str(uuid.uuid4())
-        tran = Transaction(transaction)
-        tran.channel_name = validated_data['channel_name']
+        key = str(uuid.uuid4())
+        stg = Storage(key)
+        stg.channel_name = validated_data['channel_name']
         data = translate_fk_names(validated_data['data'])
-        tran.data = json.dumps(data)
+        stg.record = json.dumps(data)
+        stg.save()
         return {
-            'transaction': transaction
+            'transaction': key
         }
 
     def update(self, instance, validated_data):

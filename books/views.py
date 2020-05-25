@@ -5,7 +5,7 @@ from django.db import transaction
 
 from rest_framework import generics
 
-from broker.storages import Transaction
+from broker.dictdb import Storage
 
 from .models import Record, Customer
 from .services import transaction_response
@@ -30,12 +30,12 @@ class RecordListView(generics.ListCreateAPIView):
 
     @transaction.atomic
     def perform_create(self, serializer):
-        tran = Transaction(self.request.data['id'])
-        data = json.loads(tran.data)
+        stg = Storage(self.request.data['id'])
+        data = json.loads(stg.record)
         data.update({'debtor': self.request.user})
         serializer.save(**data)
-        transaction_response(tran.channel_name.decode(), 'ACCEPTED')
-        del tran
+        transaction_response(stg.channel_name.decode(), 'ACCEPTED')
+        del stg
 
 
 class CreditorListView(generics.ListAPIView):

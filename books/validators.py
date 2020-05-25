@@ -4,7 +4,7 @@ from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers
 
-from broker.storages import Transaction
+from broker.dictdb import Storage
 
 
 class CreditorAndDebtorSameUserValidator:
@@ -13,8 +13,8 @@ class CreditorAndDebtorSameUserValidator:
 
     def __call__(self, value, serializer_field):
         request = serializer_field.context['request']
-        tran = Transaction(request.data['id'])
-        data = json.loads(tran.data)
+        stg = Storage(request.data['id'])
+        data = json.loads(stg.record)
         if int(data['creditor_id']) == request.user.id:
             message = _('creditor and debtor are the same user.')
             raise serializers.ValidationError(message)
