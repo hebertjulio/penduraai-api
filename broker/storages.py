@@ -46,8 +46,7 @@ class Transaction:
 
     def exist(self):
         pattern = ':'.join([self.PREFIX, self.key, '*'])
-        names = self.db.keys(pattern)
-        count = self.db.exists(*names)
+        count = len(self.db.keys(pattern))
         return count == 2
 
     def __del__(self):

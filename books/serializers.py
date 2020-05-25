@@ -1,28 +1,26 @@
-from django.db.transaction import atomic
-
 from rest_framework import serializers
 
 from accounts.relations import BuyerField, SellerField
+from broker.validators import IdValidator
 
 from .models import Record, Customer
-from .services import transaction_response
 
 from .validators import (
-    CreditorAndDebtorSameUserValidator, TransactionExistValidator
+    CreditorAndDebtorSameUserValidator
 )
 
 
 class RecordSerializer(serializers.ModelSerializer):
 
-    transaction = serializers.CharField(max_length=255, write_only=True)
+    id = serializers.UUIDField(
+        write_only=True, validators=[IdValidator()]
+    )
+
     buyer = BuyerField()
 
-    @atomic
     def create(self, validated_data):
-        transaction = validated_data.pop('transaction')
         obj = Record(**validated_data)
         obj.save()
-        transaction_response(transaction, 'ACCEPTED')
         return obj
 
     class Meta:
@@ -33,7 +31,6 @@ class RecordSerializer(serializers.ModelSerializer):
             'description', 'value',
         ]
         validators = [
-            TransactionExistValidator(),
             CreditorAndDebtorSameUserValidator(),
         ]
 

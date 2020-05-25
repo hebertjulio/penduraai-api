@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'channels',
     'accounts',
     'books',
+    'broker',
 ]
 
 MIDDLEWARE = [
