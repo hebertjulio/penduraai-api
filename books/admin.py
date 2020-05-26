@@ -7,7 +7,7 @@ from .models import Record, Customer
 class RecordAdmin(admin.ModelAdmin):
     list_display = (
         'id', 'creditor', 'seller', 'debtor', 'buyer',
-        'value', 'operation',
+        'value', 'operation', 'status',
     )
     search_fields = (
         'creditor__name', 'creditor__email',
@@ -19,7 +19,7 @@ class RecordAdmin(admin.ModelAdmin):
         'buyer',
     )
     list_filter = (
-        'operation',
+        'operation', 'status',
     )
     ordering = (
         '-created',
