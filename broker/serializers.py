@@ -1,10 +1,8 @@
-import uuid
 import json
 
 from rest_framework import serializers
 
 from .dictdb import Transaction
-from .services import translate_fk_names
 
 
 class TransactionSerializer(serializers.Serializer):
@@ -13,10 +11,9 @@ class TransactionSerializer(serializers.Serializer):
     data = serializers.JSONField(write_only=True)
 
     def create(self, validated_data):
-        tran = Transaction(code=str(uuid.uuid4()))
-        data = translate_fk_names(validated_data['data'])
+        data = validated_data['data']
+        tran = Transaction()
         tran.data = json.dumps(data)
-        tran.save()
         return {
             'transaction': tran.code
         }

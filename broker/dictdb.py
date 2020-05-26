@@ -1,4 +1,5 @@
 import redis
+import uuid
 
 from django.conf import settings
 
@@ -13,45 +14,56 @@ class Transaction:
         db=settings.DICTDB_REDIS_DB
     )
 
-    code = None
-    values = {}
-
-    def __init__(self, code):
+    def __init__(self, code=str(uuid.uuid4()), expire=60*10):
         self.code = code
+        self.expire = expire
 
-    def __setattr__(self, attr, value):
-        if attr in Transaction.__dict__.keys():
-            self.__dict__[attr] = value
-        else:
-            self.values[attr] = value
+    @property
+    def data(self):
+        name = ':'.join([self.PREFIX, self.code])
+        data = self.db.get(name)
+        return data
 
-    def __getattr__(self, attr):
-        if attr in Transaction.__dict__.keys():
-            return self.__dict__[attr]
-        name = ':'.join([self.PREFIX, self.code, attr])
-        value = self.db.get(name)
-        return value
+    @data.setter
+    def data(self, data):
+        name = ':'.join([self.PREFIX, self.code])
+        self.db.set(name, data, ex=self.expire)
 
-    def __delattr__(self, attr):
-        name = ':'.join([self.PREFIX, self.code, attr])
-        self.db.delete(*[name])
+    @data.deleter
+    def data(self):
+        raise NotImplementedError
+
+    @property
+    def ttl(self):
+        name = ':'.join([self.PREFIX, self.code])
+        return self.db.ttl(name)
+
+    @ttl.setter
+    def ttl(self, expire):
+        name = ':'.join([self.PREFIX, self.code])
+        self.db.expire(name, expire)
+
+    @ttl.deleter
+    def ttl(self):
+        raise NotImplementedError
+
+    @property
+    def code(self):
+        return self.code
+
+    @code.setter
+    def code(self, _):
+        raise NotImplementedError
+
+    @code.deleter
+    def code(self):
+        raise NotImplementedError
+
+    def exist(self):
+        pattern = ':'.join([self.PREFIX, self.code])
+        count = len(self.db.keys(pattern))
+        return count == 1
 
     def __del__(self):
         names = [':'.join([self.PREFIX, self.code])]
         self.db.delete(*names)
-
-    @property
-    def ttl(self, attr='*'):
-        pattern = ':'.join([self.PREFIX, self.code, attr])
-        names = self.db.keys(pattern)
-        return min(*[self.db.ttl(name) for name in names])
-
-    def exist(self, attr='*'):
-        pattern = ':'.join([self.PREFIX, self.code, attr])
-        count = len(self.db.keys(pattern))
-        return count > 0
-
-    def save(self):
-        for attr, value in self.values.items():
-            name = ':'.join([self.PREFIX, self.code, attr])
-            self.db.set(name, value, ex=60*10)

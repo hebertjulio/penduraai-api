@@ -13,6 +13,11 @@ class Record(TimeStampedModel):
         ('debt', _('debt')),
     )
 
+    STATUS = Choices(
+        ('accepted', _('accepted')),
+        ('rejected', _('rejected')),
+    )
+
     MIN_VALUE = 0.01
 
     id = models.UUIDField(primary_key=True)
@@ -48,6 +53,11 @@ class Record(TimeStampedModel):
     buyer = models.ForeignKey(
         'accounts.Profile', on_delete=models.CASCADE,
         related_name='records_buyer',
+    )
+
+    status = models.CharField(
+        _('status'), max_length=30, db_index=True,
+        choices=STATUS
     )
 
     def __str__(self):
