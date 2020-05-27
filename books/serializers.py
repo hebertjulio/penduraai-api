@@ -1,25 +1,24 @@
 from rest_framework import serializers
 
 from accounts.relations import BuyerField, SellerField
-from broker.validators import IdValidator
+from broker.serializers import BaseTransactionSerializer
 
 from .models import Record, Customer
 
 from .validators import (
-    CreditorAndDebtorSameUserValidator
-)
+    CreditorAndDebtorSameUserValidator)
 
 
-class RecordSerializer(serializers.ModelSerializer):
-
-    id = serializers.UUIDField(
-        write_only=True, validators=[IdValidator()]
-    )
+class RecordSerializer(BaseTransactionSerializer, serializers.ModelSerializer):
 
     buyer = BuyerField()
+    seller = SellerField()
 
     def create(self, validated_data):
+        del validated_data['transaction']
+        request = self.context['request']
         obj = Record(**validated_data)
+        obj.debtor = request.user
         obj.save()
         return obj
 
@@ -27,25 +26,14 @@ class RecordSerializer(serializers.ModelSerializer):
         model = Record
         fields = '__all__'
         read_only_fields = [
-            'debtor', 'creditor', 'seller', 'operation',
-            'description', 'value',
+            'debtor',
         ]
         validators = [
-            CreditorAndDebtorSameUserValidator(),
+            CreditorAndDebtorSameUserValidator()
         ]
-
-
-class RecordCreateSerializer(serializers.ModelSerializer):
-
-    seller = SellerField()
-
-    def create(self, validated_data):
-        return validated_data
-
-    class Meta:
-        model = Record
-        exclude = [
-            'debtor', 'buyer'
+        signature_fields = [
+            'creditor', 'seller', 'operation', 'value',
+            'description',
         ]
 
 

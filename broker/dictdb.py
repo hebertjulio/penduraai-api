@@ -1,59 +1,115 @@
 import redis
+import uuid
+import json
 
 from django.conf import settings
 
+from .services import generate_signature
 
-class Storage:
 
-    PREFIX = 'storage'
+class Transaction:
 
-    db = redis.Redis(
-        host=settings.DICTDB_REDIS_HOST,
-        port=settings.DICTDB_REDIS_PORT,
-        db=settings.DICTDB_REDIS_DB
-    )
+    __PREFIX = 'transaction'
 
-    expire = None
-    key = None
-    values = {}
-
-    def __init__(self, key, expire=60):
-        self.key = key
-        self.expire = expire
-
-    def __setattr__(self, attr, value):
-        if attr in Storage.__dict__.keys():
-            self.__dict__[attr] = value
-        else:
-            self.values[attr] = value
-
-    def __getattr__(self, attr):
-        if attr in Storage.__dict__.keys():
-            return self.__dict__[attr]
-        name = ':'.join([self.PREFIX, self.key, attr])
-        value = self.db.get(name)
-        return value
-
-    def __delattr__(self, attr):
-        name = ':'.join([self.PREFIX, self.key, attr])
-        self.db.delete(*[name])
-
-    def __del__(self):
-        names = [':'.join([self.PREFIX, self.key])]
-        self.db.delete(*names)
+    def __init__(self, code=str(uuid.uuid4())):
+        self.__db = redis.Redis(
+            host=settings.DICTDB_REDIS_HOST,
+            port=settings.DICTDB_REDIS_PORT,
+            db=settings.DICTDB_REDIS_DB
+        )
+        self.__code = code
 
     @property
-    def ttl(self, attr='*'):
-        pattern = ':'.join([self.PREFIX, self.key, attr])
-        names = self.db.keys(pattern)
-        return min(*[self.db.ttl(name) for name in names])
+    def name(self):
+        return ':'.join([self.__PREFIX, self.code])
 
-    def exist(self, attr='*'):
-        pattern = ':'.join([self.PREFIX, self.key, attr])
-        count = len(self.db.keys(pattern))
-        return count > 0
+    @name.setter
+    def name(self, _):
+        raise NotImplementedError
 
-    def save(self):
-        for attr, value in self.values.items():
-            name = ':'.join([self.PREFIX, self.key, attr])
-            self.db.set(name, value, ex=self.expire)
+    @name.deleter
+    def name(self):
+        raise NotImplementedError
+
+    @property
+    def data(self):
+        data = self.__db.get(self.name) or '{}'
+        data = json.loads(data)
+        return data
+
+    @data.setter
+    def data(self, value):
+        if not isinstance(value, dict):
+            raise ValueError
+        value = json.dumps(value)
+        ex = self.ttl if self.ttl > 0 else 60*2
+        self.__db.set(self.name, value, ex=ex)
+
+    @data.deleter
+    def data(self):
+        raise NotImplementedError
+
+    @property
+    def code(self):
+        return self.__code
+
+    @code.setter
+    def code(self, value):
+        raise NotImplementedError
+
+    @code.deleter
+    def code(self):
+        raise NotImplementedError
+
+    @property
+    def expire(self):
+        raise NotImplementedError
+
+    @expire.setter
+    def expire(self, value):
+        self.__db.expire(self.name, value)
+
+    @expire.deleter
+    def expire(self, value):
+        raise NotImplementedError
+
+    @property
+    def ttl(self):
+        return self.__db.ttl(self.name)
+
+    @ttl.setter
+    def ttl(self, _):
+        raise NotImplementedError
+
+    @ttl.deleter
+    def ttl(self):
+        raise NotImplementedError
+
+    @property
+    def signature(self):
+        signature = generate_signature(self.code, self.data)
+        return signature
+
+    @signature.setter
+    def signature(self, _):
+        raise NotImplementedError
+
+    @signature.deleter
+    def signature(self):
+        raise NotImplementedError
+
+    def exist(self):
+        keys = self.__db.keys(self.name)
+        count = len(keys)
+        return count == 1
+
+    def delete(self):
+        self.__db.delete(*[self.name])
+
+    def __str__(self):
+        data = json.dumps(self.data)
+        return '%s %s' % (self.name, data)
+
+    def __repr__(self):
+        data = json.dumps(self.data)
+        return '%s %s' % (self.name, data)

@@ -1,14 +1,8 @@
-import json
-
 from django.db.models import Q, Sum, Case, When, F, DecimalField
-from django.db import transaction
 
 from rest_framework import generics
 
-from broker.dictdb import Storage
-
 from .models import Record, Customer
-from .services import transaction_response
 
 from .serializers import (
     RecordSerializer, CreditorSerializar, DebtorSerializar,
@@ -27,15 +21,6 @@ class RecordListView(generics.ListCreateAPIView):
         user = self.request.user
         qs = Record.objects.filter(Q(creditor=user) | Q(debtor=user))
         return qs
-
-    @transaction.atomic
-    def perform_create(self, serializer):
-        stg = Storage(self.request.data['id'])
-        data = json.loads(stg.record)
-        data.update({'debtor': self.request.user})
-        serializer.save(**data)
-        transaction_response(stg.channel_name.decode(), 'ACCEPTED')
-        del stg
 
 
 class CreditorListView(generics.ListAPIView):

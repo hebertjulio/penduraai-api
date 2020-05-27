@@ -1,36 +1,41 @@
-import uuid
-import json
-
 from rest_framework import serializers
-from model_utils import Choices
 
-from books.serializers import RecordCreateSerializer
-
-from .dictdb import Storage
-from .services import translate_fk_names
+from .dictdb import Transaction
+from .validators import (
+    TransactionCodeExistValidator, TransactionSignatureValidator)
 
 
-class TransactionSerializer(serializers.Serializer):
+class BaseTransactionSerializer(serializers.Serializer):
 
-    OPERATION = Choices(
-        ('record-create', RecordCreateSerializer),
-    )
-
-    transaction = serializers.UUIDField(read_only=True)
-    operation = serializers.ChoiceField(choices=OPERATION, write_only=True)
-    data = serializers.JSONField(write_only=True)
-    channel_name = serializers.CharField(max_length=255, write_only=True)
+    transaction = serializers.UUIDField(write_only=True, validators=[
+        TransactionCodeExistValidator(),
+        TransactionSignatureValidator(),
+    ])
 
     def create(self, validated_data):
-        key = str(uuid.uuid4())
-        stg = Storage(key)
-        stg.channel_name = validated_data['channel_name']
-        data = translate_fk_names(validated_data['data'])
-        stg.record = json.dumps(data)
-        stg.save()
+        pass
+
+    def update(self, instance, validated_data):
+        pass
+
+
+class TransactionSerializer(BaseTransactionSerializer):
+
+    data = serializers.JSONField(write_only=True)
+
+    def create(self, validated_data):
+        data = validated_data['data']
+        tran = Transaction()
+        tran.expire = 60*10  # 10 minutes
+        tran.data = data
         return {
-            'transaction': key
+            'transaction': tran.code
         }
 
     def update(self, instance, validated_data):
         pass
+
+    class Meta:
+        read_only_fields = [
+            'transaction'
+        ]
