@@ -1,11 +1,23 @@
 from rest_framework import serializers
 
 from .dictdb import Transaction
+from .validators import (
+    TransactionCodeExistValidator, TransactionSignatureValidator)
 
 
-class TransactionSerializer(serializers.Serializer):
+class BaseTransactionSerializer(serializers.Serializer):
 
-    transaction = serializers.UUIDField(read_only=True)
+    transaction = serializers.UUIDField(write_only=True, validators=[
+        TransactionCodeExistValidator(),
+        TransactionSignatureValidator(),
+    ])
+
+    def update(self, instance, validated_data):
+        pass
+
+
+class TransactionSerializer(BaseTransactionSerializer):
+
     data = serializers.JSONField(write_only=True)
 
     def create(self, validated_data):
@@ -19,3 +31,8 @@ class TransactionSerializer(serializers.Serializer):
 
     def update(self, instance, validated_data):
         pass
+
+    class Meta:
+        read_only_fields = [
+            'transaction'
+        ]
