@@ -1,12 +1,13 @@
 from rest_framework import serializers
 
 from accounts.relations import BuyerField, SellerField
+from broker.validators import (
+    TransactionCodeExistValidator, TransactionSignatureValidator)
 
 from .models import Record, Customer
 
 from .validators import (
-    CreditorAndDebtorSameUserValidator
-)
+    CreditorAndDebtorSameUserValidator)
 
 
 class RecordSerializer(serializers.ModelSerializer):
@@ -28,8 +29,19 @@ class RecordSerializer(serializers.ModelSerializer):
             'debtor',
         ]
         validators = [
-            CreditorAndDebtorSameUserValidator(),
+            CreditorAndDebtorSameUserValidator()
         ]
+        extra_kwargs = {
+            'id': {
+                'validators': [
+                    TransactionCodeExistValidator(),
+                    TransactionSignatureValidator([
+                        'debtor', 'buyer',
+                        'status', 'id',
+                    ])
+                ]
+            }
+        }
 
 
 class CreditorSerializar(serializers.BaseSerializer):

@@ -1,5 +1,3 @@
-import json
-
 from rest_framework import serializers
 
 from .dictdb import Transaction
@@ -13,7 +11,8 @@ class TransactionSerializer(serializers.Serializer):
     def create(self, validated_data):
         data = validated_data['data']
         tran = Transaction()
-        tran.data = json.dumps(data)
+        tran.expire = 60*10  # 10 minutes
+        tran.data = data
         return {
             'transaction': tran.code
         }
