@@ -14,6 +14,7 @@ from .managers import CustomUserManager
 
 class User(AbstractBaseUser, PermissionsMixin, TimeStampedModel):
 
+    id = models.BigAutoField(primary_key=True, editable=False)
     email = models.EmailField(_('email address'), unique=True)
     name = models.CharField(_('name'), max_length=50)
 
@@ -72,6 +73,7 @@ class Profile(TimeStampedModel):
 
     pin_validator = RegexValidator(r'\d{4}')
 
+    id = models.BigAutoField(primary_key=True, editable=False)
     name = models.CharField(_('name'), max_length=30)
     pin = models.CharField(_('pin'), max_length=4, validators=[pin_validator])
     can_add_customer = models.BooleanField(_('can add customer'))

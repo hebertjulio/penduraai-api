@@ -1,7 +1,8 @@
 from rest_framework import serializers
 
 from accounts.relations import BuyerField, SellerField
-from broker.serializers import BaseTransactionSerializer
+from broker.validators import (
+    TransactionCodeExistValidator, TransactionSignatureValidator)
 
 from .models import Record, Customer
 
@@ -9,7 +10,12 @@ from .validators import (
     CreditorAndDebtorSameUserValidator)
 
 
-class RecordSerializer(BaseTransactionSerializer, serializers.ModelSerializer):
+class RecordSerializer(serializers.ModelSerializer):
+
+    transaction = serializers.UUIDField(write_only=True, validators=[
+        TransactionCodeExistValidator(),
+        TransactionSignatureValidator(),
+    ])
 
     buyer = BuyerField()
     seller = SellerField()

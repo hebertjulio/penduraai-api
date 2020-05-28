@@ -1,5 +1,3 @@
-import uuid
-
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.core.validators import MinValueValidator
@@ -20,15 +18,13 @@ class Record(TimeStampedModel):
         ('rejected', _('rejected')),
     )
 
-    MIN_VALUE = 0.01
-
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    id = models.BigAutoField(primary_key=True, editable=False)
     description = models.CharField(('description'), max_length=255)
 
     value = models.DecimalField(
         _('value'), max_digits=10, decimal_places=2,
         validators=[
-            MinValueValidator(MIN_VALUE)
+            MinValueValidator(0.01)
         ]
     )
 
@@ -74,6 +70,8 @@ class Record(TimeStampedModel):
 
 
 class Customer(TimeStampedModel):
+
+    id = models.BigAutoField(primary_key=True, editable=False)
 
     creditor = models.ForeignKey(
         'accounts.User', on_delete=models.CASCADE,

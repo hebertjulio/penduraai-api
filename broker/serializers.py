@@ -5,37 +5,24 @@ from .validators import (
     TransactionCodeExistValidator, TransactionSignatureValidator)
 
 
-class BaseTransactionSerializer(serializers.Serializer):
+class TransactionSerializer(serializers.Serializer):
 
-    transaction = serializers.UUIDField(write_only=True, validators=[
+    id = serializers.UUIDField(read_only=True, validators=[
         TransactionCodeExistValidator(),
         TransactionSignatureValidator(),
     ])
 
-    def create(self, validated_data):
-        pass
-
-    def update(self, instance, validated_data):
-        pass
-
-
-class TransactionSerializer(BaseTransactionSerializer):
-
-    data = serializers.JSONField(write_only=True)
+    payload = serializers.JSONField()
+    status = serializers.ChoiceField(choices=Transaction.STATUS)
 
     def create(self, validated_data):
-        data = validated_data['data']
+        payload = validated_data['payload']
         tran = Transaction()
-        tran.expire = 60*10  # 10 minutes
-        tran.data = data
+        tran.payload = payload
+        tran.save(expire=60*30)  # 30 minutes
         return {
-            'transaction': tran.code
+            'id': tran.id
         }
 
     def update(self, instance, validated_data):
         pass
-
-    class Meta:
-        read_only_fields = [
-            'transaction'
-        ]
