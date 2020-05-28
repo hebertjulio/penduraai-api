@@ -11,18 +11,20 @@ class TransactionSignatureValidator:
 
     requires_context = True
 
+    def __init__(self, fields=None):
+        if fields is not None:
+            if not isinstance(fields, list):
+                raise ValueError
+        self.fields = fields or []
+
     def __call__(self, value, serializer_field):
-        tran = Transaction(str(value))
-        parent = serializer_field.parent
-        meta = parent.Meta.__dict__
-        signature_fields = []
-        if 'signature_fields' in meta.keys():
-            signature_fields = meta['signature_fields']
         parent = serializer_field.parent
         data = {
             k: v for k, v in parent.initial_data.items()
-            if k in signature_fields}
+            if k in self.fields
+        }
         signature = generate_signature(str(value), data)
+        tran = Transaction(str(value))
         if tran.signature != signature:
             message = _('Transaction signature is invalid.')
             raise serializers.ValidationError(message)
