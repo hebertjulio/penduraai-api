@@ -11,8 +11,11 @@ class TransactionSignatureValidator:
 
     requires_context = True
 
-    def __init__(self, fields=[]):
-        self.fields = fields
+    def __init__(self, fields=None):
+        if fields is not None:
+            if not isinstance(fields, list):
+                raise ValueError
+        self.fields = fields or []
 
     def __call__(self, value, serializer_field):
         parent = serializer_field.parent
