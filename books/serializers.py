@@ -14,7 +14,10 @@ class RecordSerializer(serializers.ModelSerializer):
 
     transaction = serializers.UUIDField(write_only=True, validators=[
         TransactionCodeExistValidator(),
-        TransactionSignatureValidator(),
+        TransactionSignatureValidator([
+            'debtor', 'buyer', 'operation', 'value',
+            'description',
+        ]),
     ])
 
     buyer = BuyerField()
@@ -36,10 +39,6 @@ class RecordSerializer(serializers.ModelSerializer):
         ]
         validators = [
             CreditorAndDebtorSameUserValidator()
-        ]
-        signature_fields = [
-            'creditor', 'seller', 'operation', 'value',
-            'description',
         ]
 
 
