@@ -1,6 +1,6 @@
 import redis
-import uuid
 import json
+import uuid
 
 from django.conf import settings
 
@@ -11,17 +11,17 @@ class Transaction:
 
     __PREFIX = 'transaction'
 
-    def __init__(self, code=str(uuid.uuid4())):
+    def __init__(self, _uuid=str(uuid.uuid4())):
         self.__db = redis.Redis(
             host=settings.DICTDB_REDIS_HOST,
             port=settings.DICTDB_REDIS_PORT,
             db=settings.DICTDB_REDIS_DB
         )
-        self.__code = code
+        self.__uuid = _uuid
 
     @property
     def name(self):
-        return ':'.join([self.__PREFIX, self.code])
+        return ':'.join([self.__PREFIX, self.uuid])
 
     @name.setter
     def name(self, _):
@@ -50,15 +50,15 @@ class Transaction:
         raise NotImplementedError
 
     @property
-    def code(self):
-        return self.__code
+    def uuid(self):
+        return self.__uuid
 
-    @code.setter
-    def code(self, value):
+    @uuid.setter
+    def uuid(self, value):
         raise NotImplementedError
 
-    @code.deleter
-    def code(self):
+    @uuid.deleter
+    def uuid(self):
         raise NotImplementedError
 
     @property
@@ -87,7 +87,7 @@ class Transaction:
 
     @property
     def signature(self):
-        signature = generate_signature(self.code, self.data)
+        signature = generate_signature(self.uuid, self.data)
         return signature
 
     @signature.setter

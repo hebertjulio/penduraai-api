@@ -7,7 +7,7 @@ from .validators import (
 
 class BaseTransactionSerializer(serializers.Serializer):
 
-    transaction = serializers.UUIDField(write_only=True, validators=[
+    uuid = serializers.UUIDField(write_only=True, validators=[
         TransactionCodeExistValidator(),
         TransactionSignatureValidator(),
     ])
@@ -26,10 +26,10 @@ class TransactionSerializer(BaseTransactionSerializer):
     def create(self, validated_data):
         data = validated_data['data']
         tran = Transaction()
-        tran.expire = 60*10  # 10 minutes
+        tran.expire = 60*30  # 30 minutes
         tran.data = data
         return {
-            'transaction': tran.code
+            'uuid': tran.uuid
         }
 
     def update(self, instance, validated_data):
@@ -37,5 +37,5 @@ class TransactionSerializer(BaseTransactionSerializer):
 
     class Meta:
         read_only_fields = [
-            'transaction'
+            'uuid'
         ]

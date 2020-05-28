@@ -15,7 +15,6 @@ class RecordSerializer(BaseTransactionSerializer, serializers.ModelSerializer):
     seller = SellerField()
 
     def create(self, validated_data):
-        del validated_data['transaction']
         request = self.context['request']
         obj = Record(**validated_data)
         obj.debtor = request.user
