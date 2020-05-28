@@ -9,19 +9,28 @@ from .services import generate_signature
 
 class Transaction:
 
+    __REDIS_CONFIG = {
+        'host': settings.DICTDB_REDIS_HOST,
+        'port': settings.DICTDB_REDIS_PORT,
+        'db': settings.DICTDB_REDIS_DB
+    }
+
     __PREFIX = 'transaction'
 
-    def __init__(self, _uuid=str(uuid.uuid4())):
-        self.__db = redis.Redis(
-            host=settings.DICTDB_REDIS_HOST,
-            port=settings.DICTDB_REDIS_PORT,
-            db=settings.DICTDB_REDIS_DB
-        )
-        self.__uuid = _uuid
+    __DEFAULT_DATA = '''{
+        "payload": {},
+        "status": "waiting"
+    }'''
+
+    def __init__(self, _id=str(uuid.uuid4())):
+        self.__db = redis.Redis(**self.__REDIS_CONFIG)
+        self.__id = _id
+        self.__data = self.__db.get(self.name) or self.__DEFAULT_DATA
+        self.__data = json.loads(self.__data)
 
     @property
     def name(self):
-        return ':'.join([self.__PREFIX, self.uuid])
+        return ':'.join([self.__PREFIX, self.id])
 
     @name.setter
     def name(self, _):
@@ -32,33 +41,41 @@ class Transaction:
         raise NotImplementedError
 
     @property
-    def data(self):
-        data = self.__db.get(self.name) or '{}'
-        data = json.loads(data)
-        return data
+    def payload(self):
+        value = self.__data['payload']
+        return value
 
-    @data.setter
-    def data(self, value):
-        if not isinstance(value, dict):
-            raise ValueError
-        value = json.dumps(value)
-        ex = self.ttl if self.ttl > 0 else 60*2
-        self.__db.set(self.name, value, ex=ex)
+    @payload.setter
+    def payload(self, value):
+        self.__data['payload'] = value
 
-    @data.deleter
-    def data(self):
+    @payload.deleter
+    def payload(self):
         raise NotImplementedError
 
     @property
-    def uuid(self):
-        return self.__uuid
+    def status(self):
+        value = self.__data['status']
+        return value
 
-    @uuid.setter
-    def uuid(self, value):
+    @status.setter
+    def status(self, value):
+        self.__data['status'] = value
+
+    @status.deleter
+    def status(self):
         raise NotImplementedError
 
-    @uuid.deleter
-    def uuid(self):
+    @property
+    def id(self):
+        return self.__id
+
+    @id.setter
+    def id(self, value):
+        raise NotImplementedError
+
+    @id.deleter
+    def id(self):
         raise NotImplementedError
 
     @property
@@ -87,7 +104,7 @@ class Transaction:
 
     @property
     def signature(self):
-        signature = generate_signature(self.uuid, self.data)
+        signature = generate_signature(self.id, self.payload)
         return signature
 
     @signature.setter
@@ -103,13 +120,18 @@ class Transaction:
         count = len(keys)
         return count == 1
 
+    def save(self, expire=60*2):
+        value = json.dumps(self.__data)
+        ex = self.ttl if self.ttl > 0 else expire
+        self.__db.set(self.name, value, ex=ex)
+
     def delete(self):
         self.__db.delete(*[self.name])
 
     def __str__(self):
-        data = json.dumps(self.data)
-        return '%s %s' % (self.name, data)
+        value = json.dumps(self.__data)
+        return '%s %s' % (self.name, value)
 
     def __repr__(self):
-        data = json.dumps(self.data)
-        return '%s %s' % (self.name, data)
+        value = json.dumps(self.__data)
+        return '%s %s' % (self.name, value)

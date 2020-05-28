@@ -1,41 +1,37 @@
+from django.utils.translation import gettext_lazy as _
+
 from rest_framework import serializers
+from model_utils import Choices
 
 from .dictdb import Transaction
 from .validators import (
     TransactionCodeExistValidator, TransactionSignatureValidator)
 
 
-class BaseTransactionSerializer(serializers.Serializer):
+class TransactionSerializer(serializers.Serializer):
 
-    uuid = serializers.UUIDField(write_only=True, validators=[
+    STATUS = Choices(
+        ('awaiting', _('awaiting')),
+        ('accepted', _('accepted')),
+        ('rejected', _('rejected')),
+    )
+
+    id = serializers.UUIDField(read_only=True, validators=[
         TransactionCodeExistValidator(),
         TransactionSignatureValidator(),
     ])
 
-    def create(self, validated_data):
-        pass
-
-    def update(self, instance, validated_data):
-        pass
-
-
-class TransactionSerializer(BaseTransactionSerializer):
-
-    data = serializers.JSONField(write_only=True)
+    payload = serializers.JSONField(write_only=True)
+    status = serializers.JSONField(write_only=True)
 
     def create(self, validated_data):
-        data = validated_data['data']
+        payload = validated_data['payload']
         tran = Transaction()
-        tran.expire = 60*30  # 30 minutes
-        tran.data = data
+        tran.payload = payload
+        tran.save(expire=60*30)  # 30 minutes
         return {
-            'uuid': tran.uuid
+            'id': tran.id
         }
 
     def update(self, instance, validated_data):
         pass
-
-    class Meta:
-        read_only_fields = [
-            'uuid'
-        ]

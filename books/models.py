@@ -19,7 +19,6 @@ class Record(TimeStampedModel):
     )
 
     id = models.BigAutoField(primary_key=True, editable=False)
-    uuid = models.UUIDField(unique=True)
     description = models.CharField(('description'), max_length=255)
 
     value = models.DecimalField(
@@ -60,10 +59,10 @@ class Record(TimeStampedModel):
     )
 
     def __str__(self):
-        return str(self.uuid)
+        return str(self.id)
 
     def __repr__(self):
-        return str(self.uuid)
+        return str(self.id)
 
     class Meta:
         verbose_name = _('record')
@@ -73,7 +72,6 @@ class Record(TimeStampedModel):
 class Customer(TimeStampedModel):
 
     id = models.BigAutoField(primary_key=True, editable=False)
-    uuid = models.UUIDField(unique=True)
 
     creditor = models.ForeignKey(
         'accounts.User', on_delete=models.CASCADE,

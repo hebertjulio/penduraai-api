@@ -6,13 +6,13 @@ from .models import Record, Customer
 @admin.register(Record)
 class RecordAdmin(admin.ModelAdmin):
     list_display = (
-        'uuid', 'creditor', 'seller', 'debtor', 'buyer',
+        'id', 'creditor', 'seller', 'debtor', 'buyer',
         'value', 'operation', 'status',
     )
     search_fields = (
         'creditor__name', 'creditor__email',
         'debtor__name', 'debtor__email',
-        'uuid',
+        'id',
     )
     autocomplete_fields = (
         'creditor', 'debtor', 'seller',
