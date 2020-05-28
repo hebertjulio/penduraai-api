@@ -14,7 +14,7 @@ class RecordListView(generics.ListCreateAPIView):
 
     serializer_class = RecordSerializer
     filterset_fields = (
-        'creditor', 'debtor',
+        'creditor', 'debtor', 'uuid'
     )
 
     def get_queryset(self):
