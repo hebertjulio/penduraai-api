@@ -1,7 +1,4 @@
-from django.utils.translation import gettext_lazy as _
-
 from rest_framework import serializers
-from model_utils import Choices
 
 from .dictdb import Transaction
 from .validators import (
@@ -10,19 +7,13 @@ from .validators import (
 
 class TransactionSerializer(serializers.Serializer):
 
-    STATUS = Choices(
-        ('awaiting', _('awaiting')),
-        ('accepted', _('accepted')),
-        ('rejected', _('rejected')),
-    )
-
     id = serializers.UUIDField(read_only=True, validators=[
         TransactionCodeExistValidator(),
         TransactionSignatureValidator(),
     ])
 
-    payload = serializers.JSONField(write_only=True)
-    status = serializers.JSONField(write_only=True)
+    payload = serializers.JSONField()
+    status = serializers.ChoiceField(choices=Transaction.STATUS)
 
     def create(self, validated_data):
         payload = validated_data['payload']
