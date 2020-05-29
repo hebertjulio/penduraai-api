@@ -1,2 +1,2 @@
 release: python manage.py migrate
-web: gunicorn penduraai.wsgi --log-file -
+web: daphne penduraai.asgi:application -p 8888

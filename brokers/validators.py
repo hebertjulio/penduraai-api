@@ -2,8 +2,7 @@ from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers
 
-from broker.services import generate_signature
-
+from .services import generate_signature
 from .dictdb import Transaction
 
 
@@ -23,7 +22,7 @@ class TransactionSignatureValidator:
             k: v for k, v in parent.initial_data.items()
             if k in self.fields
         }
-        signature = generate_signature(str(value), data)
+        signature = generate_signature(data)
         tran = Transaction(str(value))
         if tran.signature != signature:
             message = _('Transaction signature is invalid.')

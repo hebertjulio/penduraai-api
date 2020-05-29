@@ -5,6 +5,8 @@ DEBUG = true
 DATABASES__default__ENGINE = "django.db.backends.sqlite3"
 DATABASES__default__NAME = "db.sqlite3"
 
-DICTDB_REDIS_HOST = 'localhost'
-DICTDB_REDIS_PORT = 6379
-DICTDB_REDIS_DB = 9
+REDIS_CONFIG__host = "localhost"
+REDIS_CONFIG__port = 6379
+REDIS_CONFIG__db = 2
+
+CHANNEL_LAYERS__default__CONFIG__hosts = [["localhost", "6379"]]
