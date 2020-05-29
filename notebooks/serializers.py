@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from accounts.relations import BuyerField, SellerField
-from broker.validators import (
+from brokers.validators import (
     TransactionCodeExistValidator, TransactionSignatureValidator)
 
 from .models import Record, Customer

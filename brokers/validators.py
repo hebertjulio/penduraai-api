@@ -2,8 +2,7 @@ from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers
 
-from broker.services import generate_signature
-
+from .services import generate_signature
 from .dictdb import Transaction
 
 

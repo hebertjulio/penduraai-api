@@ -40,7 +40,7 @@ INSTALLED_APPS = [
     'django_filters',
     'accounts',
     'notebooks',
-    'broker',
+    'brokers',
 ]
 
 MIDDLEWARE = [
