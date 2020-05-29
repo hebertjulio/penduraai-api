@@ -35,6 +35,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'channels',
     'rest_framework',
     'rest_framework_api_key',
     'django_filters',
@@ -77,7 +78,7 @@ TEMPLATES = [
 
 # https://channels.readthedocs.io/en/latest/installation.html
 
-ASGI_APPLICATION = 'penduraai.asgi.application'
+ASGI_APPLICATION = 'penduraai.routing.application'
 
 
 # Password validation
@@ -162,6 +163,18 @@ REST_FRAMEWORK = {
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': datetime.timedelta(days=1),
     'REFRESH_TOKEN_LIFETIME': datetime.timedelta(days=60),
+}
+
+
+# https://channels.readthedocs.io/en/latest/deploying.html#setting-up-a-channel-backend
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [],
+        },
+    },
 }
 
 
