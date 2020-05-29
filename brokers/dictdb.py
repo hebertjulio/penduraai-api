@@ -21,8 +21,7 @@ class Transaction:
     PREFIX = 'transaction'
 
     __DEFAULT_DATA = {
-        "payload": {},
-        "status": STATUS.awaiting
+        'payload': {}, 'status': STATUS.awaiting
     }
 
     def __init__(self, _id=str(uuid.uuid4())):
