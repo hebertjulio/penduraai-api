@@ -28,7 +28,7 @@ class Transaction:
         self.__db = redis.Redis(**settings.REDIS_CONFIG)
         self.__name = ':'.join([self.PREFIX, _id])
         if not self.exist():
-            self.__set_data()
+            self.__set_data(self.__DEFAULT_DATA)
 
     @property
     def id(self):
@@ -131,7 +131,7 @@ class Transaction:
         value = json.loads(value)
         return value
 
-    def __set_data(self, value=__DEFAULT_DATA):
+    def __set_data(self, value):
         if not isinstance(value, dict):
             raise ValueError
         value = json.dumps(value)
