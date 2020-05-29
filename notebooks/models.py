@@ -13,11 +13,6 @@ class Record(TimeStampedModel):
         ('debt', _('debt')),
     )
 
-    STATUS = Choices(
-        ('accepted', _('accepted')),
-        ('rejected', _('rejected')),
-    )
-
     id = models.BigAutoField(primary_key=True, editable=False)
     description = models.CharField(('description'), max_length=255)
 
@@ -51,11 +46,6 @@ class Record(TimeStampedModel):
     buyer = models.ForeignKey(
         'accounts.Profile', on_delete=models.CASCADE,
         related_name='records_buyer',
-    )
-
-    status = models.CharField(
-        _('status'), max_length=30, db_index=True,
-        choices=STATUS
     )
 
     def __str__(self):
