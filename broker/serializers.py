@@ -19,9 +19,10 @@ class TransactionSerializer(serializers.Serializer):
         payload = validated_data['payload']
         tran = Transaction()
         tran.payload = payload
-        tran.save(expire=60*30)  # 30 minutes
+        tran.expire = 60*30  # 30 minutes
         return {
-            'id': tran.id
+            'id': tran.id, 'payload': tran.payload,
+            'status': tran.status,
         }
 
     def update(self, instance, validated_data):

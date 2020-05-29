@@ -18,25 +18,23 @@ class Transaction:
         ('rejected', _('rejected')),
     )
 
-    __PREFIX = 'transaction'
+    PREFIX = 'transaction'
 
-    __DEFAULT_DATA = '''
-        {"payload": {}, "status": "%s"}
-    ''' % STATUS.awaiting
+    __DEFAULT_DATA = {
+        "payload": {},
+        "status": STATUS.awaiting
+    }
 
     def __init__(self, _id=str(uuid.uuid4())):
-        regis_config = {
-            'host': settings.DICTDB_REDIS_HOST,
-            'port': settings.DICTDB_REDIS_PORT,
-            'db': settings.DICTDB_REDIS_DB
-        }
-        self.__db = redis.Redis(**regis_config)
-        self.__id = _id
-        self.__data = self.data
+        self.__db = redis.Redis(**settings.REDIS_CONFIG)
+        self.__name = ':'.join([self.PREFIX, _id])
+        if not self.exist():
+            self.__set_data()
 
     @property
     def id(self):
-        return self.__id
+        value = self.__name.split(':')[1]
+        return value
 
     @id.setter
     def id(self, value):
@@ -47,41 +45,18 @@ class Transaction:
         raise NotImplementedError
 
     @property
-    def name(self):
-        return ':'.join([self.__PREFIX, self.id])
-
-    @name.setter
-    def name(self, _):
-        raise NotImplementedError
-
-    @name.deleter
-    def name(self):
-        raise NotImplementedError
-
-    @property
-    def data(self):
-        value = self.__db.get(self.name) or self.__DEFAULT_DATA
-        value = json.loads(value)
-        return value
-
-    @data.setter
-    def data(self, _):
-        raise NotImplementedError
-
-    @data.deleter
-    def data(self):
-        raise NotImplementedError
-
-    @property
     def payload(self):
-        value = self.__data['payload']
+        data = self.__get_data()
+        value = data['payload']
         return value
 
     @payload.setter
     def payload(self, value):
         if not isinstance(value, dict):
             raise ValueError
-        self.__data['payload'] = value
+        data = self.__get_data()
+        data['payload'] = value
+        self.__set_data(data)
 
     @payload.deleter
     def payload(self):
@@ -89,34 +64,26 @@ class Transaction:
 
     @property
     def status(self):
-        value = self.__data['status']
+        data = self.__get_data()
+        value = data['status']
         return value
 
     @status.setter
     def status(self, value):
         if value not in self.STATUS:
             raise ValueError
-        self.__data['status'] = value
+        data = self.__get_data()
+        data['status'] = value
+        self.__set_data(data)
 
     @status.deleter
     def status(self):
         raise NotImplementedError
 
     @property
-    def expire(self):
-        raise NotImplementedError
-
-    @expire.setter
-    def expire(self, value):
-        self.__db.expire(self.name, value)
-
-    @expire.deleter
-    def expire(self, value):
-        raise NotImplementedError
-
-    @property
     def ttl(self):
-        return self.__db.ttl(self.name)
+        value = self.__db.ttl(self.__name)
+        return value
 
     @ttl.setter
     def ttl(self, _):
@@ -127,9 +94,23 @@ class Transaction:
         raise NotImplementedError
 
     @property
+    def expire(self):
+        raise NotImplementedError
+
+    @expire.setter
+    def expire(self, value):
+        if not isinstance(value, int):
+            raise ValueError
+        self.__db.expire(self.__name, value)
+
+    @expire.deleter
+    def expire(self):
+        raise NotImplementedError
+
+    @property
     def signature(self):
-        signature = generate_signature(self.id, self.payload)
-        return signature
+        value = generate_signature(self.__payload)
+        return value
 
     @signature.setter
     def signature(self, _):
@@ -140,23 +121,30 @@ class Transaction:
         raise NotImplementedError
 
     def exist(self):
-        keys = self.__db.keys(self.name)
+        keys = self.__db.keys(self.__name)
         count = len(keys)
         return count == 1
 
-    def save(self, expire=60*2):
-        value = json.dumps(self.__data)
-        ex = self.ttl if self.ttl > 0 else expire
-        self.__db.set(self.name, value, ex=ex)
+    def __get_data(self):
+        value = self.__db.get(self.__name)
+        if value is None:
+            return self.__DEFAULT_DATA
+        value = json.loads(value)
+        return value
+
+    def __set_data(self, value=__DEFAULT_DATA):
+        if not isinstance(value, dict):
+            raise ValueError
+        value = json.dumps(value)
+        expire = self.ttl if self.exist() else 60
+        self.__db.set(self.__name, value, ex=expire)
 
     def delete(self):
-        self.__db.delete(*[self.name])
-        self.__data = json.loads(self.__DEFAULT_DATA)
+        self.__db.delete(*[self.__name])
 
     def __str__(self):
-        value = json.dumps(self.__data)
-        return '%s %s' % (self.name, value)
+        return self.__name
 
     def __repr__(self):
-        value = json.dumps(self.__data)
-        return '%s %s' % (self.name, value)
+        value = json.dumps(self.__get_data())
+        return '%s %s' % (self.__name, value)
