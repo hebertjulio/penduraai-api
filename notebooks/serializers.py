@@ -1,5 +1,7 @@
 from django.db.transaction import atomic
 from rest_framework import serializers
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
 
 from accounts.relations import BuyerField, SellerField
 from brokers.validators import (
@@ -16,7 +18,7 @@ from .validators import (
 class RecordSerializer(serializers.ModelSerializer):
 
     transaction = serializers.UUIDField(write_only=True, validators=[
-        TransactionValidator(),
+        # TransactionValidator(),
         TransactionSignatureValidator([
             'creditor', 'seller', 'operation', 'value',
             'description',
@@ -35,6 +37,14 @@ class RecordSerializer(serializers.ModelSerializer):
         obj.save()
         tran = Transaction(tid)
         tran.status = Transaction.STATUS.accepted
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+            tid,
+            {
+                "type": "websocket.send",
+                "text": tran.status,
+            },
+        )
         return obj
 
     class Meta:
