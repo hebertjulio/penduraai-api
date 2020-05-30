@@ -1,19 +1,14 @@
 from rest_framework import serializers
 
 from .dictdb import Transaction
-from .validators import (
-    TransactionCodeExistValidator, TransactionSignatureValidator)
 
 
 class TransactionSerializer(serializers.Serializer):
 
-    id = serializers.UUIDField(read_only=True, validators=[
-        TransactionCodeExistValidator(),
-        TransactionSignatureValidator(),
-    ])
-
-    payload = serializers.JSONField()
-    status = serializers.ChoiceField(choices=Transaction.STATUS)
+    id = serializers.UUIDField(read_only=True)
+    payload = serializers.JSONField(binary=True)
+    status = serializers.ChoiceField(
+        choices=Transaction.STATUS, read_only=True)
 
     def create(self, validated_data):
         payload = validated_data['payload']
