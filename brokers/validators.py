@@ -29,10 +29,13 @@ class TransactionSignatureValidator:
             raise serializers.ValidationError(message)
 
 
-class TransactionCodeExistValidator:
+class TransactionValidator:
 
     def __call__(self, value):
         tran = Transaction(str(value))
         if not tran.exist():
             message = _('Transaction code non-existent.')
+            raise serializers.ValidationError(message)
+        if tran.status != Transaction.STATUS.awaiting:
+            message = _('Transaction status %s.' % tran.status)
             raise serializers.ValidationError(message)

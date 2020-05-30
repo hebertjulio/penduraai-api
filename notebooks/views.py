@@ -23,6 +23,13 @@ class RecordListView(generics.ListCreateAPIView):
         return qs
 
 
+class RecordDetailView(generics.RetrieveAPIView):
+
+    lookup_field = 'pk'
+    serializer_class = RecordSerializer
+    queryset = Record.objects.all()
+
+
 class CreditorListView(generics.ListAPIView):
 
     serializer_class = CreditorSerializar

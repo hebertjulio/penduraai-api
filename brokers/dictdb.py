@@ -108,7 +108,7 @@ class Transaction:
 
     @property
     def signature(self):
-        value = generate_signature(self.__payload)
+        value = generate_signature(self.payload)
         return value
 
     @signature.setter
