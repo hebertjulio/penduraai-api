@@ -13,7 +13,7 @@ from .services import generate_signature
 class Transaction:
 
     STATUS = Choices(
-        ('no_exist', _('no_exist')),
+        ('no_exist', _('no exist')),
         ('awaiting', _('awaiting')),
         ('accepted', _('accepted')),
         ('rejected', _('rejected')),
@@ -103,7 +103,7 @@ class Transaction:
 
     @property
     def data(self):
-        value = self.__data
+        value = {**{'id': self.id}, **self.__data}
         return value
 
     @data.setter
@@ -134,5 +134,5 @@ class Transaction:
         return self.__name
 
     def __repr__(self):
-        value = json.dumps(self.__get_data())
-        return '%s %s' % (self.__name, value)
+        value = json.dumps(self.data)
+        return value
