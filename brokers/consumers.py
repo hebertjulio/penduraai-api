@@ -1,4 +1,4 @@
-import urllib.parse
+import json
 
 from channels.consumer import AsyncConsumer
 from channels.exceptions import StopConsumer
@@ -8,51 +8,41 @@ from .dictdb import Transaction
 
 class TransactionConsumer(AsyncConsumer):
 
-    async def get_id(self, query_string):
-        qs = urllib.parse.parse_qs(query_string)
-        _id = qs.get(b'id', (None,))[0]
-        return _id if _id is None else _id.decode()
+    async def get_url_route(self):
+        kwargs = self.scope['url_route']['kwargs']
+        return kwargs
+
+    async def dispatch(self, message):
+        url_route = await self.get_url_route()
+        message.update(url_route)
+        await super().dispatch(message)
 
     async def websocket_connect(self, event):
-        _id = await self.get_id(self.scope['query_string'])
-
-        if _id is None:
-            await self.send({
-                "type": "websocket.disconnect",
-            })
-            return
-
-        tran = Transaction(_id)
-        if not tran.exist():
-            await self.send({
-                "type": "websocket.disconnect",
-            })
-            return
-
+        tran = Transaction(event['pk'])
+        data = json.dumps(tran.data)
         await self.send({
-            "type": "websocket.accept",
+            'type': 'websocket.accept'
         })
-
         await self.send({
-            "type": "websocket.send",
-            "text": tran.status,
+            'type': 'websocket.send',
+            'text': data
         })
-
-        await self.channel_layer.group_add(_id, self.channel_name)
+        await self.channel_layer.group_add(
+            event['pk'], self.channel_name
+        )
 
     async def websocket_send(self, event):
-
-        await self.send({
-            "type": "websocket.send",
-            "text": event["text"],
-        })
+        if 'text' in event and event['text']:
+            await self.send({
+                'type': 'websocket.send',
+                'text': event['text'],
+            })
 
     async def websocket_disconnect(self, event):
         await self.send({
-            "type": "websocket.close",
+            'type': 'websocket.close'
         })
-
-        _id = await self.get_id(self.scope['query_string'])
-        await self.channel_layer.group_discard(_id, self.channel_name)
-
+        await self.channel_layer.group_discard(
+            event['pk'], self.channel_name
+        )
         raise StopConsumer

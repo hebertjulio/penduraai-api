@@ -1,3 +1,5 @@
+import json
+
 from rest_framework.exceptions import NotFound
 from rest_framework.response import Response
 from rest_framework.status import (
@@ -6,6 +8,7 @@ from rest_framework.views import APIView
 
 from .dictdb import Transaction
 from .serializers import TransactionSerializer
+from .services import send_message
 
 
 class TransactionListView(APIView):
@@ -36,4 +39,5 @@ class TransactionRejectView(APIView):
             raise NotFound
         tran.status = Transaction.STATUS.rejected
         data = {'id': tran.id, 'payload': tran.payload, 'status': tran.status}
+        send_message(tran.id, json.dumps(tran.data))
         return Response(data, status=HTTP_200_OK)

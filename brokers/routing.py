@@ -4,5 +4,5 @@ from .consumers import TransactionConsumer
 
 
 routing = [
-    path("transactions", TransactionConsumer),
+    path('transactions/<str:pk>', TransactionConsumer),
 ]

@@ -1,24 +1,24 @@
+import json
+
 from django.db.transaction import atomic
+
 from rest_framework import serializers
-from asgiref.sync import async_to_sync
-from channels.layers import get_channel_layer
 
 from accounts.relations import BuyerField, SellerField
 from brokers.validators import (
     TransactionValidator, TransactionSignatureValidator)
-
 from brokers.dictdb import Transaction
+from brokers.services import send_message
 
 from .models import Record, Customer
 
-from .validators import (
-    CreditorAndDebtorSameUserValidator)
+from .validators import CreditorAndDebtorSameUserValidator
 
 
 class RecordSerializer(serializers.ModelSerializer):
 
     transaction = serializers.UUIDField(write_only=True, validators=[
-        # TransactionValidator(),
+        TransactionValidator(),
         TransactionSignatureValidator([
             'creditor', 'seller', 'operation', 'value',
             'description',
@@ -30,21 +30,15 @@ class RecordSerializer(serializers.ModelSerializer):
 
     @atomic
     def create(self, validated_data):
-        tid = str(validated_data.pop('transaction'))
+        transaction = str(validated_data.pop('transaction'))
         request = self.context['request']
         obj = Record(**validated_data)
         obj.debtor = request.user
         obj.save()
-        tran = Transaction(tid)
+        tran = Transaction(transaction)
         tran.status = Transaction.STATUS.accepted
-        channel_layer = get_channel_layer()
-        async_to_sync(channel_layer.group_send)(
-            tid,
-            {
-                "type": "websocket.send",
-                "text": tran.status,
-            },
-        )
+        tran.save()
+        send_message(tran.id, json.dumps(tran.data))
         return obj
 
     class Meta:
