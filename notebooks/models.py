@@ -73,7 +73,7 @@ class Customer(TimeStampedModel):
         related_name='customers_debtor',
     )
 
-    authorized = models.BooleanField(_('authorized'))
+    authorized = models.BooleanField(_('authorized'), default=True)
 
     def __str__(self):
         return self.creditor.name

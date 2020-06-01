@@ -94,10 +94,29 @@ class DebtorSerializar(serializers.BaseSerializer):
 
 class CustomerSerializer(serializers.ModelSerializer):
 
-    creditor = serializers.HiddenField(
+    transaction = serializers.UUIDField(write_only=True, validators=[
+        TransactionValidator(),
+        TransactionSignatureValidator([
+            'creditor',
+        ]),
+    ])
+
+    debtor = serializers.HiddenField(
         default=serializers.CurrentUserDefault()
     )
+
+    @atomic
+    def create(self, validated_data):
+        transaction = str(validated_data.pop('transaction'))
+        obj = Customer(**validated_data)
+        obj.save()
+        tran = Transaction(transaction)
+        tran.status = Transaction.STATUS.accepted
+        tran.save()
+        send_message(tran.id, json.dumps(tran.data))
+        return obj
 
     class Meta:
         model = Customer
         fields = '__all__'
+        read_only_fields = ['authorized']
