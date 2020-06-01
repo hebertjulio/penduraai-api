@@ -27,8 +27,7 @@ class TransactionDetailView(APIView):
         tran = Transaction(pk)
         if not tran.exist():
             raise NotFound
-        data = {'id': tran.id, 'payload': tran.payload, 'status': tran.status}
-        return Response(data, status=HTTP_200_OK)
+        return Response(tran.data, status=HTTP_200_OK)
 
 
 class TransactionRejectView(APIView):
@@ -38,6 +37,5 @@ class TransactionRejectView(APIView):
         if not tran.exist():
             raise NotFound
         tran.status = Transaction.STATUS.rejected
-        data = {'id': tran.id, 'payload': tran.payload, 'status': tran.status}
         send_message(tran.id, json.dumps(tran.data))
-        return Response(data, status=HTTP_200_OK)
+        return Response(tran.data, status=HTTP_200_OK)
