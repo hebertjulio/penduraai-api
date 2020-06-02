@@ -8,7 +8,7 @@ from rest_framework.views import APIView
 
 from .dictdb import Transaction
 from .serializers import TransactionSerializer
-from .services import send_message
+from .services import push_notification
 
 
 class TransactionListView(APIView):
@@ -37,5 +37,5 @@ class TransactionRejectView(APIView):
         if not tran.exist():
             raise NotFound
         tran.status = Transaction.STATUS.rejected
-        send_message(tran.id, json.dumps(tran.data))
+        push_notification(tran.id, json.dumps(tran.data))
         return Response(tran.data, status=HTTP_200_OK)

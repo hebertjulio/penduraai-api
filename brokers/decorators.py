@@ -3,7 +3,7 @@ import json
 from functools import wraps
 
 from .dictdb import Transaction
-from .services import send_message
+from .services import push_notification
 
 
 def accept_transaction(func):
@@ -14,6 +14,6 @@ def accept_transaction(func):
         tran = Transaction(transaction)
         tran.status = Transaction.STATUS.accepted
         tran.save()
-        send_message(tran.id, json.dumps(tran.data))
+        push_notification(tran.id, json.dumps(tran.data))
         return r
     return wrapper
