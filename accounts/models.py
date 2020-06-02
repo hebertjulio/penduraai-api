@@ -68,6 +68,7 @@ class Profile(TimeStampedModel):
 
     ROLE = Choices(
         ('owner', _('owner')),
+        ('admin', _('admin')),
         ('guest', _('guest')),
     )
 
@@ -76,7 +77,6 @@ class Profile(TimeStampedModel):
     id = models.BigAutoField(primary_key=True, editable=False)
     name = models.CharField(_('name'), max_length=30)
     pin = models.CharField(_('pin'), max_length=4, validators=[pin_validator])
-    can_add_customer = models.BooleanField(_('can add customer'))
 
     accountable = models.ForeignKey(
         'User', on_delete=models.CASCADE,

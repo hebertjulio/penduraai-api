@@ -11,6 +11,10 @@ urlpatterns = [
         views.RecordListView.as_view(),
         name='record_list'),
     path(
+        'records/<int:pk>',
+        views.RecordDetailView.as_view(),
+        name='record_detail'),
+    path(
         'creditors',
         views.CreditorListView.as_view(),
         name='creditor_list'),

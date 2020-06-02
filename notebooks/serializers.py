@@ -1,33 +1,35 @@
+from django.db.transaction import atomic
+
 from rest_framework import serializers
 
 from accounts.relations import BuyerField, SellerField
-from brokers.validators import (
-    TransactionCodeExistValidator, TransactionSignatureValidator)
+from brokers.validators import IsValidTransactionValidator
+from brokers.decorators import accept_transaction
 
 from .models import Record, Customer
 
 from .validators import (
-    CreditorAndDebtorSameUserValidator)
+    OweToYourselfValidator, IsCustomerValidator,
+    CustomerFromYourselfValidator)
 
 
 class RecordSerializer(serializers.ModelSerializer):
 
     transaction = serializers.UUIDField(write_only=True, validators=[
-        TransactionCodeExistValidator(),
-        TransactionSignatureValidator([
-            'debtor', 'buyer', 'operation', 'value',
-            'description',
-        ]),
+        IsValidTransactionValidator(),
     ])
 
-    buyer = BuyerField()
-    seller = SellerField()
+    debtor = serializers.HiddenField(
+        default=serializers.CurrentUserDefault()
+    )
 
+    seller = SellerField()
+    buyer = BuyerField()
+
+    @atomic
+    @accept_transaction
     def create(self, validated_data):
-        del validated_data['transaction']
-        request = self.context['request']
         obj = Record(**validated_data)
-        obj.debtor = request.user
         obj.save()
         return obj
 
@@ -38,7 +40,8 @@ class RecordSerializer(serializers.ModelSerializer):
             'debtor',
         ]
         validators = [
-            CreditorAndDebtorSameUserValidator()
+            OweToYourselfValidator(),
+            IsCustomerValidator()
         ]
 
 
@@ -84,10 +87,25 @@ class DebtorSerializar(serializers.BaseSerializer):
 
 class CustomerSerializer(serializers.ModelSerializer):
 
-    creditor = serializers.HiddenField(
+    transaction = serializers.UUIDField(write_only=True, validators=[
+        IsValidTransactionValidator(),
+    ])
+
+    debtor = serializers.HiddenField(
         default=serializers.CurrentUserDefault()
     )
+
+    @atomic
+    @accept_transaction
+    def create(self, validated_data):
+        obj = Customer(**validated_data)
+        obj.save()
+        return obj
 
     class Meta:
         model = Customer
         fields = '__all__'
+        read_only_fields = ['authorized']
+        validators = [
+            CustomerFromYourselfValidator()
+        ]

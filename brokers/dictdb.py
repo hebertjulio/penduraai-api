@@ -1,6 +1,5 @@
 import redis
 import json
-import uuid
 
 from django.utils.translation import gettext_lazy as _
 from django.conf import settings
@@ -13,6 +12,7 @@ from .services import generate_signature
 class Transaction:
 
     STATUS = Choices(
+        ('no_exist', _('no exist')),
         ('awaiting', _('awaiting')),
         ('accepted', _('accepted')),
         ('rejected', _('rejected')),
@@ -20,15 +20,16 @@ class Transaction:
 
     PREFIX = 'transaction'
 
-    __DEFAULT_DATA = {
-        'payload': {}, 'status': STATUS.awaiting
-    }
+    __DEFAULT_DATA = '''{
+        "payload": {}, "status": "%s"
+    }'''
 
-    def __init__(self, _id=str(uuid.uuid4())):
+    def __init__(self, _id):
         self.__db = redis.Redis(**settings.REDIS_CONFIG)
         self.__name = ':'.join([self.PREFIX, _id])
-        if not self.exist():
-            self.__set_data(self.__DEFAULT_DATA)
+        data = self.__db.get(self.__name)
+        data = data or self.__DEFAULT_DATA % Transaction.STATUS.no_exist
+        self.__data = json.loads(data)
 
     @property
     def id(self):
@@ -45,17 +46,14 @@ class Transaction:
 
     @property
     def payload(self):
-        data = self.__get_data()
-        value = data['payload']
+        value = self.__data['payload']
         return value
 
     @payload.setter
     def payload(self, value):
         if not isinstance(value, dict):
             raise ValueError
-        data = self.__get_data()
-        data['payload'] = value
-        self.__set_data(data)
+        self.__data['payload'] = value
 
     @payload.deleter
     def payload(self):
@@ -63,17 +61,14 @@ class Transaction:
 
     @property
     def status(self):
-        data = self.__get_data()
-        value = data['status']
+        value = self.__data['status']
         return value
 
     @status.setter
     def status(self, value):
         if value not in self.STATUS:
             raise ValueError
-        data = self.__get_data()
-        data['status'] = value
-        self.__set_data(data)
+        self.__data['status'] = value
 
     @status.deleter
     def status(self):
@@ -93,22 +88,8 @@ class Transaction:
         raise NotImplementedError
 
     @property
-    def expire(self):
-        raise NotImplementedError
-
-    @expire.setter
-    def expire(self, value):
-        if not isinstance(value, int):
-            raise ValueError
-        self.__db.expire(self.__name, value)
-
-    @expire.deleter
-    def expire(self):
-        raise NotImplementedError
-
-    @property
     def signature(self):
-        value = generate_signature(self.__payload)
+        value = generate_signature(self.payload)
         return value
 
     @signature.setter
@@ -119,31 +100,38 @@ class Transaction:
     def signature(self):
         raise NotImplementedError
 
+    @property
+    def data(self):
+        value = {**{'id': self.id}, **self.__data}
+        return value
+
+    @data.setter
+    def data(self, _):
+        raise NotImplementedError
+
+    @data.deleter
+    def data(self):
+        raise NotImplementedError
+
     def exist(self):
         keys = self.__db.keys(self.__name)
         count = len(keys)
         return count == 1
 
-    def __get_data(self):
-        value = self.__db.get(self.__name)
-        if value is None:
-            return self.__DEFAULT_DATA
-        value = json.loads(value)
-        return value
-
-    def __set_data(self, value):
-        if not isinstance(value, dict):
-            raise ValueError
-        value = json.dumps(value)
-        expire = self.ttl if self.exist() else 60
+    def save(self, expire=60):
+        if not self.exist():
+            self.__data['status'] = Transaction.STATUS.awaiting
+        value = json.dumps(self.__data)
+        expire = self.ttl if self.exist() else expire
         self.__db.set(self.__name, value, ex=expire)
 
     def delete(self):
         self.__db.delete(*[self.__name])
+        self.__data = self.__DEFAULT_DATA % Transaction.STATUS.no_exist
 
     def __str__(self):
         return self.__name
 
     def __repr__(self):
-        value = json.dumps(self.__get_data())
-        return '%s %s' % (self.__name, value)
+        value = json.dumps(self.data)
+        return value
