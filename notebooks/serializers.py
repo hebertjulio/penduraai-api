@@ -1,6 +1,7 @@
 from django.db.transaction import atomic
 
 from rest_framework import serializers
+from rest_framework.validators import UniqueTogetherValidator
 
 from accounts.relations import BuyerField, SellerField
 from brokers.validators import IsValidTransactionValidator
@@ -107,5 +108,9 @@ class CustomerSerializer(serializers.ModelSerializer):
         fields = '__all__'
         read_only_fields = ['authorized']
         validators = [
-            CustomerFromYourselfValidator()
+            CustomerFromYourselfValidator(),
+            UniqueTogetherValidator(
+                queryset=Customer.objects.all(),
+                fields=['creditor', 'debtor']
+            )
         ]
