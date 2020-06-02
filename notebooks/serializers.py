@@ -5,31 +5,27 @@ from django.db.transaction import atomic
 from rest_framework import serializers
 
 from accounts.relations import BuyerField, SellerField
-from brokers.validators import (
-    TransactionValidator, TransactionSignatureValidator)
+from brokers.validators import IsValidTransactionValidator
 from brokers.dictdb import Transaction
 from brokers.services import send_message
 
 from .models import Record, Customer
 
-from .validators import CreditorAndDebtorSameUserValidator, IsCustomerValidator
+from .validators import OweToYourselfValidator, IsCustomerValidator
 
 
 class RecordSerializer(serializers.ModelSerializer):
 
     transaction = serializers.UUIDField(write_only=True, validators=[
-        TransactionValidator(),
-        TransactionSignatureValidator([
-            'creditor', 'seller', 'operation', 'value',
-            'description',
-        ]),
+        IsValidTransactionValidator(),
     ])
 
-    buyer = BuyerField()
-    seller = SellerField()
     debtor = serializers.HiddenField(
         default=serializers.CurrentUserDefault()
     )
+
+    seller = SellerField()
+    buyer = BuyerField()
 
     @atomic
     def create(self, validated_data):
@@ -49,7 +45,7 @@ class RecordSerializer(serializers.ModelSerializer):
             'debtor',
         ]
         validators = [
-            CreditorAndDebtorSameUserValidator(),
+            OweToYourselfValidator(),
             IsCustomerValidator()
         ]
 
@@ -97,10 +93,7 @@ class DebtorSerializar(serializers.BaseSerializer):
 class CustomerSerializer(serializers.ModelSerializer):
 
     transaction = serializers.UUIDField(write_only=True, validators=[
-        TransactionValidator(),
-        TransactionSignatureValidator([
-            'creditor',
-        ]),
+        IsValidTransactionValidator(),
     ])
 
     debtor = serializers.HiddenField(
