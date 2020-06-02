@@ -12,18 +12,20 @@ class IsValidTransactionValidator:
 
     def __call__(self, value, serializer_field):
         parent = serializer_field.parent
+        data = parent.initial_data
         tran = Transaction(str(value))
+        IsValidTransactionValidator.exist_validate(tran)
+        IsValidTransactionValidator.signature_validate(tran, data)
+        IsValidTransactionValidator.status_validate(tran)
 
-        self.exist_validate(tran)
-        self.signature_validate(tran, parent.initial_data)
-        self.status_validate(tran)
-
-    def exist_validate(self, tran):
+    @staticmethod
+    def exist_validate(tran):
         if not tran.exist():
             message = _('transaction code non-existent.')
             raise serializers.ValidationError(message)
 
-    def signature_validate(self, tran, initial_data):
+    @staticmethod
+    def signature_validate(tran, initial_data):
         data = {
             k: v for k, v in initial_data.items()
             if k in tran.payload.keys()
@@ -33,7 +35,8 @@ class IsValidTransactionValidator:
             message = _('transaction signature is invalid.')
             raise serializers.ValidationError(message)
 
-    def status_validate(self, tran):
+    @staticmethod
+    def status_validate(tran):
         if tran.status != Transaction.STATUS.awaiting:
             message = _('transaction status is %s.' % tran.status)
             raise serializers.ValidationError(message)
