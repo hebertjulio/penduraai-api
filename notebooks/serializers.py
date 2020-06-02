@@ -1,13 +1,10 @@
-import json
-
 from django.db.transaction import atomic
 
 from rest_framework import serializers
 
 from accounts.relations import BuyerField, SellerField
 from brokers.validators import IsValidTransactionValidator
-from brokers.dictdb import Transaction
-from brokers.services import send_message
+from brokers.decorators import accept_transaction
 
 from .models import Record, Customer
 
@@ -30,14 +27,10 @@ class RecordSerializer(serializers.ModelSerializer):
     buyer = BuyerField()
 
     @atomic
+    @accept_transaction
     def create(self, validated_data):
-        transaction = str(validated_data.pop('transaction'))
         obj = Record(**validated_data)
         obj.save()
-        tran = Transaction(transaction)
-        tran.status = Transaction.STATUS.accepted
-        tran.save()
-        send_message(tran.id, json.dumps(tran.data))
         return obj
 
     class Meta:
@@ -103,14 +96,10 @@ class CustomerSerializer(serializers.ModelSerializer):
     )
 
     @atomic
+    @accept_transaction
     def create(self, validated_data):
-        transaction = str(validated_data.pop('transaction'))
         obj = Customer(**validated_data)
         obj.save()
-        tran = Transaction(transaction)
-        tran.status = Transaction.STATUS.accepted
-        tran.save()
-        send_message(tran.id, json.dumps(tran.data))
         return obj
 
     class Meta:

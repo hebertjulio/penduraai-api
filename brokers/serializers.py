@@ -1,3 +1,5 @@
+import uuid
+
 from rest_framework import serializers
 
 from .dictdb import Transaction
@@ -11,7 +13,7 @@ class TransactionSerializer(serializers.Serializer):
         choices=Transaction.STATUS, read_only=True)
 
     def create(self, validated_data):
-        tran = Transaction()
+        tran = Transaction(str(uuid.uuid4()))
         tran.payload = validated_data['payload']
         tran.save(60*30)  # 30 minutes
         return tran.data

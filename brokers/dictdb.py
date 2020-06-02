@@ -1,6 +1,5 @@
 import redis
 import json
-import uuid
 
 from django.utils.translation import gettext_lazy as _
 from django.conf import settings
@@ -25,7 +24,7 @@ class Transaction:
         "payload": {}, "status": "%s"
     }'''
 
-    def __init__(self, _id=str(uuid.uuid4())):
+    def __init__(self, _id):
         self.__db = redis.Redis(**settings.REDIS_CONFIG)
         self.__name = ':'.join([self.PREFIX, _id])
         data = self.__db.get(self.__name)
