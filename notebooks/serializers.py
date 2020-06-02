@@ -12,7 +12,7 @@ from brokers.services import send_message
 
 from .models import Record, Customer
 
-from .validators import CreditorAndDebtorSameUserValidator
+from .validators import CreditorAndDebtorSameUserValidator, IsCustomerValidator
 
 
 class RecordSerializer(serializers.ModelSerializer):
@@ -27,13 +27,14 @@ class RecordSerializer(serializers.ModelSerializer):
 
     buyer = BuyerField()
     seller = SellerField()
+    debtor = serializers.HiddenField(
+        default=serializers.CurrentUserDefault()
+    )
 
     @atomic
     def create(self, validated_data):
         transaction = str(validated_data.pop('transaction'))
-        request = self.context['request']
         obj = Record(**validated_data)
-        obj.debtor = request.user
         obj.save()
         tran = Transaction(transaction)
         tran.status = Transaction.STATUS.accepted
@@ -48,7 +49,8 @@ class RecordSerializer(serializers.ModelSerializer):
             'debtor',
         ]
         validators = [
-            CreditorAndDebtorSameUserValidator()
+            CreditorAndDebtorSameUserValidator(),
+            IsCustomerValidator()
         ]
 
 
