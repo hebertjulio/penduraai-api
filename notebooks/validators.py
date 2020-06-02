@@ -25,3 +25,14 @@ class IsCustomerValidator:
         if not customer.exists():
             message = _('you aren\'t a costumer.')
             raise serializers.ValidationError(message)
+
+
+class CustomerFromYourselfValidator:
+
+    requires_context = True
+
+    def __call__(self, value, serializer_field):
+        request = serializer_field.context['request']
+        if value['creditor'].id == request.user.id:
+            message = _('you can\'t customer from yourself.')
+            raise serializers.ValidationError(message)

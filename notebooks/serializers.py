@@ -11,7 +11,9 @@ from brokers.services import send_message
 
 from .models import Record, Customer
 
-from .validators import OweToYourselfValidator, IsCustomerValidator
+from .validators import (
+    OweToYourselfValidator, IsCustomerValidator,
+    CustomerFromYourselfValidator)
 
 
 class RecordSerializer(serializers.ModelSerializer):
@@ -115,3 +117,6 @@ class CustomerSerializer(serializers.ModelSerializer):
         model = Customer
         fields = '__all__'
         read_only_fields = ['authorized']
+        validators = [
+            CustomerFromYourselfValidator()
+        ]
