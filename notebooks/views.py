@@ -31,11 +31,11 @@ class RecordDetailView(generics.RetrieveAPIView):
     queryset = Record.objects.all()
 
 
-class CustomerBalanceListView(APIView):
+class CustomerBalancesListView(APIView):
 
     def get(self, request, by):  # skipcq
-        user = request.user
-        rows = Customer.objects.balance_of(user.id, by=by)
+        of_user = request.user.id
+        rows = Customer.objects.balances_list(by, of_user)
         serializer = CustomerBalanceSerializar(rows, many=True)
         return Response(serializer.data, HTTP_200_OK)
 
