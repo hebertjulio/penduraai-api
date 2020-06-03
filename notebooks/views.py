@@ -8,9 +8,7 @@ from rest_framework.views import APIView
 from .models import Record, Customer
 
 from .serializers import (
-    RecordSerializer, CreditorSerializar, DebtorSerializar,
-    CustomerSerializer
-)
+    RecordSerializer, CustomerBalanceSerializar, CustomerSerializer)
 
 
 class RecordListView(generics.ListCreateAPIView):
@@ -38,7 +36,7 @@ class CustomerBalanceListView(APIView):
     def get(self, request, by):  # skipcq
         user = request.user
         rows = Customer.objects.balance_of(user.id, by=by)
-        serializer = CreditorSerializar(rows, many=True)
+        serializer = CustomerBalanceSerializar(rows, many=True)
         return Response(serializer.data, HTTP_200_OK)
 
 
