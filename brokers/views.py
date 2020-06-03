@@ -14,7 +14,8 @@ from .services import push_notification
 class TransactionListView(APIView):
 
     def post(self, request):  # skipcq
-        serializer = TransactionSerializer(data=request.data)
+        context = {'request': request}
+        serializer = TransactionSerializer(data=request.data, context=context)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=HTTP_201_CREATED)
