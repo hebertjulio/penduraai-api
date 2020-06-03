@@ -19,7 +19,7 @@ class CustomerManager(Manager):
         HAVING c.{having}_id = {id}
     """
 
-    def debtors(self, _id):
+    def debtors_of(self, _id):
         from django.db import connection
         with connection.cursor() as cursor:
             sql = self.__SQL.format(
@@ -30,7 +30,7 @@ class CustomerManager(Manager):
                     'user_id', 'name', 'payment', 'debt'
                 ], row))
 
-    def creditors(self, _id):
+    def creditors_of(self, _id):
         from django.db import connection
         with connection.cursor() as cursor:
             sql = self.__SQL.format(
