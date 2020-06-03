@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import path, re_path
 
 from . import views
 
@@ -14,14 +14,10 @@ urlpatterns = [
         'records/<int:pk>',
         views.RecordDetailView.as_view(),
         name='record_detail'),
-    path(
-        'creditors',
-        views.CreditorListView.as_view(),
-        name='creditor_list'),
-    path(
-        'debtors',
-        views.DebtorListView.as_view(),
-        name='debtor_list'),
+    re_path(
+        r'^customers/(?P<by>(debtor|creditor))$',
+        views.CustomerBalanceListView.as_view(),
+        name='customer_balance_list'),
     path(
         'customers',
         views.CustomerListView.as_view(),

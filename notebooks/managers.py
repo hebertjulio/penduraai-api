@@ -19,22 +19,21 @@ class CustomerManager(Manager):
         HAVING c.{having}_id = {id}
     """
 
-    def debtors_of(self, _id):
-        from django.db import connection
-        with connection.cursor() as cursor:
-            sql = self.__SQL.format(
-                groupby='debtor', having='creditor', id=_id)
-            cursor.execute(sql)
-            for row in cursor.fetchall():
-                yield dict(zip([
-                    'user_id', 'name', 'payment', 'debt'
-                ], row))
+    fields = {
+        'creditor': {
+            'groupby': 'creditor', 'having': 'debtor',
+        },
+        'debtor': {
+            'groupby': 'debtor', 'having': 'creditor',
+        }
+    }
 
-    def creditors_of(self, _id):
+    def balance_of(self, _id, by):
+        if by not in self.fields.keys():
+            raise ValueError
         from django.db import connection
         with connection.cursor() as cursor:
-            sql = self.__SQL.format(
-                groupby='creditor', having='debtor', id=_id)
+            sql = self.__SQL.format(id=_id, **self.fields[by])
             cursor.execute(sql)
             for row in cursor.fetchall():
                 yield dict(zip([

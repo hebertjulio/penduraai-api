@@ -46,7 +46,7 @@ class RecordSerializer(serializers.ModelSerializer):
         ]
 
 
-class CreditorSerializar(serializers.BaseSerializer):
+class CustomerBalanceSerializar(serializers.BaseSerializer):
 
     def create(self, validated_data):
         pass
@@ -55,28 +55,6 @@ class CreditorSerializar(serializers.BaseSerializer):
         pass
 
     def to_representation(self, instance):
-        # instance = [r for r in instance][0]
-        balance = instance['payment'] - instance['debt']
-        return {
-            'user_id': instance['user_id'],
-            'name': instance['name'],
-            'balance': balance,
-        }
-
-    def to_internal_value(self, data):
-        pass
-
-
-class DebtorSerializar(serializers.BaseSerializer):
-
-    def create(self, validated_data):
-        pass
-
-    def update(self, instance, validated_data):
-        pass
-
-    def to_representation(self, instance):
-        # instance = [r for r in instance][0]
         balance = instance['payment'] - instance['debt']
         return {
             'user_id': instance['user_id'],
