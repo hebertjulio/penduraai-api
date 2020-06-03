@@ -35,7 +35,7 @@ class RecordDetailView(generics.RetrieveAPIView):
 
 class CreditorListView(APIView):
 
-    def get(self, request):
+    def get(self, request):  # skipcq
         user = request.user
         rows = Customer.objects.creditors(user.id)
         serializer = CreditorSerializar(rows, many=True)
@@ -44,7 +44,7 @@ class CreditorListView(APIView):
 
 class DebtorListView(generics.ListAPIView):
 
-    def get(self, request):
+    def get(self, request):  # skipcq
         user = request.user
         rows = Customer.objects.debtors(user.id)
         serializer = DebtorSerializar(rows, many=True)
