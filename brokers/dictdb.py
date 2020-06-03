@@ -118,11 +118,15 @@ class Transaction:
         count = len(keys)
         return count == 1
 
-    def save(self, expire=60):
+    def save(self, expire=None):
         if not self.exist():
             self.__data['status'] = Transaction.STATUS.awaiting
         value = json.dumps(self.__data)
-        expire = self.ttl if self.exist() else expire
+        if expire is None:
+            if self.exist():
+                expire = self.ttl
+            else:
+                expire = 60  # default
         self.__db.set(self.__name, value, ex=expire)
 
     def delete(self):
