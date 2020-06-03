@@ -13,7 +13,7 @@ from .services import push_notification
 
 class TransactionListView(APIView):
 
-    def post(_, request):
+    def post(self, request):
         serializer = TransactionSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
@@ -23,7 +23,7 @@ class TransactionListView(APIView):
 
 class TransactionDetailView(APIView):
 
-    def get(_, request, pk):
+    def get(self, request, pk):
         tran = Transaction(pk)
         if not tran.exist():
             raise NotFound
@@ -32,7 +32,7 @@ class TransactionDetailView(APIView):
 
 class TransactionRejectView(APIView):
 
-    def put(_, request, pk):
+    def put(self, request, pk):
         tran = Transaction(pk)
         if not tran.exist():
             raise NotFound
