@@ -11,7 +11,7 @@ class DebtorAccountable:
         request = serializer_field.context['request']
         debtor_id = request.user.id
         if value.accountable.id != debtor_id:
-            message = _('debtor isn\'t accountable of buyer.')
+            message = _('Accountable for buyer is invalid.')
             raise serializers.ValidationError(message)
 
 
@@ -23,5 +23,5 @@ class CreditorAccountable:
         parent = serializer_field.parent
         creditor_id = int(parent.initial_data['creditor'])
         if value.accountable.id != creditor_id:
-            message = _('creditor isn\'t accountable of seller.')
+            message = _('Accountable for seller is invalid.')
             raise serializers.ValidationError(message)

@@ -11,7 +11,7 @@ from .models import Record, Customer
 
 from .validators import (
     OweToYourselfValidator, IsCustomerValidator,
-    CustomerFromYourselfValidator)
+    CustomerFromYourselfValidator, BalanceWhenPaymentValidator)
 
 
 class RecordSerializer(serializers.ModelSerializer):
@@ -42,7 +42,8 @@ class RecordSerializer(serializers.ModelSerializer):
         ]
         validators = [
             OweToYourselfValidator(),
-            IsCustomerValidator()
+            IsCustomerValidator(),
+            BalanceWhenPaymentValidator()
         ]
 
 
