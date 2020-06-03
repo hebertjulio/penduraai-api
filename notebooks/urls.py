@@ -16,8 +16,8 @@ urlpatterns = [
         name='record_detail'),
     re_path(
         r'^customers/(?P<by>(debtor|creditor))$',
-        views.CustomerBalanceListView.as_view(),
-        name='customer_balance_list'),
+        views.CustomerBalancesListView.as_view(),
+        name='customer_balances_list'),
     path(
         'customers',
         views.CustomerListView.as_view(),

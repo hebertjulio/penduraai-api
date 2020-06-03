@@ -21,7 +21,7 @@ class IsValidTransactionValidator:
     @staticmethod
     def exist_validate(tran):
         if not tran.exist():
-            message = _('transaction code non-existent.')
+            message = _('Transaction non-existent.')
             raise serializers.ValidationError(message)
 
     @staticmethod
@@ -32,11 +32,11 @@ class IsValidTransactionValidator:
         }
         signature = generate_signature(data)
         if tran.signature != signature:
-            message = _('transaction signature is invalid.')
+            message = _('Invalid transaction signature.')
             raise serializers.ValidationError(message)
 
     @staticmethod
     def status_validate(tran):
         if tran.status != Transaction.STATUS.awaiting:
-            message = _('transaction status is %s.' % tran.status)
+            message = _('Transaction status is %s.' % tran.status)
             raise serializers.ValidationError(message)

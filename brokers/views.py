@@ -6,6 +6,8 @@ from rest_framework.status import (
     HTTP_200_OK, HTTP_201_CREATED, HTTP_400_BAD_REQUEST)
 from rest_framework.views import APIView
 
+from rest_framework_api_key.permissions import HasAPIKey
+
 from .dictdb import Transaction
 from .serializers import TransactionSerializer
 from .services import push_notification
@@ -13,9 +15,10 @@ from .services import push_notification
 
 class TransactionListView(APIView):
 
+    permission_classes = [HasAPIKey]
+
     def post(self, request):  # skipcq
-        context = {'request': request}
-        serializer = TransactionSerializer(data=request.data, context=context)
+        serializer = TransactionSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=HTTP_201_CREATED)
@@ -23,6 +26,8 @@ class TransactionListView(APIView):
 
 
 class TransactionDetailView(APIView):
+
+    permission_classes = [HasAPIKey]
 
     def get(self, request, pk):  # skipcq
         tran = Transaction(pk)
@@ -32,6 +37,8 @@ class TransactionDetailView(APIView):
 
 
 class TransactionRejectView(APIView):
+
+    permission_classes = [HasAPIKey]
 
     def put(self, request, pk):  # skipcq
         tran = Transaction(pk)

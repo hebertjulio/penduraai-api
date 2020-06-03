@@ -28,12 +28,12 @@ class CustomerManager(Manager):
         }
     }
 
-    def balance_of(self, _id, by):
+    def balances_list(self, by, of_user):
         if by not in self.fields.keys():
             raise ValueError
         from django.db import connection
         with connection.cursor() as cursor:
-            sql = self.__SQL.format(id=_id, **self.fields[by])
+            sql = self.__SQL.format(id=of_user, **self.fields[by])
             cursor.execute(sql)
             for row in cursor.fetchall():
                 yield dict(zip([
