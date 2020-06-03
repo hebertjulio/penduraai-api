@@ -1,6 +1,7 @@
-from django.db.models import Q, Sum, Case, When, F, DecimalField
-
 from rest_framework import generics
+from rest_framework.response import Response
+from rest_framework.status import HTTP_200_OK
+from rest_framework.views import APIView
 
 from .models import Record, Customer
 
@@ -30,40 +31,22 @@ class RecordDetailView(generics.RetrieveAPIView):
     queryset = Record.objects.all()
 
 
-class CreditorListView(generics.ListAPIView):
+class CreditorListView(APIView):
 
-    serializer_class = CreditorSerializar
-
-    def get_queryset(self):
-        payment_sum = Sum(Case(When(
-            operation='payment', then=F('value')), output_field=DecimalField(),
-            default=0))
-        debt_sum = Sum(Case(When(
-            operation='debt', then=F('value')), output_field=DecimalField(),
-            default=0))
-        user = self.request.user
-        qs = Record.objects.values('creditor__id', 'creditor__name')
-        qs = qs.annotate(payment_sum=payment_sum, debt_sum=debt_sum)
-        qs = qs.filter(debtor=user)
-        return qs
+    def get(_, request):
+        user = request.user
+        rows = Customer.objects.creditors(user.id)
+        serializer = CreditorSerializar(rows, many=True)
+        return Response(serializer.data, HTTP_200_OK)
 
 
 class DebtorListView(generics.ListAPIView):
 
-    serializer_class = DebtorSerializar
-
-    def get_queryset(self):
-        payment_sum = Sum(Case(When(
-            operation='payment', then=F('value')), output_field=DecimalField(),
-            default=0))
-        debt_sum = Sum(Case(When(
-            operation='debt', then=F('value')), output_field=DecimalField(),
-            default=0))
-        user = self.request.user
-        qs = Record.objects.values('debtor__id', 'debtor__name')
-        qs = qs.annotate(payment_sum=payment_sum, debt_sum=debt_sum)
-        qs = qs.filter(creditor=user)
-        return qs
+    def get(_, request):
+        user = request.user
+        rows = Customer.objects.debtors(user.id)
+        serializer = DebtorSerializar(rows, many=True)
+        return Response(serializer.data, HTTP_200_OK)
 
 
 class CustomerListView(generics.ListCreateAPIView):
