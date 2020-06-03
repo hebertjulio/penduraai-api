@@ -47,11 +47,6 @@ class BalanceWhenPaymentValidator:
         creditor = data['creditor']
         debtor = data['debtor']
         balance = BalanceWhenPaymentValidator.get_balance(creditor, debtor)
-        BalanceWhenPaymentValidator.balance_validate(balance, value)
-
-
-    @staticmethod
-    def balance_validate(balance, value):
         balance_final = balance + value
         if balance_final > 0:
             message = _('Balance cannot be positive.')
