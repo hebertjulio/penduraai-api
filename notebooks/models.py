@@ -16,7 +16,7 @@ class Record(TimeStampedModel):
     )
 
     id = models.BigAutoField(primary_key=True, editable=False)
-    description = models.CharField(('description'), max_length=255)
+    note = models.CharField(('note'), max_length=255, blank=True)
 
     value = models.DecimalField(
         _('value'), max_digits=10, decimal_places=2,
@@ -76,6 +76,18 @@ class Customer(TimeStampedModel):
     )
 
     authorized = models.BooleanField(_('authorized'), default=True)
+
+    @property
+    def debtor_name(self):
+        return self.debtor.name
+
+    @debtor_name.setter
+    def debtor_name(self):
+        raise NotImplementedError
+
+    @debtor_name.deleter
+    def debtor_name(self):
+        raise NotImplementedError
 
     def __str__(self):
         return self.creditor.name

@@ -1,7 +1,6 @@
 from django.db.transaction import atomic
 
 from rest_framework import serializers
-from rest_framework.validators import UniqueTogetherValidator
 
 from accounts.relations import BuyerField, SellerField
 from brokers.validators import IsValidTransactionValidator
@@ -11,7 +10,8 @@ from .models import Record, Customer
 
 from .validators import (
     OweToYourselfValidator, IsCustomerValidator,
-    CustomerFromYourselfValidator, PositiveBalanceValidator)
+    CustomerFromYourselfValidator, PositiveBalanceValidator,
+    AlreadyACustomerValidator)
 
 
 class RecordSerializer(serializers.ModelSerializer):
@@ -20,17 +20,15 @@ class RecordSerializer(serializers.ModelSerializer):
         IsValidTransactionValidator(),
     ])
 
-    debtor = serializers.HiddenField(
-        default=serializers.CurrentUserDefault()
-    )
-
     seller = SellerField()
     buyer = BuyerField()
 
     @atomic
     @accept_transaction
     def create(self, validated_data):
+        request = self.context['request']
         obj = Record(**validated_data)
+        obj.debtor = request.user
         obj.save()
         return obj
 
@@ -53,28 +51,30 @@ class CustomerSerializer(serializers.ModelSerializer):
         IsValidTransactionValidator(),
     ])
 
-    debtor = serializers.HiddenField(
-        default=serializers.CurrentUserDefault()
-    )
+    debtor_name = serializers.CharField(read_only=True)
 
     @atomic
     @accept_transaction
     def create(self, validated_data):
+        request = self.context['request']
         obj = Customer(**validated_data)
+        obj.debtor = request.user
         obj.save()
         return obj
 
     class Meta:
         model = Customer
         fields = '__all__'
-        read_only_fields = ['authorized']
+        read_only_fields = ['authorized', 'debtor']
         validators = [
             CustomerFromYourselfValidator(),
-            UniqueTogetherValidator(
-                queryset=Customer.objects.all(),
-                fields=['creditor', 'debtor']
-            )
+            AlreadyACustomerValidator()
         ]
+        extra_kwargs = {
+            'creditor': {
+                'write_only': True
+            }
+        }
 
 
 class CreditorSerializar(serializers.BaseSerializer):
