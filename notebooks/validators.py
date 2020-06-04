@@ -25,8 +25,12 @@ class IsCustomerValidator:
 
 class CustomerFromYourselfValidator:
 
-    def __call__(self, value):
-        if value['creditor'].id == value['debtor'].id:
+    requires_context = True
+
+    def __call__(self, value, serializer_field):
+        request = serializer_field.context['request']
+        user = request.user
+        if value['creditor'].id == user.id:
             message = _('You can\'t customer from yourself.')
             raise serializers.ValidationError(message)
 
@@ -40,4 +44,17 @@ class PositiveBalanceValidator:
         balance = balance + value['value']
         if balance > 0:
             message = _('Balance cannot be positive.')
+            raise serializers.ValidationError(message)
+
+
+class AlreadyACustomerValidator:
+
+    requires_context = True
+
+    def __call__(self, value, serializer_field):
+        request = serializer_field.context['request']
+        user = request.user
+        qs = user.customers_debtor.filter(creditor=value['creditor'])
+        if qs.exists():
+            message = _('You are already a customer.')
             raise serializers.ValidationError(message)

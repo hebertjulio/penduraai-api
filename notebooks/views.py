@@ -36,6 +36,8 @@ class CustomerListView(generics.ListCreateAPIView):
     def get_queryset(self):
         user = self.request.user
         qs = Customer.objects.filter(creditor=user)
+        qs = qs.select_related('debtor')
+        qs = qs.order_by('debtor__name')
         return qs
 
 

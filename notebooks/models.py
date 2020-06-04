@@ -77,6 +77,18 @@ class Customer(TimeStampedModel):
 
     authorized = models.BooleanField(_('authorized'), default=True)
 
+    @property
+    def debtor_name(self):
+        return self.debtor.name
+
+    @debtor_name.setter
+    def debtor_name(self):
+        raise NotImplementedError
+
+    @debtor_name.deleter
+    def debtor_name(self):
+        raise NotImplementedError
+
     def __str__(self):
         return self.creditor.name
 
