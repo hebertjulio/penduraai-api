@@ -19,6 +19,14 @@ class TransactionConsumer(AsyncConsumer):
 
     async def websocket_connect(self, event):
         tran = Transaction(event['pk'])
+        if not tran.exist():
+            await self.send({
+                'type': 'websocket.reject'
+            })
+            await self.send({
+                'type': 'websocket.close'
+            })
+            raise StopConsumer
         data = json.dumps(tran.data)
         await self.send({
             'type': 'websocket.accept'

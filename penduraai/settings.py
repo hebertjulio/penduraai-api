@@ -78,7 +78,7 @@ TEMPLATES = [
 
 # https://channels.readthedocs.io/en/latest/installation.html
 
-ASGI_APPLICATION = 'penduraai.routing.application'
+ASGI_APPLICATION = 'penduraai.channels_routing.application'
 
 
 # Password validation
