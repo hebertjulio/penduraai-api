@@ -1,22 +1,19 @@
 from django.db.models import Q
 
 from rest_framework import generics
-from rest_framework.response import Response
-from rest_framework.status import HTTP_200_OK
-from rest_framework.views import APIView
+from rest_framework import filters
 
 from .models import Record, Customer
 
 from .serializers import (
-    RecordSerializer, CustomerBalanceSerializar, CustomerSerializer)
+    RecordSerializer, CustomerSerializer, CreditorSerializar,
+    DebtorSerializar)
 
 
 class RecordListView(generics.ListCreateAPIView):
 
     serializer_class = RecordSerializer
-    filterset_fields = (
-        'creditor', 'debtor',
-    )
+    filterset_fields = ['creditor', 'debtor']
 
     def get_queryset(self):
         user = self.request.user
@@ -29,15 +26,6 @@ class RecordDetailView(generics.RetrieveAPIView):
     lookup_field = 'pk'
     serializer_class = RecordSerializer
     queryset = Record.objects.all()
-
-
-class CustomerBalancesListView(APIView):
-
-    def get(self, request, by):  # skipcq
-        of_user = request.user.id
-        rows = Customer.objects.balances_list(by, of_user)
-        serializer = CustomerBalanceSerializar(rows, many=True)
-        return Response(serializer.data, HTTP_200_OK)
 
 
 class CustomerListView(generics.ListCreateAPIView):
@@ -58,4 +46,32 @@ class CustomerDetailView(generics.RetrieveUpdateDestroyAPIView):
     def get_queryset(self):
         user = self.request.user
         qs = Customer.objects.filter(creditor=user)
+        return qs
+
+
+class CreditorListView(generics.ListAPIView):
+
+    serializer_class = CreditorSerializar
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['creditor__name']
+
+    def get_queryset(self):
+        user = self.request.user
+        values = ('creditor__id', 'creditor__name', 'balance')
+        qs = Customer.objects.creditors(user)
+        qs = qs.values(*values)
+        return qs
+
+
+class DebtorListView(generics.ListAPIView):
+
+    serializer_class = DebtorSerializar
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['debtor__name']
+
+    def get_queryset(self):
+        user = self.request.user
+        values = ('debtor__id', 'debtor__name', 'balance')
+        qs = qs = Customer.objects.debtors(user)
+        qs = qs.values(*values)
         return qs

@@ -5,7 +5,7 @@ from django.core.validators import MinValueValidator
 from model_utils.models import TimeStampedModel
 from model_utils import Choices
 
-from .managers import CustomerManager
+from .querysets import CustomerQuerySet
 
 
 class Record(TimeStampedModel):
@@ -83,7 +83,7 @@ class Customer(TimeStampedModel):
     def __repr__(self):
         return self.creditor.name
 
-    objects = CustomerManager()
+    objects = CustomerQuerySet.as_manager()
 
     class Meta:
         verbose_name = _('customer')

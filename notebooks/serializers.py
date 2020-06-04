@@ -11,7 +11,7 @@ from .models import Record, Customer
 
 from .validators import (
     OweToYourselfValidator, IsCustomerValidator,
-    CustomerFromYourselfValidator, BalanceWhenPaymentValidator)
+    CustomerFromYourselfValidator, PositiveBalanceValidator)
 
 
 class RecordSerializer(serializers.ModelSerializer):
@@ -43,28 +43,8 @@ class RecordSerializer(serializers.ModelSerializer):
         validators = [
             OweToYourselfValidator(),
             IsCustomerValidator(),
-            BalanceWhenPaymentValidator()
+            PositiveBalanceValidator()
         ]
-
-
-class CustomerBalanceSerializar(serializers.BaseSerializer):
-
-    def create(self, validated_data):
-        pass
-
-    def update(self, instance, validated_data):
-        pass
-
-    def to_representation(self, instance):
-        balance = instance['payment'] - instance['debt']
-        return {
-            'user_id': instance['user_id'],
-            'name': instance['name'],
-            'balance': balance,
-        }
-
-    def to_internal_value(self, data):
-        pass
 
 
 class CustomerSerializer(serializers.ModelSerializer):
@@ -95,3 +75,41 @@ class CustomerSerializer(serializers.ModelSerializer):
                 fields=['creditor', 'debtor']
             )
         ]
+
+
+class CreditorSerializar(serializers.BaseSerializer):
+
+    def create(self, validated_data):
+        pass
+
+    def update(self, instance, validated_data):
+        pass
+
+    def to_representation(self, instance):
+        return {
+            'id': instance['creditor__id'],
+            'name': instance['creditor__name'],
+            'balance': instance['balance'] or 0,
+        }
+
+    def to_internal_value(self, data):
+        pass
+
+
+class DebtorSerializar(serializers.BaseSerializer):
+
+    def create(self, validated_data):
+        pass
+
+    def update(self, instance, validated_data):
+        pass
+
+    def to_representation(self, instance):
+        return {
+            'id': instance['debtor__id'],
+            'name': instance['debtor__name'],
+            'balance': instance['balance'] or 0,
+        }
+
+    def to_internal_value(self, data):
+        pass
