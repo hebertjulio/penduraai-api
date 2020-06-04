@@ -16,7 +16,7 @@ class Record(TimeStampedModel):
     )
 
     id = models.BigAutoField(primary_key=True, editable=False)
-    description = models.CharField(('description'), max_length=255)
+    note = models.CharField(('note'), max_length=255, blank=True)
 
     value = models.DecimalField(
         _('value'), max_digits=10, decimal_places=2,
