@@ -5,8 +5,8 @@ class CustomerQuerySet(QuerySet):
 
     __BALANCE_QUERY = """
         SELECT
-            SUM(CASE WHEN operation='payment' THEN value END) -
-            SUM(CASE WHEN operation='debt' THEN value END)
+            SUM(CASE WHEN operation='payment' THEN value ELSE 0 END) -
+            SUM(CASE WHEN operation='debt' THEN value ELSE 0 END)
         FROM notebooks_record
         WHERE creditor_id = notebooks_customer.creditor_id
         AND debtor_id = notebooks_customer.debtor_id
