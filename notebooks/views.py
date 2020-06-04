@@ -18,6 +18,7 @@ class RecordListView(generics.ListCreateAPIView):
     def get_queryset(self):
         user = self.request.user
         qs = Record.objects.filter(Q(creditor=user) | Q(debtor=user))
+        qs = qs.order_by('-created')
         return qs
 
 
