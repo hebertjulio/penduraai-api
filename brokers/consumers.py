@@ -6,7 +6,7 @@ from channels.exceptions import StopConsumer
 from .dictdb import Transaction
 
 
-class TransactionConsumer(AsyncConsumer):
+class BaseConsumer(AsyncConsumer):
 
     async def get_url_route(self):
         kwargs = self.scope['url_route']['kwargs']
@@ -17,40 +17,58 @@ class TransactionConsumer(AsyncConsumer):
         message.update(url_route)
         await super().dispatch(message)
 
-    async def websocket_connect(self, event):
-        tran = Transaction(event['pk'])
-        if not tran.exist():
-            await self.send({
-                'type': 'websocket.reject'
-            })
-            await self.send({
-                'type': 'websocket.close'
-            })
-            raise StopConsumer
-        data = json.dumps(tran.data)
-        await self.send({
+    async def accept(self):
+        await super().send({
             'type': 'websocket.accept'
         })
-        await self.send({
-            'type': 'websocket.send',
-            'text': data
-        })
-        await self.channel_layer.group_add(
-            event['pk'], self.channel_name
-        )
 
-    async def websocket_send(self, event):
-        if 'text' in event and event['text']:
-            await self.send({
+    async def send(self, message):
+        if message:
+            await super().send({
                 'type': 'websocket.send',
-                'text': event['text'],
+                'text': message,
             })
 
-    async def websocket_disconnect(self, event):
-        await self.send({
+    async def reject(self):
+        await super().send({
+            'type': 'websocket.reject'
+        })
+
+    async def close(self):
+        await super().send({
             'type': 'websocket.close'
         })
-        await self.channel_layer.group_discard(
-            event['pk'], self.channel_name
-        )
         raise StopConsumer
+
+    async def group_add(self, name):
+        if name:
+            await self.channel_layer.group_add(
+                name, self.channel_name
+            )
+
+    async def group_discard(self, name):
+        if name:
+            await self.channel_layer.group_discard(
+                name, self.channel_name
+            )
+
+
+class TransactionConsumer(BaseConsumer):
+
+    async def websocket_connect(self, event):
+        tran = Transaction(event['pk'])
+        if tran.exist():
+            await self.accept()
+            await self.send(json.dumps(tran.data))
+            await self.group_add(event['pk'])
+        else:
+            await self.reject()
+            await self.close()
+
+    async def websocket_send(self, event):
+        if 'text' in event:
+            await self.send(event['text'])
+
+    async def websocket_disconnect(self, event):
+        await self.close()
+        await self.group_discard(event['pk'])

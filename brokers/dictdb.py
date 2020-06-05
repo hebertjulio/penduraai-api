@@ -102,7 +102,9 @@ class Transaction:
 
     @property
     def data(self):
-        value = {**{'id': self.id}, **self.__data}
+        value = {**{
+            'id': self.id, 'ttl': self.ttl
+        }, **self.__data}
         return value
 
     @data.setter

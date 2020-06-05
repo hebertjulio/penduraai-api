@@ -15,6 +15,10 @@ urlpatterns = [
         views.RecordDetailView.as_view(),
         name='record_detail'),
     path(
+        'records/<int:pk>/strikethrough',
+        views.RecordStrikethroughView.as_view(),
+        name='record_strikethrough'),
+    path(
         'customers',
         views.CustomerListView.as_view(),
         name='customer_list'),
