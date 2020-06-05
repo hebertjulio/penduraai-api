@@ -24,6 +24,7 @@ daphne = "^2.5.0"
 ipython = "^7.15.0"
 django-silk = "^4.0.1"
 dj_database_url = "^0.5.0"
+django-redis = "^4.12.1"
 
 
 [tool.poetry.dev-dependencies]
