@@ -11,6 +11,7 @@ class TransactionSerializer(serializers.Serializer):
     payload = serializers.JSONField(binary=True)
     status = serializers.ChoiceField(
         choices=Transaction.STATUS, read_only=True)
+    ttl = serializers.IntegerField(read_only=True)
 
     def create(self, validated_data):
         tran = Transaction(str(uuid.uuid4()))
