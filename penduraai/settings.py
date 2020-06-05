@@ -13,6 +13,8 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 import os
 import datetime
 
+import dj_database_url
+
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -32,13 +34,14 @@ INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
-    'django.contrib.sessions',
+    # 'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'channels',
     'rest_framework',
     'rest_framework_api_key',
     'django_filters',
+    'silk',
     'accounts',
     'notebooks',
     'brokers',
@@ -55,6 +58,7 @@ MIDDLEWARE = [
     # Simplified static file serving.
     # https://warehouse.python.org/project/whitenoise/
     'whitenoise.middleware.WhiteNoiseMiddleware',
+    'silk.middleware.SilkyMiddleware',
 ]
 
 ROOT_URLCONF = 'penduraai.urls'
@@ -176,6 +180,56 @@ CHANNEL_LAYERS = {
         },
     },
 }
+
+
+# Define custom login URL to auth
+# https://docs.djangoproject.com/en/2.2/ref/settings/#login-url
+
+LOGIN_URL = '/admin/login/'
+
+
+# Database
+# https://docs.djangoproject.com/en/3.0/ref/settings/#databases
+
+DATABASES = {
+    'default': dj_database_url.config(
+        env='HEROKU_POSTGRESQL_JADE_URL',
+        engine='django.db.backends.postgresql'
+    )
+}
+
+
+# Define django-silk configs.
+# https://silk.readthedocs.io/en/latest/index.html
+
+SILKY_AUTHENTICATION = True  # User must login
+SILKY_AUTHORISATION = True  # User must have permissions
+
+SILKY_INTERCEPT_FUNC = (
+    lambda request: all(
+        path not in request.path
+        for path in ['admin', 'swagger']
+    )
+)
+
+
+# https://docs.djangoproject.com/en/3.0/topics/cache/
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': '',
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+        }
+    }
+}
+
+
+# https://docs.djangoproject.com/en/3.0/topics/http/sessions/
+
+SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
+SESSION_CACHE_ALIAS = 'default'
 
 
 # HERE STARTS DYNACONF EXTENSION LOAD (Keep at the very bottom of settings.py)

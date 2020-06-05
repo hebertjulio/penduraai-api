@@ -25,7 +25,7 @@ class Transaction:
     }'''
 
     def __init__(self, _id):
-        self.__db = redis.Redis(**settings.REDIS_CONFIG)
+        self.__db = redis.Redis(**settings.TRANSACTION_REDIS_CONFIG)
         self.__name = ':'.join([self.PREFIX, _id])
         data = self.__db.get(self.__name)
         data = data or self.__DEFAULT_DATA % Transaction.STATUS.no_exist
