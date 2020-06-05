@@ -22,11 +22,11 @@ class BaseConsumer(AsyncConsumer):
             'type': 'websocket.accept'
         })
 
-    async def send(self, text):
-        if text:
+    async def send(self, message):
+        if message:
             await super().send({
                 'type': 'websocket.send',
-                'text': text,
+                'text': message,
             })
 
     async def reject(self):
