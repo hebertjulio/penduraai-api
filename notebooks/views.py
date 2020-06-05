@@ -1,7 +1,10 @@
 from django.db.models import Q
 
 from rest_framework import generics
-from rest_framework import filters
+from rest_framework.filters import SearchFilter
+from rest_framework.exceptions import NotFound
+from rest_framework.views import APIView
+from rest_framework.response import Response
 
 from .models import Record, Customer
 
@@ -29,6 +32,31 @@ class RecordDetailView(generics.RetrieveAPIView):
     queryset = Record.objects.all()
 
 
+class RecordStrikethroughView(APIView):
+
+    def get_object(self, pk, user):
+        try:
+            user = self.request.user
+            obj = Record.objects.get(pk=pk, creditor=user)
+            return obj
+        except Record.DoesNotExist:
+            raise NotFound
+
+    def put(self, request, pk):
+        user = self.request.user
+        obj = self.get_object(pk, user)
+        obj.strikethrough = True
+        serializer = RecordSerializer(obj)
+        return Response(serializer.data)
+
+    def delete(self, request, pk):
+        user = self.request.user
+        obj = self.get_object(pk, user)
+        obj.strikethrough = False
+        serializer = RecordSerializer(obj)
+        return Response(serializer.data)
+
+
 class CustomerListView(generics.CreateAPIView):
 
     serializer_class = CustomerSerializer
@@ -48,7 +76,7 @@ class CustomerDetailView(generics.RetrieveUpdateDestroyAPIView):
 class CreditorListView(generics.ListAPIView):
 
     serializer_class = CreditorSerializar
-    filter_backends = [filters.SearchFilter]
+    filter_backends = [SearchFilter]
     search_fields = ['creditor__name']
 
     def get_queryset(self):
@@ -63,7 +91,7 @@ class CreditorListView(generics.ListAPIView):
 class DebtorListView(generics.ListAPIView):
 
     serializer_class = DebtorSerializar
-    filter_backends = [filters.SearchFilter]
+    filter_backends = [SearchFilter]
     search_fields = ['debtor__name']
 
     def get_queryset(self):

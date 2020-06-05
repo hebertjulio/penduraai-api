@@ -9,7 +9,8 @@ class CustomerQuerySet(QuerySet):
             SUM(CASE WHEN operation='debt' THEN value ELSE 0.0 END)
         FROM notebooks_record
         WHERE creditor_id = notebooks_customer.creditor_id
-        AND debtor_id = notebooks_customer.debtor_id
+            AND debtor_id = notebooks_customer.debtor_id
+            AND strikethrough = false
     """
 
     def creditors(self, debtor):

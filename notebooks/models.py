@@ -50,6 +50,8 @@ class Record(TimeStampedModel):
         related_name='records_buyer',
     )
 
+    strikethrough = models.BooleanField(_('strikethrough'), default=False)
+
     def __str__(self):
         return str(self.id)
 
