@@ -40,18 +40,6 @@ class BaseConsumer(AsyncConsumer):
         })
         raise StopConsumer
 
-    async def group_add(self, name):
-        if name:
-            await self.channel_layer.group_add(
-                name, self.channel_name
-            )
-
-    async def group_discard(self, name):
-        if name:
-            await self.channel_layer.group_discard(
-                name, self.channel_name
-            )
-
 
 class TransactionConsumer(BaseConsumer):
 
@@ -60,7 +48,9 @@ class TransactionConsumer(BaseConsumer):
         if tran.exist():
             await self.accept()
             await self.send(json.dumps(tran.data))
-            await self.group_add(event['pk'])
+            await self.channel_layer.group_add(
+                event['pk'], self.channel_name
+            )
         else:
             await self.reject()
             await self.close()
@@ -69,6 +59,11 @@ class TransactionConsumer(BaseConsumer):
         if 'text' in event:
             await self.send(event['text'])
 
+    async def websocket_receive(self, event):
+        pass
+
     async def websocket_disconnect(self, event):
         await self.close()
-        await self.group_discard(event['pk'])
+        await self.channel_layer.group_discard(
+            event['pk'], self.channel_name
+        )
