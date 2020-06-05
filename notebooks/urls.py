@@ -15,7 +15,7 @@ urlpatterns = [
         views.RecordDetailView.as_view(),
         name='record_detail'),
     re_path(
-        r'records/(?P<pk>\w+)/(?P<switch>(strikethrough|clean))',
+        r'records/(?P<pk>\w+)/(?P<switch>(undo-)?strikethrough)',
         views.RecordStrikethroughView.as_view(),
         name='record_strikethrough'),
     path(
