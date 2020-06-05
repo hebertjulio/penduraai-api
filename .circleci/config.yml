@@ -8,8 +8,10 @@ jobs:
     executor: python/default
     steps:
       - checkout
-      - python/load-cache
-      - python/install-deps
+      - python/load-cache:
+          dependency-file: requirements-dev.txt
+      - python/install-deps:
+          dependency-file: requirements-dev.txt
       - python/save-cache
       - run:
           command: ./manage.py test -v 2
