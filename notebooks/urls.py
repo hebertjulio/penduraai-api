@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import path, re_path
 
 from . import views
 
@@ -14,8 +14,8 @@ urlpatterns = [
         'records/<int:pk>',
         views.RecordDetailView.as_view(),
         name='record_detail'),
-    path(
-        'records/<int:pk>/strikethrough',
+    re_path(
+        r'records/(?P<pk>\w+)/(?P<switch>(strikethrough|clean))',
         views.RecordStrikethroughView.as_view(),
         name='record_strikethrough'),
     path(
