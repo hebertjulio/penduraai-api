@@ -206,9 +206,10 @@ SILKY_AUTHENTICATION = True  # User must login
 SILKY_AUTHORISATION = True  # User must have permissions
 
 SILKY_INTERCEPT_FUNC = (
-    lambda request: all([
-        i not in request.path for i in ['admin', 'swagger']
-    ])
+    lambda request: all(
+        path not in request.path
+        for path in ['admin', 'swagger']
+    )
 )
 
 
