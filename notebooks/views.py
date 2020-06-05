@@ -38,27 +38,16 @@ class RecordDetailView(generics.RetrieveAPIView):
 
 class RecordStrikethroughView(APIView):
 
-    def get_object(self, pk, user):
+    def patch(self, request, pk, switch):
         try:
             user = self.request.user
             obj = Record.objects.get(pk=pk, creditor=user)
-            return obj
+            obj.strikethrough = switch == 'strikethrough'
+            obj.save()
+            serializer = RecordSerializer(obj)
+            return Response(serializer.data)
         except Record.DoesNotExist:
             raise NotFound
-
-    def put(self, request, pk):
-        user = self.request.user
-        obj = self.get_object(pk, user)
-        obj.strikethrough = True
-        serializer = RecordSerializer(obj)
-        return Response(serializer.data)
-
-    def delete(self, request, pk):
-        user = self.request.user
-        obj = self.get_object(pk, user)
-        obj.strikethrough = False
-        serializer = RecordSerializer(obj)
-        return Response(serializer.data)
 
 
 class CustomerListView(generics.CreateAPIView):
