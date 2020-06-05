@@ -29,7 +29,11 @@ class RecordDetailView(generics.RetrieveAPIView):
 
     lookup_field = 'pk'
     serializer_class = RecordSerializer
-    queryset = Record.objects.all()
+
+    def get_queryset(self):
+        user = self.request.user
+        qs = Record.objects.filter(Q(creditor=user) | Q(debtor=user))
+        return qs
 
 
 class RecordStrikethroughView(APIView):
