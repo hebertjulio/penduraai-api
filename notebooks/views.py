@@ -62,6 +62,7 @@ class CreditorListView(generics.ListAPIView):
         user = self.request.user
         values = ('creditor__id', 'creditor__name', 'balance')
         qs = Customer.objects.creditors(user)
+        qs = qs.order_by('creditor__name')
         qs = qs.values(*values)
         return qs
 
@@ -76,5 +77,6 @@ class DebtorListView(generics.ListAPIView):
         user = self.request.user
         values = ('debtor__id', 'debtor__name', 'balance')
         qs = qs = Customer.objects.debtors(user)
+        qs = qs.order_by('debtor__name')
         qs = qs.values(*values)
         return qs
