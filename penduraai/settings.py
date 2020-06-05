@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_api_key',
     'django_filters',
+    'silk',
     'accounts',
     'notebooks',
     'brokers',
@@ -55,6 +56,7 @@ MIDDLEWARE = [
     # Simplified static file serving.
     # https://warehouse.python.org/project/whitenoise/
     'whitenoise.middleware.WhiteNoiseMiddleware',
+    'silk.middleware.SilkyMiddleware',
 ]
 
 ROOT_URLCONF = 'penduraai.urls'
@@ -176,6 +178,25 @@ CHANNEL_LAYERS = {
         },
     },
 }
+
+
+# Define custom login URL to auth
+# https://docs.djangoproject.com/en/2.2/ref/settings/#login-url
+
+LOGIN_URL = '/admin/login/'
+
+
+# Define django-silk configs.
+# https://silk.readthedocs.io/en/latest/index.html
+
+SILKY_AUTHENTICATION = True  # User must login
+SILKY_AUTHORISATION = True  # User must have permissions
+
+SILKY_INTERCEPT_FUNC = (
+    lambda request: all([
+        i not in request.path for i in ['admin', 'swagger']
+    ])
+)
 
 
 # HERE STARTS DYNACONF EXTENSION LOAD (Keep at the very bottom of settings.py)
