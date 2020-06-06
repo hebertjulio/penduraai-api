@@ -85,7 +85,7 @@ class ProfileAuthenticateView(APIView):
         serializer.is_valid(raise_exception=True)
         try:
             pin = request.data['pin']
-            profile = self.request.user.profiles_accountable.get(pin=pin)
+            profile = self.request.user.accountable.get(pin=pin)
             serializer = ProfileSerializer(profile)
             res = Response(serializer.data, HTTP_200_OK)
             return res

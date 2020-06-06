@@ -30,27 +30,30 @@ class Record(TimeStampedModel):
         choices=OPERATION
     )
 
-    creditor = models.ForeignKey(
-        'accounts.User', on_delete=models.CASCADE,
-        related_name='records_creditor',
-    )
-
-    debtor = models.ForeignKey(
-        'accounts.User', on_delete=models.CASCADE,
-        related_name='records_debtor',
+    customer_record = models.ForeignKey(
+        'CustomerRecord', on_delete=models.CASCADE,
+        related_name='customer_record',
     )
 
     seller = models.ForeignKey(
         'accounts.Profile', on_delete=models.CASCADE,
-        related_name='records_seller',
+        related_name='as_seller',
     )
 
     buyer = models.ForeignKey(
         'accounts.Profile', on_delete=models.CASCADE,
-        related_name='records_buyer',
+        related_name='as_buyer',
     )
 
     strikethrough = models.BooleanField(_('strikethrough'), default=False)
+
+    @property
+    def creditor(self):
+        return self.customer_record.creditor.name
+
+    @property
+    def debtor(self):
+        return self.customer_record.debtor.name
 
     def __str__(self):
         return str(self.id)
@@ -63,45 +66,33 @@ class Record(TimeStampedModel):
         verbose_name_plural = _('records')
 
 
-class Customer(TimeStampedModel):
+class CustomerRecord(TimeStampedModel):
 
     id = models.BigAutoField(primary_key=True, editable=False)
 
     creditor = models.ForeignKey(
         'accounts.User', on_delete=models.CASCADE,
-        related_name='customers_creditor',
+        related_name='as_creditor',
     )
 
     debtor = models.ForeignKey(
         'accounts.User', on_delete=models.CASCADE,
-        related_name='customers_debtor',
+        related_name='as_debtor',
     )
 
     authorized = models.BooleanField(_('authorized'), default=True)
 
-    @property
-    def debtor_name(self):
+    def __str__(self):
         return self.debtor.name
 
-    @debtor_name.setter
-    def debtor_name(self):
-        raise NotImplementedError
-
-    @debtor_name.deleter
-    def debtor_name(self):
-        raise NotImplementedError
-
-    def __str__(self):
-        return self.creditor.name
-
     def __repr__(self):
-        return self.creditor.name
+        return self.debtor.name
 
     objects = CustomerQuerySet.as_manager()
 
     class Meta:
-        verbose_name = _('customer')
-        verbose_name_plural = _('customers')
+        verbose_name = _('customer record')
+        verbose_name_plural = _('customer records')
         unique_together = [
             ['creditor', 'debtor']
         ]

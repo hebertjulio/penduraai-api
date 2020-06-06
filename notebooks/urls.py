@@ -1,4 +1,4 @@
-from django.urls import path, re_path
+from django.urls import path
 
 from . import views
 
@@ -14,18 +14,22 @@ urlpatterns = [
         'records/<int:pk>',
         views.RecordDetailView.as_view(),
         name='record_detail'),
-    re_path(
-        r'records/(?P<pk>\w+)/(?P<switch>(undo-)?strikethrough)',
+    path(
+        'records/<int:pk>/strikethrough',
         views.RecordStrikethroughView.as_view(),
         name='record_strikethrough'),
     path(
-        'customers',
-        views.CustomerListView.as_view(),
-        name='customer_list'),
+        'customer-records',
+        views.CustomerRecordListView.as_view(),
+        name='customer_record_list'),
     path(
-        'customers/<int:pk>',
-        views.CustomerDetailView.as_view(),
-        name='customer_detail'),
+        'customer-records/<int:pk>',
+        views.CustomerRecordDetailView.as_view(),
+        name='customer_record_detail'),
+    path(
+        'customer-records/creditor/<int:pk>',
+        views.DebtorCustomerRecordView.as_view(),
+        name='debtor_customer_record'),
     path(
         'creditors',
         views.CreditorListView.as_view(),

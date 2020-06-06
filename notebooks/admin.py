@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Record, Customer
+from .models import Record, CustomerRecord
 
 
 @admin.register(Record)
@@ -10,13 +10,12 @@ class RecordAdmin(admin.ModelAdmin):
         'value', 'operation',
     )
     search_fields = (
-        'creditor__name', 'creditor__email',
-        'debtor__name', 'debtor__email',
+        'customerrecord__creditor__name', 'customerrecord__creditor__email',
+        'customerrecord__debtor__name', 'customerrecord__debtor__email',
         'id',
     )
     autocomplete_fields = (
-        'creditor', 'debtor', 'seller',
-        'buyer',
+        'customer_record', 'seller', 'buyer',
     )
     list_filter = (
         'operation',
@@ -26,8 +25,8 @@ class RecordAdmin(admin.ModelAdmin):
     )
 
 
-@admin.register(Customer)
-class CustomerAdmin(admin.ModelAdmin):
+@admin.register(CustomerRecord)
+class CustomerRecordAdmin(admin.ModelAdmin):
     list_display = (
         'creditor', 'debtor', 'authorized',
     )

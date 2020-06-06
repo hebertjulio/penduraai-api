@@ -80,7 +80,7 @@ class Profile(TimeStampedModel):
 
     accountable = models.ForeignKey(
         'User', on_delete=models.CASCADE,
-        related_name='profiles_accountable',
+        related_name='accountable',
     )
 
     role = models.CharField(

@@ -2,16 +2,15 @@ from django.db.transaction import atomic
 
 from rest_framework import serializers
 
-from accounts.relations import BuyerField, SellerField
 from brokers.validators import IsValidTransactionValidator
 from brokers.decorators import accept_transaction
 
-from .models import Record, Customer
+from .models import Record, CustomerRecord
 
 from .validators import (
-    OweToYourselfValidator, IsCustomerValidator,
-    CustomerFromYourselfValidator, PositiveBalanceValidator,
-    AlreadyACustomerValidator)
+    IsCustomerRecordOwnerValidator, CustomerFromYourselfValidator,
+    AlreadyACustomerValidator, SellerAccountableValidator,
+    BuyerAccountableValidator)
 
 
 class RecordSerializer(serializers.ModelSerializer):
@@ -20,50 +19,46 @@ class RecordSerializer(serializers.ModelSerializer):
         IsValidTransactionValidator(),
     ])
 
-    seller = SellerField()
-    buyer = BuyerField()
-
     @atomic
     @accept_transaction
     def create(self, validated_data):
-        request = self.context['request']
         obj = Record(**validated_data)
-        obj.debtor = request.user
         obj.save()
         return obj
 
     class Meta:
         model = Record
         fields = '__all__'
-        read_only_fields = [
-            'debtor',
-        ]
+        extra_kwargs = {
+            'customer_record': {
+                'validators': [
+                    IsCustomerRecordOwnerValidator()
+                ]
+            }
+        }
         validators = [
-            OweToYourselfValidator(),
-            IsCustomerValidator(),
-            PositiveBalanceValidator()
+            SellerAccountableValidator(),
+            BuyerAccountableValidator()
         ]
 
 
-class CustomerSerializer(serializers.ModelSerializer):
+class CustomerRecordSerializer(serializers.ModelSerializer):
 
     transaction = serializers.UUIDField(write_only=True, validators=[
         IsValidTransactionValidator(),
     ])
 
-    debtor_name = serializers.CharField(read_only=True)
-
     @atomic
     @accept_transaction
     def create(self, validated_data):
         request = self.context['request']
-        obj = Customer(**validated_data)
+        obj = CustomerRecord(**validated_data)
         obj.debtor = request.user
         obj.save()
         return obj
 
     class Meta:
-        model = Customer
+        model = CustomerRecord
         fields = '__all__'
         read_only_fields = ['authorized', 'debtor']
         validators = [

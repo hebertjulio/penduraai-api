@@ -2,31 +2,16 @@ from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers
 
-from .models import Record, Customer
 
-
-class OweToYourselfValidator:
+class IsCustomerRecordOwnerValidator:
 
     requires_context = True
 
     def __call__(self, value, serializer_field):
         request = serializer_field.context['request']
         user = request.user
-        if value['creditor'].id == user.id:
-            message = _('you can\'t owe to yourself.')
-            raise serializers.ValidationError(message)
-
-
-class IsCustomerValidator:
-
-    requires_context = True
-
-    def __call__(self, value, serializer_field):
-        request = serializer_field.context['request']
-        user = request.user
-        qs = value['creditor'].customers_creditor.filter(debtor=user)
-        if not qs.exists():
-            message = _('You aren\'t a costumer.')
+        if value.debtor.id != user.id:
+            message = _('you aren\'t owner of this customer record.')
             raise serializers.ValidationError(message)
 
 
@@ -42,22 +27,6 @@ class CustomerFromYourselfValidator:
             raise serializers.ValidationError(message)
 
 
-class PositiveBalanceValidator:
-
-    requires_context = True
-
-    def __call__(self, value, serializer_field):
-        if value['operation'] == Record.OPERATION.debt:
-            return
-        request = serializer_field.context['request']
-        user = request.user
-        balance = Customer.objects.balance(value['creditor'], user)
-        balance = balance + value['value']
-        if balance > 0:
-            message = _('Balance cannot be positive.')
-            raise serializers.ValidationError(message)
-
-
 class AlreadyACustomerValidator:
 
     requires_context = True
@@ -65,7 +34,31 @@ class AlreadyACustomerValidator:
     def __call__(self, value, serializer_field):
         request = serializer_field.context['request']
         user = request.user
-        qs = user.customers_debtor.filter(creditor=value['creditor'])
+        qs = user.as_debtor.filter(creditor=value['creditor'])
         if qs.exists():
             message = _('You are already a customer.')
+            raise serializers.ValidationError(message)
+
+
+class SellerAccountableValidator:
+
+    def __call__(self, value):
+        customer_record = value['customer_record']
+        qs = customer_record.creditor.accountable.filter(
+            id=value['seller'].id
+        )
+        if not qs.exists():
+            message = _('Accountable for seller is invalid.')
+            raise serializers.ValidationError(message)
+
+
+class BuyerAccountableValidator:
+
+    def __call__(self, value):
+        customer_record = value['customer_record']
+        qs = customer_record.debtor.accountable.filter(
+            id=value['buyer'].id
+        )
+        if not qs.exists():
+            message = _('Accountable for buyer is invalid.')
             raise serializers.ValidationError(message)
