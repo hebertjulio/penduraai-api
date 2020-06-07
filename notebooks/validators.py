@@ -10,8 +10,8 @@ class IsCustomerRecordOwnerValidator:
     def __call__(self, value, serializer_field):
         request = serializer_field.context['request']
         user = request.user
-        if value.debtor.id != user.id:
-            message = _('you aren\'t owner of this customer record.')
+        if value['debtor'].id != user.id:
+            message = _('You aren\'t owner of this customer record.')
             raise serializers.ValidationError(message)
 
 

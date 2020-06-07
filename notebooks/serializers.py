@@ -29,14 +29,8 @@ class RecordSerializer(serializers.ModelSerializer):
     class Meta:
         model = Record
         fields = '__all__'
-        extra_kwargs = {
-            'customer_record': {
-                'validators': [
-                    IsCustomerRecordOwnerValidator()
-                ]
-            }
-        }
         validators = [
+            IsCustomerRecordOwnerValidator(),
             SellerAccountableValidator(),
             BuyerAccountableValidator()
         ]
@@ -84,7 +78,7 @@ class CreditorSerializar(serializers.BaseSerializer):
         return {
             'id': instance['creditor__id'],
             'name': instance['creditor__name'],
-            'balance': instance['balance'] or 0.0,
+            'balance': instance['balance'],
         }
 
     def to_internal_value(self, data):
@@ -103,7 +97,7 @@ class DebtorSerializar(serializers.BaseSerializer):
         return {
             'id': instance['debtor__id'],
             'name': instance['debtor__name'],
-            'balance': instance['balance'] or 0.0,
+            'balance': instance['balance'],
         }
 
     def to_internal_value(self, data):
