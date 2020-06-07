@@ -4,14 +4,11 @@ from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 
 
-def generate_signature(creditor, payload):
+def generate_signature(data):
     """generate signature to integrity check"""
-    if not isinstance(payload, dict):
+    if not isinstance(data, dict):
         raise ValueError
-    if not isinstance(creditor, str):
-        creditor = str(creditor)
-    value = ';'.join(str(v) for _, v in sorted(payload.items()))
-    value = creditor + ';' + value
+    value = ';'.join(str(v) for _, v in sorted(data.items()))
     h = hashlib.sha256(value.encode())
     return h.hexdigest()
 

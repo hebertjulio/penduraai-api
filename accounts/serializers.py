@@ -7,7 +7,7 @@ from .models import User, Profile
 
 class UserCreateSerializer(serializers.ModelSerializer):
 
-    pin = serializers.RegexField(regex=r'\d{4}', write_only=True)
+    pin = serializers.RegexField(regex=Profile.PIN_REGEX, write_only=True)
 
     @atomic
     def create(self, validated_data):
@@ -98,16 +98,3 @@ class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
         fields = '__all__'
-
-
-class ProfileAuthenticateSerializer(serializers.Serializer):
-
-    accountable = serializers.HiddenField(
-        default=serializers.CurrentUserDefault()
-    )
-
-    def create(self, validated_data):
-        raise NotImplementedError
-
-    def update(self, instance, validated_data):
-        raise NotImplementedError

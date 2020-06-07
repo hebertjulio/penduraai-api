@@ -4,9 +4,17 @@ from django.db.transaction import atomic
 
 from rest_framework import serializers
 
+from accounts.relations import SellerRelatedField
+
+from accounts.validators import (
+    CanSaleOrReceivePaymentValidator, CanShopValidator,
+    CanAddNewCustomerValidator
+)
+
 from .decorators import accept_transaction
 from .models import Record, CustomerRecord
 from .dictdb import Transaction
+
 from .validators import (
     IsCustomerRecordOwnerValidator, CustomerFromYourselfValidator,
     AlreadyACustomerValidator, SellerAccountableValidator,
@@ -37,6 +45,11 @@ class RecordSerializer(serializers.ModelSerializer):
             'customer_record': {
                 'validators': [
                     IsCustomerRecordOwnerValidator()
+                ]
+            },
+            'buyer': {
+                'validators': [
+                    CanShopValidator()
                 ]
             }
         }
@@ -115,9 +128,30 @@ class TransactionSerializer(serializers.Serializer):
         tran = Transaction(str(uuid.uuid4()))
         tran.action = validated_data['action']
         tran.creditor = request.user.id
+        tran.seller = validated_data['seller'].id
         tran.payload = validated_data['payload']
         tran.save(60*30)  # 30 minutes
         return tran.data
+
+    def update(self, instance, validated_data):
+        raise NotImplementedError
+
+
+class RecordTransactionSerializer(TransactionSerializer):
+
+    seller = SellerRelatedField(validators=[
+        CanSaleOrReceivePaymentValidator()
+    ])
+
+    def update(self, instance, validated_data):
+        raise NotImplementedError
+
+
+class CustomerRecordTransactionSerializer(TransactionSerializer):
+
+    seller = SellerRelatedField(validators=[
+        CanAddNewCustomerValidator()
+    ])
 
     def update(self, instance, validated_data):
         raise NotImplementedError

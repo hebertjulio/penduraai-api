@@ -31,9 +31,9 @@ urlpatterns = [
         views.ProfileDetailView.as_view(),
         name='profile_detail'),
     path(
-        'profiles/authenticate',
-        views.ProfileAuthenticateView.as_view(),
-        name='profile_authenticate'),
+        'profiles/pin/<int:pin>',
+        views.ProfilePinView.as_view(),
+        name='profile_pin'),
     path(
         'token-obtain-pair',
         views.TokenObtainPairView.as_view(),

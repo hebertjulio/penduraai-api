@@ -78,11 +78,14 @@ class Profile(TimeStampedModel):
         ('both', _('both (sell and buy)')),
     )
 
-    pin_validator = RegexValidator(r'\d{4}')
+    PIN_REGEX = r'\d{4}'
 
     id = models.BigAutoField(primary_key=True, editable=False)
     name = models.CharField(_('name'), max_length=30)
-    pin = models.CharField(_('pin'), max_length=4, validators=[pin_validator])
+
+    pin = models.CharField(_('pin'), max_length=4, validators=[
+        RegexValidator(PIN_REGEX)
+    ])
 
     accountable = models.ForeignKey(
         'User', on_delete=models.CASCADE,
