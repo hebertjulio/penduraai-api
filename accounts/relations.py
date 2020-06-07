@@ -7,8 +7,8 @@ class SellerRelatedField(RelatedField):
 
     queryset = Profile.objects.filter(accountable__is_active=True)
 
-    def to_representation(self, instance):
-        return instance
+    def to_representation(self, value):
+        return value
 
     def to_internal_value(self, data):
         qs = self.get_queryset()
