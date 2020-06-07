@@ -66,39 +66,20 @@ class CustomerRecordSerializer(serializers.ModelSerializer):
         }
 
 
-class CreditorSerializar(serializers.BaseSerializer):
+class CreditorDebtorSerializar(serializers.BaseSerializer):
 
     def create(self, validated_data):
-        pass
+        raise NotImplementedError
 
     def update(self, instance, validated_data):
-        pass
+        raise NotImplementedError
 
     def to_representation(self, instance):
         return {
-            'id': instance['creditor__id'],
-            'name': instance['creditor__name'],
+            'user_id': instance['user_id'],
+            'user_name': instance['user_name'],
             'balance': instance['balance'],
         }
 
     def to_internal_value(self, data):
-        pass
-
-
-class DebtorSerializar(serializers.BaseSerializer):
-
-    def create(self, validated_data):
-        pass
-
-    def update(self, instance, validated_data):
-        pass
-
-    def to_representation(self, instance):
-        return {
-            'id': instance['debtor__id'],
-            'name': instance['debtor__name'],
-            'balance': instance['balance'],
-        }
-
-    def to_internal_value(self, data):
-        pass
+        raise NotImplementedError

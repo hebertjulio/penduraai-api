@@ -9,13 +9,16 @@ from rest_framework.response import Response
 from .models import Record, CustomerRecord
 
 from .serializers import (
-    RecordSerializer, CustomerRecordSerializer, CreditorSerializar,
-    DebtorSerializar)
+    RecordSerializer, CustomerRecordSerializer, CreditorDebtorSerializar)
 
 
 class RecordListView(generics.ListCreateAPIView):
 
     serializer_class = RecordSerializer
+    filterset_fields = [
+        'customer_record__creditor_id',
+        'customer_record__debtor_id',
+    ]
 
     def get_queryset(self):
         user = self.request.user
@@ -81,29 +84,23 @@ class CustomerRecordDetailView(generics.RetrieveUpdateDestroyAPIView):
 
 class CreditorListView(generics.ListAPIView):
 
-    serializer_class = CreditorSerializar
+    serializer_class = CreditorDebtorSerializar
     filter_backends = [SearchFilter]
-    search_fields = ['creditor__name']
+    search_fields = ['user_name']
 
     def get_queryset(self):
         user = self.request.user
-        values = ('creditor__id', 'creditor__name', 'balance')
         qs = CustomerRecord.objects.creditors(user)
-        qs = qs.order_by('creditor__name')
-        qs = qs.values(*values)
         return qs
 
 
 class DebtorListView(generics.ListAPIView):
 
-    serializer_class = DebtorSerializar
+    serializer_class = CreditorDebtorSerializar
     filter_backends = [SearchFilter]
-    search_fields = ['debtor__name']
+    search_fields = ['user_name']
 
     def get_queryset(self):
         user = self.request.user
-        values = ('debtor__id', 'debtor__name', 'balance')
-        qs = qs = CustomerRecord.objects.debtors(user)
-        qs = qs.order_by('debtor__name')
-        qs = qs.values(*values)
+        qs = CustomerRecord.objects.debtors(user)
         return qs

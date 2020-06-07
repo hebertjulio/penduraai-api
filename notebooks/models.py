@@ -51,9 +51,25 @@ class Record(TimeStampedModel):
     def creditor(self):
         return self.customer_record.creditor.name
 
+    @creditor.setter
+    def creditor(self, _):
+        raise NotImplementedError
+
+    @creditor.deleter
+    def creditor(self):
+        raise NotImplementedError
+
     @property
     def debtor(self):
         return self.customer_record.debtor.name
+
+    @debtor.setter
+    def debtor(self, _):
+        raise NotImplementedError
+
+    @debtor.deleter
+    def debtor(self):
+        raise NotImplementedError
 
     def __str__(self):
         return str(self.id)

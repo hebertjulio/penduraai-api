@@ -40,7 +40,7 @@ class UserCreateSerializer(serializers.ModelSerializer):
 class UserUpdateSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
-        pass
+        raise NotImplementedError
 
     @atomic
     def update(self, instance, validated_data):
@@ -73,10 +73,10 @@ class UserUpdateSerializer(serializers.ModelSerializer):
 class UserReadSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
-        pass
+        raise NotImplementedError
 
     def update(self, instance, validated_data):
-        pass
+        raise NotImplementedError
 
     class Meta:
         model = User
@@ -107,7 +107,7 @@ class ProfileAuthenticateSerializer(serializers.Serializer):
     )
 
     def create(self, validated_data):
-        pass
+        raise NotImplementedError
 
     def update(self, instance, validated_data):
-        pass
+        raise NotImplementedError

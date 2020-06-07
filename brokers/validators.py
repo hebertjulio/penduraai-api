@@ -30,7 +30,7 @@ class IsValidTransactionValidator:
             k: v for k, v in initial_data.items()
             if k in tran.payload.keys()
         }
-        signature = generate_signature(data)
+        signature = generate_signature(tran.creditor, data)
         if tran.signature != signature:
             message = _('Invalid transaction signature.')
             raise serializers.ValidationError(message)
