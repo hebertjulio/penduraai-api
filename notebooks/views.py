@@ -67,7 +67,7 @@ class CustomerRecordListView(generics.CreateAPIView):
 
 class DebtorCustomerRecordView(APIView):
 
-    def get(self, request, pk):
+    def get(self, request, pk):  # skipcq
         try:
             user = request.user
             obj = user.as_debtor.get(creditor_id=pk)
