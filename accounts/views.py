@@ -1,5 +1,5 @@
 from rest_framework.status import HTTP_200_OK
-from rest_framework.exceptions import PermissionDenied
+from rest_framework.exceptions import NotFound
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import generics
@@ -12,7 +12,7 @@ from .models import User, Profile
 
 from .serializers import (
     UserReadSerializer, UserCreateSerializer, UserUpdateSerializer,
-    ProfileSerializer, ProfileAuthenticateSerializer)
+    ProfileSerializer)
 
 
 class UserListView(rwgenerics.CreateAPIView):
@@ -81,19 +81,13 @@ class ProfileDetailView(generics.RetrieveUpdateDestroyAPIView):
         return qs
 
 
-class ProfileAuthenticateView(APIView):
+class ProfilePinView(APIView):
 
-    def post(self, request, *args, **kwargs):
-        context = {'request': request}
-        serializer = ProfileAuthenticateSerializer(
-            data=request.data, context=context
-        )
-        serializer.is_valid(raise_exception=True)
+    def get(self, request, pin):
         try:
-            pin = request.data['pin']
             user = self.request.user
             profile = user.accountable.get(pin=pin)
             serializer = ProfileSerializer(profile)
             return Response(serializer.data, HTTP_200_OK)
         except Profile.DoesNotExist:
-            raise PermissionDenied()
+            raise NotFound

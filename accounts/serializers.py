@@ -98,16 +98,3 @@ class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
         fields = '__all__'
-
-
-class ProfileAuthenticateSerializer(serializers.Serializer):
-
-    accountable = serializers.HiddenField(
-        default=serializers.CurrentUserDefault()
-    )
-
-    def create(self, validated_data):
-        raise NotImplementedError
-
-    def update(self, instance, validated_data):
-        raise NotImplementedError

@@ -12,8 +12,8 @@ from .services import generate_signature
 class Transaction:
 
     ACTION = Choices(
-        ('create_record', _('create record')),
-        ('create_customer_record', _('create customer record')),
+        ('new_record', _('new record')),
+        ('new_customer_record', _('new customer record')),
     )
 
     STATUS = Choices(
@@ -95,6 +95,21 @@ class Transaction:
         raise NotImplementedError
 
     @property
+    def seller(self):
+        value = self.__data['seller']
+        return value
+
+    @seller.setter
+    def seller(self, value):
+        if not isinstance(value, int):
+            raise ValueError
+        self.__data['seller'] = value
+
+    @seller.deleter
+    def seller(self):
+        raise NotImplementedError
+
+    @property
     def status(self):
         value = self.__data['status']
         return value
@@ -124,7 +139,9 @@ class Transaction:
 
     @property
     def signature(self):
-        value = generate_signature(self.creditor, self.payload)
+        data = {'seller': self.seller, 'creditor': self.creditor}
+        data.update(**self.payload)
+        value = generate_signature(data)
         return value
 
     @signature.setter

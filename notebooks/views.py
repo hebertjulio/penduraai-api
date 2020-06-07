@@ -14,7 +14,7 @@ from .dictdb import Transaction
 from .services import send_message
 from .serializers import (
     RecordSerializer, CustomerRecordSerializer, CreditorDebtorSerializar,
-    TransactionSerializer
+    RecordTransactionSerializer, CustomerRecordTransactionSerializer
 )
 
 
@@ -29,7 +29,8 @@ class RecordListView(generics.ListCreateAPIView):
     def get_queryset(self):
         user = self.request.user
         qs = Record.objects.filter(
-            Q(customer_record__creditor=user) | Q(customer_record__debtor=user)
+            Q(customer_record__creditor=user) |
+            Q(customer_record__debtor=user)
         )
         qs = qs.order_by('-created')
         return qs
@@ -42,7 +43,10 @@ class RecordDetailView(generics.RetrieveAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        qs = Record.objects.filter(Q(creditor=user) | Q(debtor=user))
+        qs = Record.objects.filter(
+            Q(customer_record__creditor=user) |
+            Q(customer_record__debtor=user)
+        )
         return qs
 
 
@@ -88,35 +92,36 @@ class CustomerRecordDetailView(generics.RetrieveUpdateDestroyAPIView):
         return qs
 
 
-class CreditorListView(generics.ListAPIView):
+class DebtorCreditorListView(generics.ListAPIView):
 
+    lookup_field = 'switch'
     serializer_class = CreditorDebtorSerializar
     filter_backends = [SearchFilter]
     search_fields = ['user_name']
 
     def get_queryset(self):
+        switch = self.kwargs['switch']
         user = self.request.user
-        qs = CustomerRecord.objects.creditors(user)
-        return qs
-
-
-class DebtorListView(generics.ListAPIView):
-
-    serializer_class = CreditorDebtorSerializar
-    filter_backends = [SearchFilter]
-    search_fields = ['user_name']
-
-    def get_queryset(self):
-        user = self.request.user
-        qs = CustomerRecord.objects.debtors(user)
-        return qs
+        if switch == 'debtors':
+            return CustomerRecord.objects.debtors(user)
+        return CustomerRecord.objects.creditors(user)
 
 
 class TransactionListView(APIView):
 
-    def post(self, request):  # skipcq
+    def post(self, request, switch):  # skipcq
         context = {'request': request}
-        serializer = TransactionSerializer(data=request.data, context=context)
+        params = {'data': request.data, 'context': context}
+        if switch == 'new-record':
+            params['data'].update({
+                'action': Transaction.ACTION.new_record
+            })
+            serializer = RecordTransactionSerializer(**params)
+        else:
+            params['data'].update({
+                'action': Transaction.ACTION.new_customer_record
+            })
+            serializer = CustomerRecordTransactionSerializer(**params)
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data, status=HTTP_201_CREATED)

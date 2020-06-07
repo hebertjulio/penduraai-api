@@ -87,7 +87,8 @@ class TransactionSignatureValidator:
             k: v for k, v in parent.initial_data.items()
             if k in tran.payload.keys()
         }
-        signature = generate_signature(tran.creditor, data)
+        data.update({'creditor': tran.creditor, 'seller': tran.seller})
+        signature = generate_signature(data)
         if tran.signature != signature:
             message = _('Invalid transaction signature.')
             raise serializers.ValidationError(message)
