@@ -433,6 +433,17 @@ test = ["cryptography", "pytest-cov", "pytest-django", "pytest-xdist", "pytest",
 
 [[package]]
 category = "main"
+description = "Generic views, viewsets and mixins that extend the Django REST Framework ones adding separated serializers for read and write operations"
+name = "drf-rw-serializers"
+optional = false
+python-versions = "*"
+version = "1.0.3"
+
+[package.dependencies]
+Django = ">=1.11,<3.1"
+
+[[package]]
+category = "main"
 description = "The dynamic configurator for your Python Project"
 name = "dynaconf"
 optional = false
@@ -839,7 +850,6 @@ version = "2.8.5"
 [[package]]
 category = "dev"
 description = "Run a subprocess in a pseudo terminal"
-marker = "python_version >= \"3.4\" and sys_platform != \"win32\" or sys_platform != \"win32\" or python_version >= \"3.4\" and sys_platform != \"win32\" and (python_version >= \"3.4\" and sys_platform != \"win32\" or sys_platform != \"win32\")"
 name = "ptyprocess"
 optional = false
 python-versions = "*"
@@ -1285,7 +1295,7 @@ test = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 testing = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 
 [metadata]
-content-hash = "52d120d1ebfdc9b596775cd361928491a4a4029e2d938d1cac1ca9dfd3431492"
+content-hash = "c3d2bd6cd13d4d9da4e653ddb7bafa6464d9e2b6d0537c6c167c6dcb5563d8b4"
 python-versions = "3.8.2"
 
 [metadata.files]
@@ -1465,6 +1475,10 @@ djangorestframework-api-key = [
 djangorestframework-simplejwt = [
     {file = "djangorestframework_simplejwt-4.4.0-py3-none-any.whl", hash = "sha256:288ee78618d906f26abf6282b639b8f1806ce1d9a7578897a125cf79c609f259"},
     {file = "djangorestframework_simplejwt-4.4.0.tar.gz", hash = "sha256:c315be70aa12a5f5790c0ab9acd426c3a58eebea65a77d0893248c5144a5080c"},
+]
+drf-rw-serializers = [
+    {file = "drf-rw-serializers-1.0.3.tar.gz", hash = "sha256:3a0fb679df96ae9eca9eaf6607c80d254edeb7ccd744376b2c2899a283d20426"},
+    {file = "drf_rw_serializers-1.0.3-py2.py3-none-any.whl", hash = "sha256:58a94d211a1c4b767c877019a60c7fadadc4a55f90092b4d1eebaf073befb1e4"},
 ]
 dynaconf = [
     {file = "dynaconf-2.2.3-py2.py3-none-any.whl", hash = "sha256:e803cdab2d7addd539c4ee8d121f15ab0b63a83a5b723150e1746aa7e8063adb"},

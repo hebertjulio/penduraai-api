@@ -11,6 +11,11 @@ from .services import generate_signature
 
 class Transaction:
 
+    ACTION = Choices(
+        ('create_record', _('create record')),
+        ('create_customer_record', _('create customer record')),
+    )
+
     STATUS = Choices(
         ('no_exist', _('no exist')),
         ('awaiting', _('awaiting')),
@@ -45,6 +50,21 @@ class Transaction:
         raise NotImplementedError
 
     @property
+    def action(self):
+        value = self.__data['action']
+        return value
+
+    @action.setter
+    def action(self, value):
+        if value not in self.ACTION:
+            raise ValueError
+        self.__data['action'] = value
+
+    @action.deleter
+    def action(self):
+        raise NotImplementedError
+
+    @property
     def payload(self):
         value = self.__data['payload']
         return value
@@ -57,6 +77,21 @@ class Transaction:
 
     @payload.deleter
     def payload(self):
+        raise NotImplementedError
+
+    @property
+    def creditor(self):
+        value = self.__data['creditor']
+        return value
+
+    @creditor.setter
+    def creditor(self, value):
+        if not isinstance(value, int):
+            raise ValueError
+        self.__data['creditor'] = value
+
+    @creditor.deleter
+    def creditor(self):
         raise NotImplementedError
 
     @property
@@ -89,7 +124,7 @@ class Transaction:
 
     @property
     def signature(self):
-        value = generate_signature(self.payload)
+        value = generate_signature(self.creditor, self.payload)
         return value
 
     @signature.setter
@@ -124,12 +159,8 @@ class Transaction:
         if not self.exist():
             self.__data['status'] = Transaction.STATUS.awaiting
         value = json.dumps(self.__data)
-        if expire is None:
-            if self.exist():
-                expire = self.ttl
-            else:
-                expire = 60  # default
-        self.__db.set(self.__name, value, ex=expire)
+        ex = self.ttl if self.exist() else expire or 60
+        self.__db.set(self.__name, value, ex=ex)
 
     def delete(self):
         self.__db.delete(*[self.__name])

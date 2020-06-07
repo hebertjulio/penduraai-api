@@ -9,7 +9,7 @@ from django.contrib.auth.models import PermissionsMixin
 from model_utils.models import TimeStampedModel
 from model_utils import Choices
 
-from .managers import CustomUserManager
+from .managers import UserManager
 
 
 class User(AbstractBaseUser, PermissionsMixin, TimeStampedModel):
@@ -34,11 +34,15 @@ class User(AbstractBaseUser, PermissionsMixin, TimeStampedModel):
         ),
     )
 
-    objects = CustomUserManager()
+    objects = UserManager()
 
     EMAIL_FIELD = 'email'
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['name']
+
+    @staticmethod
+    def get_fields():
+        return User._meta.get_fields()
 
     def clean(self):
         super().clean()
@@ -68,8 +72,10 @@ class Profile(TimeStampedModel):
 
     ROLE = Choices(
         ('owner', _('owner')),
-        ('admin', _('admin')),
-        ('guest', _('guest')),
+        ('manager', _('manager')),
+        ('seller', _('seller')),
+        ('buyer', _('buyer')),
+        ('both', _('both (sell and buy)')),
     )
 
     pin_validator = RegexValidator(r'\d{4}')
@@ -80,7 +86,7 @@ class Profile(TimeStampedModel):
 
     accountable = models.ForeignKey(
         'User', on_delete=models.CASCADE,
-        related_name='profiles_accountable',
+        related_name='accountable',
     )
 
     role = models.CharField(

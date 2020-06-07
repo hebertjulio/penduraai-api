@@ -1,26 +1,36 @@
+import json
+
 from django.db.models import Q
 
+from rest_framework.status import HTTP_200_OK, HTTP_201_CREATED
 from rest_framework import generics
 from rest_framework.filters import SearchFilter
 from rest_framework.exceptions import NotFound
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
-from .models import Record, Customer
-
+from .models import Record, CustomerRecord
+from .dictdb import Transaction
+from .services import send_message
 from .serializers import (
-    RecordSerializer, CustomerSerializer, CreditorSerializar,
-    DebtorSerializar)
+    RecordSerializer, CustomerRecordSerializer, CreditorDebtorSerializar,
+    TransactionSerializer
+)
 
 
 class RecordListView(generics.ListCreateAPIView):
 
     serializer_class = RecordSerializer
-    filterset_fields = ['creditor', 'debtor']
+    filterset_fields = [
+        'customer_record__creditor_id',
+        'customer_record__debtor_id',
+    ]
 
     def get_queryset(self):
         user = self.request.user
-        qs = Record.objects.filter(Q(creditor=user) | Q(debtor=user))
+        qs = Record.objects.filter(
+            Q(customer_record__creditor=user) | Q(customer_record__debtor=user)
+        )
         qs = qs.order_by('-created')
         return qs
 
@@ -38,11 +48,11 @@ class RecordDetailView(generics.RetrieveAPIView):
 
 class RecordStrikethroughView(APIView):
 
-    def patch(self, request, pk, switch):
+    def patch(self, request, pk):
         try:
             user = self.request.user
             obj = Record.objects.get(pk=pk, creditor=user)
-            obj.strikethrough = switch == 'strikethrough'
+            obj.strikethrough = True
             obj.save()
             serializer = RecordSerializer(obj)
             return Response(serializer.data)
@@ -50,47 +60,84 @@ class RecordStrikethroughView(APIView):
             raise NotFound
 
 
-class CustomerListView(generics.CreateAPIView):
+class CustomerRecordListView(generics.CreateAPIView):
 
-    serializer_class = CustomerSerializer
+    serializer_class = CustomerRecordSerializer
 
 
-class CustomerDetailView(generics.RetrieveUpdateDestroyAPIView):
+class DebtorCustomerRecordView(APIView):
+
+    def get(self, request, pk):  # skipcq
+        try:
+            user = request.user
+            obj = user.as_debtor.get(creditor_id=pk)
+            serializer = CustomerRecordSerializer(obj)
+            return Response(serializer.data)
+        except CustomerRecord.DoesNotExist:
+            raise NotFound
+
+
+class CustomerRecordDetailView(generics.RetrieveUpdateDestroyAPIView):
 
     lookup_field = 'pk'
-    serializer_class = CustomerSerializer
+    serializer_class = CustomerRecordSerializer
 
     def get_queryset(self):
         user = self.request.user
-        qs = Customer.objects.filter(creditor=user)
+        qs = CustomerRecord.objects.filter(creditor=user)
         return qs
 
 
 class CreditorListView(generics.ListAPIView):
 
-    serializer_class = CreditorSerializar
+    serializer_class = CreditorDebtorSerializar
     filter_backends = [SearchFilter]
-    search_fields = ['creditor__name']
+    search_fields = ['user_name']
 
     def get_queryset(self):
         user = self.request.user
-        values = ('creditor__id', 'creditor__name', 'balance')
-        qs = Customer.objects.creditors(user)
-        qs = qs.order_by('creditor__name')
-        qs = qs.values(*values)
+        qs = CustomerRecord.objects.creditors(user)
         return qs
 
 
 class DebtorListView(generics.ListAPIView):
 
-    serializer_class = DebtorSerializar
+    serializer_class = CreditorDebtorSerializar
     filter_backends = [SearchFilter]
-    search_fields = ['debtor__name']
+    search_fields = ['user_name']
 
     def get_queryset(self):
         user = self.request.user
-        values = ('debtor__id', 'debtor__name', 'balance')
-        qs = qs = Customer.objects.debtors(user)
-        qs = qs.order_by('debtor__name')
-        qs = qs.values(*values)
+        qs = CustomerRecord.objects.debtors(user)
         return qs
+
+
+class TransactionListView(APIView):
+
+    def post(self, request):  # skipcq
+        context = {'request': request}
+        serializer = TransactionSerializer(data=request.data, context=context)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=HTTP_201_CREATED)
+
+
+class TransactionDetailView(APIView):
+
+    def get(self, request, pk):  # skipcq
+        tran = Transaction(pk)
+        if not tran.exist():
+            raise NotFound
+        return Response(tran.data, status=HTTP_200_OK)
+
+
+class TransactionRejectView(APIView):
+
+    def put(self, request, pk):  # skipcq
+        tran = Transaction(pk)
+        if not tran.exist():
+            raise NotFound
+        tran.status = Transaction.STATUS.rejected
+        tran.save()
+        send_message(tran.id, json.dumps(tran.data))
+        return Response(tran.data, status=HTTP_200_OK)

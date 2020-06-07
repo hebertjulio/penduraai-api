@@ -4,31 +4,35 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import generics
 
+from drf_rw_serializers import generics as rwgenerics
 from rest_framework_api_key.permissions import HasAPIKey
-
 from rest_framework_simplejwt import views as simplejwt_views
 
 from .models import User, Profile
+
 from .serializers import (
-    UserSerializer, ProfileSerializer, ProfileAuthenticateSerializer)
+    UserReadSerializer, UserCreateSerializer, UserUpdateSerializer,
+    ProfileSerializer, ProfileAuthenticateSerializer)
 
 
-class UserListView(generics.CreateAPIView):
+class UserListView(rwgenerics.CreateAPIView):
 
-    serializer_class = UserSerializer
+    read_serializer_class = UserReadSerializer
+    write_serializer_class = UserCreateSerializer
     permission_classes = [HasAPIKey]
 
 
-class UserDetailView(generics.RetrieveAPIView):
+class UserDetailView(rwgenerics.RetrieveAPIView):
 
     lookup_field = 'pk'
     queryset = User.objects.filter(is_active=True)
-    serializer_class = UserSerializer
+    read_serializer_class = UserReadSerializer
 
 
-class UserChangeView(generics.UpdateAPIView):
+class UserUpdateView(rwgenerics.UpdateAPIView):
 
-    serializer_class = UserSerializer
+    write_serializer_class = UserUpdateSerializer
+    read_serializer_class = UserReadSerializer
 
     def get_object(self):
         user = self.request.user
@@ -41,7 +45,7 @@ class UserDeactivateView(APIView):
         obj = self.request.user
         obj.is_active = False
         obj.save()
-        serializer = UserSerializer(obj)
+        serializer = UserReadSerializer(obj)
         res = Response(serializer.data, HTTP_200_OK)
         return res
 
@@ -80,14 +84,16 @@ class ProfileDetailView(generics.RetrieveUpdateDestroyAPIView):
 class ProfileAuthenticateView(APIView):
 
     def post(self, request, *args, **kwargs):
+        context = {'request': request}
         serializer = ProfileAuthenticateSerializer(
-            data=request.data, context={'request': request})
+            data=request.data, context=context
+        )
         serializer.is_valid(raise_exception=True)
         try:
             pin = request.data['pin']
-            profile = self.request.user.profiles_accountable.get(pin=pin)
+            user = self.request.user
+            profile = user.accountable.get(pin=pin)
             serializer = ProfileSerializer(profile)
-            res = Response(serializer.data, HTTP_200_OK)
-            return res
+            return Response(serializer.data, HTTP_200_OK)
         except Profile.DoesNotExist:
             raise PermissionDenied()

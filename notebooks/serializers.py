@@ -1,69 +1,70 @@
+import uuid
+
 from django.db.transaction import atomic
 
 from rest_framework import serializers
 
-from accounts.relations import BuyerField, SellerField
-from brokers.validators import IsValidTransactionValidator
-from brokers.decorators import accept_transaction
-
-from .models import Record, Customer
-
+from .decorators import accept_transaction
+from .models import Record, CustomerRecord
+from .dictdb import Transaction
 from .validators import (
-    OweToYourselfValidator, IsCustomerValidator,
-    CustomerFromYourselfValidator, PositiveBalanceValidator,
-    AlreadyACustomerValidator)
+    IsCustomerRecordOwnerValidator, CustomerFromYourselfValidator,
+    AlreadyACustomerValidator, SellerAccountableValidator,
+    BuyerAccountableValidator, TransactionExistValidator,
+    TransactionSignatureValidator, TransactionStatusValidator
+)
 
 
 class RecordSerializer(serializers.ModelSerializer):
 
     transaction = serializers.UUIDField(write_only=True, validators=[
-        IsValidTransactionValidator(),
+        TransactionExistValidator(),
+        TransactionSignatureValidator(),
+        TransactionStatusValidator()
     ])
-
-    seller = SellerField()
-    buyer = BuyerField()
 
     @atomic
     @accept_transaction
     def create(self, validated_data):
-        request = self.context['request']
         obj = Record(**validated_data)
-        obj.debtor = request.user
         obj.save()
         return obj
 
     class Meta:
         model = Record
         fields = '__all__'
-        read_only_fields = [
-            'debtor',
-        ]
+        extra_kwargs = {
+            'customer_record': {
+                'validators': [
+                    IsCustomerRecordOwnerValidator()
+                ]
+            }
+        }
         validators = [
-            OweToYourselfValidator(),
-            IsCustomerValidator(),
-            PositiveBalanceValidator()
+            SellerAccountableValidator(),
+            BuyerAccountableValidator()
         ]
 
 
-class CustomerSerializer(serializers.ModelSerializer):
+class CustomerRecordSerializer(serializers.ModelSerializer):
 
     transaction = serializers.UUIDField(write_only=True, validators=[
-        IsValidTransactionValidator(),
+        TransactionExistValidator(),
+        TransactionSignatureValidator(),
+        TransactionStatusValidator()
     ])
-
-    debtor_name = serializers.CharField(read_only=True)
 
     @atomic
     @accept_transaction
     def create(self, validated_data):
         request = self.context['request']
-        obj = Customer(**validated_data)
+        obj = CustomerRecord(**validated_data)
         obj.debtor = request.user
         obj.save()
         return obj
 
     class Meta:
-        model = Customer
+        model = CustomerRecord
         fields = '__all__'
         read_only_fields = ['authorized', 'debtor']
         validators = [
@@ -77,39 +78,46 @@ class CustomerSerializer(serializers.ModelSerializer):
         }
 
 
-class CreditorSerializar(serializers.BaseSerializer):
+class CreditorDebtorSerializar(serializers.BaseSerializer):
 
     def create(self, validated_data):
-        pass
+        raise NotImplementedError
 
     def update(self, instance, validated_data):
-        pass
+        raise NotImplementedError
 
     def to_representation(self, instance):
         return {
-            'id': instance['creditor__id'],
-            'name': instance['creditor__name'],
-            'balance': instance['balance'] or 0.0,
+            'user_id': instance['user_id'],
+            'user_name': instance['user_name'],
+            'balance': instance['balance'],
         }
 
     def to_internal_value(self, data):
-        pass
+        raise NotImplementedError
 
 
-class DebtorSerializar(serializers.BaseSerializer):
+class TransactionSerializer(serializers.Serializer):
+
+    id = serializers.UUIDField(read_only=True)
+    action = serializers.ChoiceField(choices=Transaction.ACTION)
+    payload = serializers.JSONField(binary=True)
+    creditor = serializers.IntegerField(read_only=True)
+
+    status = serializers.ChoiceField(
+        choices=Transaction.STATUS, read_only=True
+    )
+
+    ttl = serializers.IntegerField(read_only=True)
 
     def create(self, validated_data):
-        pass
+        request = self.context['request']
+        tran = Transaction(str(uuid.uuid4()))
+        tran.action = validated_data['action']
+        tran.creditor = request.user.id
+        tran.payload = validated_data['payload']
+        tran.save(60*30)  # 30 minutes
+        return tran.data
 
     def update(self, instance, validated_data):
-        pass
-
-    def to_representation(self, instance):
-        return {
-            'id': instance['debtor__id'],
-            'name': instance['debtor__name'],
-            'balance': instance['balance'] or 0.0,
-        }
-
-    def to_internal_value(self, data):
-        pass
+        raise NotImplementedError

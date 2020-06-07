@@ -23,6 +23,7 @@ daphne = "^2.5.0"
 django-silk = "^4.0.1"
 dj_database_url = "^0.5.0"
 django-redis = "^4.12.1"
+drf-rw-serializers = "^1.0.3"
 
 
 [tool.poetry.dev-dependencies]
