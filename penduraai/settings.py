@@ -44,7 +44,6 @@ INSTALLED_APPS = [
     'silk',
     'accounts',
     'notebooks',
-    'brokers',
 ]
 
 MIDDLEWARE = [
@@ -237,9 +236,8 @@ SESSION_CACHE_ALIAS = 'default'
 
 import dynaconf  # noqa
 
-settings = dynaconf.DjangoDynaconf(__name__,
-    ROOT_PATH=BASE_DIR,
-    SECRETS=BASE_DIR,
+settings = dynaconf.DjangoDynaconf(
+    __name__, ROOT_PATH=BASE_DIR, SECRETS=BASE_DIR,
 )  # noqa
 
 # HERE ENDS DYNACONF EXTENSION LOAD (No more code below this line)

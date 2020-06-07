@@ -1,10 +1,10 @@
 from channels.routing import ProtocolTypeRouter, URLRouter
 
-import brokers.routing
+import notebooks.routing
 
 
 routing = [
-    *brokers.routing.urlpatterns
+    *notebooks.routing.urlpatterns
 ]
 
 application = ProtocolTypeRouter({

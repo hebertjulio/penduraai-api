@@ -38,4 +38,16 @@ urlpatterns = [
         'debtors',
         views.DebtorListView.as_view(),
         name='debtor_list'),
+    path(
+        'transactions',
+        views.TransactionListView.as_view(),
+        name='transaction_list'),
+    path(
+        'transactions/<str:pk>',
+        views.TransactionDetailView.as_view(),
+        name='transaction_detail'),
+    path(
+        'transactions/<str:pk>/reject',
+        views.TransactionRejectView.as_view(),
+        name='transaction_reject'),
 ]
