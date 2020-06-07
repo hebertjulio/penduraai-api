@@ -1,35 +1,92 @@
+from django.db.transaction import atomic
+
 from rest_framework import serializers
 
 from .models import User, Profile
 
 
-class UserSerializer(serializers.ModelSerializer):
+class UserCreateSerializer(serializers.ModelSerializer):
 
+    pin = serializers.RegexField(regex=r'\d{4}', write_only=True)
+
+    @atomic
     def create(self, validated_data):
-        obj = User(**validated_data)
-        obj.is_active = True
-        obj.set_password(validated_data['password'])
-        obj.save()
-        return obj
+        pin = validated_data.pop('pin')
+        user = User(**validated_data)
+        user.is_active = True
+        user.set_password(validated_data['password'])
+        user.save()
+        profile = Profile(**{
+            'name': user.name, 'pin': pin, 'role': Profile.ROLE.owner,
+            'accountable': user})
+        profile.save()
+        return user
 
     def update(self, instance, validated_data):
-        password = validated_data.pop('password', None)
-        if password:
-            instance.set_password(password)
-        instance = super().update(instance, validated_data)
-        return instance
+        pass
 
     class Meta:
         model = User
         exclude = [
-            'user_permissions', 'groups', 'is_superuser', 'is_staff']
+            'user_permissions', 'groups', 'is_superuser',
+            'is_staff'
+        ]
         read_only_fields = [
-            'id', 'is_active', 'last_login', 'created', 'modified']
-        extra_kwargs = {
-            'password': {
-                'write_only': True
-            }
-        }
+            'id', 'is_active', 'last_login', 'created',
+            'modified'
+        ]
+
+
+class UserUpdateSerializer(serializers.ModelSerializer):
+
+    def create(self, validated_data):
+        pass
+
+    @atomic
+    def update(self, instance, validated_data):
+        user = instance
+        password = validated_data.pop('password', None)
+        if password:
+            user.set_password(password)
+        if 'name' in validated_data:
+            try:
+                profile = user.accountable.get(role=Profile.ROLE.owner)
+                profile.name = validated_data['name']
+                profile.save()
+            except Profile.DoesNotExist:
+                pass
+        user = super().update(user, validated_data)
+        return user
+
+    class Meta:
+        model = User
+        exclude = [
+            'user_permissions', 'groups', 'is_superuser',
+            'is_staff'
+        ]
+        read_only_fields = [
+            'id', 'is_active', 'last_login', 'created',
+            'modified'
+        ]
+
+
+class UserReadSerializer(serializers.ModelSerializer):
+
+    def create(self, validated_data):
+        pass
+
+    def update(self, instance, validated_data):
+        pass
+
+    class Meta:
+        model = User
+        exclude = [
+            'user_permissions', 'groups', 'is_superuser',
+            'is_staff', 'password'
+        ]
+        read_only_fields = [
+            f for f in User._meta.get_fields()
+        ]
 
 
 class ProfileSerializer(serializers.ModelSerializer):
