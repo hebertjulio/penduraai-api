@@ -85,7 +85,7 @@ class UserReadSerializer(serializers.ModelSerializer):
             'is_staff', 'password'
         ]
         read_only_fields = [
-            f for f in User._meta.get_fields()
+            f for f in User.get_fields()
         ]
 
 

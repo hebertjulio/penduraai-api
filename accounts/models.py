@@ -40,6 +40,10 @@ class User(AbstractBaseUser, PermissionsMixin, TimeStampedModel):
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['name']
 
+    @staticmethod
+    def get_fields():
+        return User._meta.get_fields()
+
     def clean(self):
         super().clean()
         self.email = self.__class__.objects.normalize_email(self.email)
