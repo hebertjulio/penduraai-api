@@ -143,9 +143,15 @@ class RecordTransactionSerializer(TransactionSerializer):
         CanSaleOrReceivePaymentValidator()
     ])
 
+    def update(self, instance, validated_data):
+        raise NotImplementedError
+
 
 class CustomerRecordTransactionSerializer(TransactionSerializer):
 
     seller = SellerRelatedField(validators=[
         CanAddNewCustomerValidator()
     ])
+
+    def update(self, instance, validated_data):
+        raise NotImplementedError
