@@ -7,7 +7,7 @@ from .models import User, Profile
 
 class UserCreateSerializer(serializers.ModelSerializer):
 
-    pin = serializers.RegexField(regex=r'\d{4}', write_only=True)
+    pin = serializers.RegexField(regex=Profile.PIN_REGEX, write_only=True)
 
     @atomic
     def create(self, validated_data):
