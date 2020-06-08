@@ -5,11 +5,9 @@ DEBUG = true
 DATABASES__default__ENGINE = "django.db.backends.sqlite3"
 DATABASES__default__NAME = "db.sqlite3"
 
+TRANSACTION_REDIS_URL = "redis://:penduraai@localhost:6379/0"
 
-TRANSACTION_REDIS_CONFIG__host = "localhost"
-TRANSACTION_REDIS_CONFIG__port = 6379
-TRANSACTION_REDIS_CONFIG__db = 1
-
-CHANNEL_LAYERS__default__CONFIG__hosts = [["localhost", "6379"]]
+CHANNEL_LAYERS__default__CONFIG__hosts = ["redis://:penduraai@localhost:6379/1"]
 
 CACHES__default__LOCATION = "redis://localhost:6379/2"
+CACHES__default__OPTIONS__PASSWORD = "penduraai"
