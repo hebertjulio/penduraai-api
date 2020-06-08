@@ -192,7 +192,7 @@ LOGIN_URL = '/admin/login/'
 
 DATABASES = {
     'default': dj_database_url.config(
-        env='HEROKU_POSTGRESQL_JADE_URL',
+        env='DATABASE_URL',
         engine='django.db.backends.postgresql'
     )
 }
