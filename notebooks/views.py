@@ -9,12 +9,7 @@ from rest_framework.exceptions import NotFound
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
-from rest_framework.permissions import IsAuthenticated
-
-from accounts.permissions import (
-    ProfileSalePermission, ProfileShopPermission,
-    ProfileAddCustomerPermission
-)
+from accounts.permissions import IsManager, IsSeller, IsBuyer
 
 from .models import Record, CustomerRecord
 from .dictdb import Transaction
@@ -29,15 +24,17 @@ class RecordListView(generics.ListCreateAPIView):
 
     serializer_class = RecordSerializer
 
-    permission_classes = [
-        IsAuthenticated,
-        ProfileShopPermission
-    ]
-
     filterset_fields = [
         'customer_record__creditor_id',
         'customer_record__debtor_id',
     ]
+
+    def get_permissions(self):
+        if self.request.method == 'post':
+            self.permission_classes += [
+                IsBuyer
+            ]
+        return super().get_permissions()
 
     def get_queryset(self):
         user = self.request.user
@@ -64,6 +61,12 @@ class RecordDetailView(generics.RetrieveAPIView):
 
 
 class RecordStrikethroughView(APIView):
+
+    def get_permissions(self):
+        self.permission_classes += [
+            IsManager
+        ]
+        return super().get_permissions()
 
     def patch(self, request, pk):
         try:
@@ -122,10 +125,11 @@ class DebtorCreditorListView(generics.ListAPIView):
 
 class TransactionNewRecordView(APIView):
 
-    permission_classes = [
-        IsAuthenticated,
-        ProfileSalePermission
-    ]
+    def get_permissions(self):
+        self.permission_classes += [
+            IsSeller
+        ]
+        return super().get_permissions()
 
     def post(self, request):  # skipcq
         context = {'request': request}
@@ -138,10 +142,11 @@ class TransactionNewRecordView(APIView):
 
 class TransactionNewCustomerRecordView(APIView):
 
-    permission_classes = [
-        IsAuthenticated,
-        ProfileAddCustomerPermission
-    ]
+    def get_permissions(self):
+        self.permission_classes += [
+            IsManager
+        ]
+        return super().get_permissions()
 
     def post(self, request):  # skipcq
         context = {'request': request}

@@ -1,50 +1,61 @@
+from django.utils.translation import gettext_lazy as _
+
 from rest_framework.permissions import BasePermission
 
 from .models import Profile
 
 
-class ProfileSalePermission(BasePermission):
-    message = 'Sale not allowed.'
+class IsOwner(BasePermission):
+    message = _('Profile does not have privileges to perform this action.')
 
+    def has_permission(self, request, view):
+        profile = request.user.profile
+        return bool(
+            profile is not None
+            and profile.role == Profile.ROLE.owner
+        )
+
+
+class IsManager(IsOwner):
+
+    def has_permission(self, request, view):
+        has_permission = super().has_permission(request, view)
+        if not has_permission:
+            profile = request.user.profile
+            return bool(
+                profile is not None
+                and profile.role == Profile.ROLE.manager
+            )
+        return has_permission
+
+
+class IsSeller(IsManager):
     roles = [
-        Profile.ROLE.owner, Profile.ROLE.manager,
         Profile.ROLE.seller, Profile.ROLE.both
     ]
 
     def has_permission(self, request, view):
-        profile = request.user.profile
-        return bool(
-            profile is not None
-            and profile.role in self.roles
-        )
+        has_permission = super().has_permission(request, view)
+        if not has_permission:
+            profile = request.user.profile
+            return bool(
+                profile is not None
+                and profile.role in self.roles
+            )
+        return has_permission
 
 
-class ProfileShopPermission(BasePermission):
-    message = 'Shop not allowed.'
-
+class IsBuyer(IsManager):
     roles = [
-        Profile.ROLE.owner, Profile.ROLE.manager,
         Profile.ROLE.buyer, Profile.ROLE.both
     ]
 
     def has_permission(self, request, view):
-        profile = request.user.profile
-        return bool(
-            profile is not None
-            and profile.role in self.roles
-        )
-
-
-class ProfileAddCustomerPermission(BasePermission):
-    message = 'Add customer not allowed.'
-
-    roles = [
-        Profile.ROLE.owner, Profile.ROLE.manager
-    ]
-
-    def has_permission(self, request, view):
-        profile = request.user.profile
-        return bool(
-            profile is not None
-            and profile.role in self.roles
-        )
+        has_permission = super().has_permission(request, view)
+        if not has_permission:
+            profile = request.user.profile
+            return bool(
+                profile is not None
+                and profile.role in self.roles
+            )
+        return has_permission

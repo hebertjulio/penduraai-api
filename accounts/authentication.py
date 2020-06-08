@@ -6,7 +6,10 @@ from .models import Profile
 class JWTAuthentication(authentication.JWTAuthentication):
 
     def authenticate(self, request):
-        user, validated_token = super().authenticate(request)
+        authenticate = super().authenticate(request)
+        if not authenticate:
+            return None
+        user, validated_token = authenticate
         pk = JWTAuthentication.get_profile_pk(request.headers)
         profile = JWTAuthentication.get_profile(user, pk)
         user.profile = profile
@@ -15,15 +18,16 @@ class JWTAuthentication(authentication.JWTAuthentication):
     @staticmethod
     def get_profile_pk(headers):
         if 'Profile' not in headers:
-            return
+            return None
         name, value = headers['Profile'].split()
         if not name.lower() == 'pk':
-            return
+            return None
         try:
             pk = int(value)
             return pk
         except TypeError:
             pass
+        return None
 
     @staticmethod
     def get_profile(user, pk):
@@ -32,3 +36,4 @@ class JWTAuthentication(authentication.JWTAuthentication):
             return profile
         except Profile.DoesNotExist:
             pass
+        return None
