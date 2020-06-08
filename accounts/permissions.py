@@ -12,7 +12,7 @@ class ProfileSalePermission(BasePermission):
     ]
 
     def has_permission(self, request, view):
-        profile = request.user.current_profile
+        profile = request.user.profile
         return bool(
             profile is not None
             and profile.role in self.roles
@@ -28,7 +28,7 @@ class ProfileShopPermission(BasePermission):
     ]
 
     def has_permission(self, request, view):
-        profile = request.user.current_profile
+        profile = request.user.profile
         return bool(
             profile is not None
             and profile.role in self.roles
@@ -43,7 +43,7 @@ class ProfileAddCustomerPermission(BasePermission):
     ]
 
     def has_permission(self, request, view):
-        profile = request.user.current_profile
+        profile = request.user.profile
         return bool(
             profile is not None
             and profile.role in self.roles

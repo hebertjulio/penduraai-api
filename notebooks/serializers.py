@@ -28,7 +28,7 @@ class RecordSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         request = self.context['request']
         obj = Record(**validated_data)
-        obj.buyer = request.user.current_profile
+        obj.buyer = request.user.profile
         obj.save()
         return obj
 
@@ -119,7 +119,7 @@ class TransactionSerializer(serializers.Serializer):
         request = self.context['request']
         if validated_data['action'] == Transaction.ACTION.new_record:
             validated_data['payload'].update({
-                'seller': request.user.current_profile.id
+                'seller': request.user.profile.id
             })
         tran = Transaction(str(uuid.uuid4()))
         tran.action = validated_data['action']
