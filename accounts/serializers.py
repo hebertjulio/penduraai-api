@@ -3,6 +3,7 @@ from django.db.transaction import atomic
 from rest_framework import serializers
 
 from .models import User, Profile
+from .validators import IsRoleOwnerValidator
 
 
 class UserCreateSerializer(serializers.ModelSerializer):
@@ -16,9 +17,12 @@ class UserCreateSerializer(serializers.ModelSerializer):
         user.is_active = True
         user.set_password(validated_data['password'])
         user.save()
+        # create owner profile
         profile = Profile(**{
-            'name': user.name, 'pin': pin, 'role': Profile.ROLE.owner,
-            'accountable': user})
+            'name': user.name, 'pin': pin,
+            'role': Profile.ROLE.owner,
+            'accountable': user
+        })
         profile.save()
         return user
 
@@ -45,16 +49,14 @@ class UserUpdateSerializer(serializers.ModelSerializer):
     @atomic
     def update(self, instance, validated_data):
         user = instance
+        # change owner profile name when user change its name
+        if 'name' in validated_data and user.name != validated_data['name']:
+            profile = user.accountable.get(role=Profile.ROLE.owner)
+            profile.name = validated_data['name']
+            profile.save()
         password = validated_data.pop('password', None)
         if password:
             user.set_password(password)
-        if 'name' in validated_data:
-            try:
-                profile = user.accountable.get(role=Profile.ROLE.owner)
-                profile.name = validated_data['name']
-                profile.save()
-            except Profile.DoesNotExist:
-                pass
         user = super().update(user, validated_data)
         return user
 
@@ -98,3 +100,10 @@ class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
         fields = '__all__'
+        extra_kwargs = {
+            'role': {
+                'validators': [
+                    IsRoleOwnerValidator()
+                ]
+            }
+        }
