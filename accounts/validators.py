@@ -14,7 +14,6 @@ class CanSaleOrReceivePaymentValidator:
     ]
 
     def __call__(self, value):
-        print(value)
         if value.role not in self.roles:
             message = _(
                 'You do not have privileges to make '
