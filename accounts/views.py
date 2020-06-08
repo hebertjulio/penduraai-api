@@ -31,10 +31,6 @@ class UserDetailView(rwgenerics.RetrieveAPIView):
     queryset = User.objects.filter(is_active=True)
     read_serializer_class = UserReadSerializer
 
-    def get_permissions(self):
-        self.permission_classes.append(IsOwner)
-        return super().get_permissions()
-
 
 class UserUpdateView(rwgenerics.UpdateAPIView):
 
