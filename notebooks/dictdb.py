@@ -95,21 +95,6 @@ class Transaction:
         raise NotImplementedError
 
     @property
-    def seller(self):
-        value = self.__data['seller']
-        return value
-
-    @seller.setter
-    def seller(self, value):
-        if not isinstance(value, int):
-            raise ValueError
-        self.__data['seller'] = value
-
-    @seller.deleter
-    def seller(self):
-        raise NotImplementedError
-
-    @property
     def status(self):
         value = self.__data['status']
         return value

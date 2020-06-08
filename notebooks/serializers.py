@@ -4,17 +4,9 @@ from django.db.transaction import atomic
 
 from rest_framework import serializers
 
-from accounts.relations import SellerRelatedField
-
-from accounts.validators import (
-    CanSaleOrReceivePaymentValidator, CanShopValidator,
-    CanAddNewCustomerValidator
-)
-
 from .decorators import accept_transaction
 from .models import Record, CustomerRecord
 from .dictdb import Transaction
-
 from .validators import (
     IsCustomerRecordOwnerValidator, CustomerFromYourselfValidator,
     AlreadyACustomerValidator, SellerAccountableValidator,
@@ -34,22 +26,22 @@ class RecordSerializer(serializers.ModelSerializer):
     @atomic
     @accept_transaction
     def create(self, validated_data):
+        request = self.context['request']
         obj = Record(**validated_data)
+        obj.buyer = request.profile
         obj.save()
         return obj
 
     class Meta:
         model = Record
         fields = '__all__'
+        read_only_fields = [
+            'buyer'
+        ]
         extra_kwargs = {
             'customer_record': {
                 'validators': [
                     IsCustomerRecordOwnerValidator()
-                ]
-            },
-            'buyer': {
-                'validators': [
-                    CanShopValidator()
                 ]
             }
         }
@@ -125,33 +117,16 @@ class TransactionSerializer(serializers.Serializer):
 
     def create(self, validated_data):
         request = self.context['request']
+        if validated_data['action'] == Transaction.ACTION.new_record:
+            validated_data['payload'].update({
+                'seller': request.profile.id
+            })
         tran = Transaction(str(uuid.uuid4()))
         tran.action = validated_data['action']
         tran.creditor = request.user.id
-        tran.seller = validated_data['seller'].id
         tran.payload = validated_data['payload']
         tran.save(60*30)  # 30 minutes
         return tran.data
-
-    def update(self, instance, validated_data):
-        raise NotImplementedError
-
-
-class RecordTransactionSerializer(TransactionSerializer):
-
-    seller = SellerRelatedField(validators=[
-        CanSaleOrReceivePaymentValidator()
-    ])
-
-    def update(self, instance, validated_data):
-        raise NotImplementedError
-
-
-class CustomerRecordTransactionSerializer(TransactionSerializer):
-
-    seller = SellerRelatedField(validators=[
-        CanAddNewCustomerValidator()
-    ])
 
     def update(self, instance, validated_data):
         raise NotImplementedError

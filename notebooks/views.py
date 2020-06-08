@@ -9,18 +9,31 @@ from rest_framework.exceptions import NotFound
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
+from rest_framework.permissions import IsAuthenticated
+
+from accounts.permissions import (
+    ProfileSalePermission, ProfileShopPermission,
+    ProfileAddCustomerPermission
+)
+
 from .models import Record, CustomerRecord
 from .dictdb import Transaction
 from .services import send_message
 from .serializers import (
     RecordSerializer, CustomerRecordSerializer, CreditorDebtorSerializar,
-    RecordTransactionSerializer, CustomerRecordTransactionSerializer
+    TransactionSerializer
 )
 
 
 class RecordListView(generics.ListCreateAPIView):
 
     serializer_class = RecordSerializer
+
+    permission_classes = [
+        IsAuthenticated,
+        ProfileShopPermission
+    ]
+
     filterset_fields = [
         'customer_record__creditor_id',
         'customer_record__debtor_id',
@@ -107,21 +120,33 @@ class DebtorCreditorListView(generics.ListAPIView):
         return CustomerRecord.objects.creditors(user)
 
 
-class TransactionListView(APIView):
+class TransactionNewRecordView(APIView):
 
-    def post(self, request, switch):  # skipcq
+    permission_classes = [
+        IsAuthenticated,
+        ProfileSalePermission
+    ]
+
+    def post(self, request):  # skipcq
         context = {'request': request}
-        params = {'data': request.data, 'context': context}
-        if switch == 'new-record':
-            params['data'].update({
-                'action': Transaction.ACTION.new_record
-            })
-            serializer = RecordTransactionSerializer(**params)
-        else:
-            params['data'].update({
-                'action': Transaction.ACTION.new_customer_record
-            })
-            serializer = CustomerRecordTransactionSerializer(**params)
+        request.data.update({'action': Transaction.ACTION.new_record})
+        serializer = TransactionSerializer(data=request.data, context=context)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=HTTP_201_CREATED)
+
+
+class TransactionNewCustomerRecordView(APIView):
+
+    permission_classes = [
+        IsAuthenticated,
+        ProfileAddCustomerPermission
+    ]
+
+    def post(self, request):  # skipcq
+        context = {'request': request}
+        request.data.update({'action': Transaction.ACTION.new_customer_record})
+        serializer = TransactionSerializer(data=request.data, context=context)
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data, status=HTTP_201_CREATED)
