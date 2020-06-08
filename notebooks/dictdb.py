@@ -95,21 +95,6 @@ class Transaction:
         raise NotImplementedError
 
     @property
-    def seller(self):
-        value = self.__data['seller']
-        return value
-
-    @seller.setter
-    def seller(self, value):
-        if not isinstance(value, int):
-            raise ValueError
-        self.__data['seller'] = value
-
-    @seller.deleter
-    def seller(self):
-        raise NotImplementedError
-
-    @property
     def status(self):
         value = self.__data['status']
         return value
@@ -139,7 +124,7 @@ class Transaction:
 
     @property
     def signature(self):
-        data = {'seller': self.seller, 'creditor': self.creditor}
+        data = {'creditor': self.creditor}
         data.update(**self.payload)
         value = generate_signature(data)
         return value

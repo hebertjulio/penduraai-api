@@ -31,13 +31,17 @@ urlpatterns = [
         views.DebtorCustomerRecordView.as_view(),
         name='debtor_customer_record'),
     re_path(
-        '(?P<switch>(debtors|creditors))',
+        r'^(?P<switch>(debtors|creditors))$',
         views.DebtorCreditorListView.as_view(),
         name='debtor_creditor_list'),
-    re_path(
-        'transactions/(?P<switch>(new-record|new-customer-record))',
-        views.TransactionListView.as_view(),
-        name='transaction_list'),
+    path(
+        'transactions/new-record',
+        views.TransactionNewRecordView.as_view(),
+        name='transaction_new_record'),
+    path(
+        'transactions/new-customer-record',
+        views.TransactionNewCustomerRecordView.as_view(),
+        name='transaction_new_customer_record'),
     path(
         'transactions/<str:pk>',
         views.TransactionDetailView.as_view(),

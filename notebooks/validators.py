@@ -57,10 +57,13 @@ class SellerAccountableValidator:
 
 class BuyerAccountableValidator:
 
-    def __call__(self, value):
+    requires_context = True
+
+    def __call__(self, value, serializer_field):
+        request = serializer_field.context['request']
         customer_record = value['customer_record']
         qs = customer_record.debtor.accountable.filter(
-            id=value['buyer'].id
+            id=request.profile.id
         )
         if not qs.exists():
             message = _('Accountable for buyer is invalid.')
@@ -87,7 +90,7 @@ class TransactionSignatureValidator:
             k: v for k, v in parent.initial_data.items()
             if k in tran.payload.keys()
         }
-        data.update({'creditor': tran.creditor, 'seller': tran.seller})
+        data.update({'creditor': tran.creditor})
         signature = generate_signature(data)
         if tran.signature != signature:
             message = _('Invalid transaction signature.')
