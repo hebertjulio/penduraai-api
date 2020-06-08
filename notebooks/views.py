@@ -20,30 +20,13 @@ from .serializers import (
 )
 
 
-class RecordListView(generics.ListCreateAPIView):
+class RecordListView(generics.CreateAPIView):
 
     serializer_class = RecordSerializer
 
-    filterset_fields = [
-        'customer_record__creditor_id',
-        'customer_record__debtor_id',
-    ]
-
     def get_permissions(self):
-        if self.request.method == 'post':
-            self.permission_classes += [
-                IsBuyer
-            ]
+        self.permission_classes.append(IsBuyer)
         return super().get_permissions()
-
-    def get_queryset(self):
-        user = self.request.user
-        qs = Record.objects.filter(
-            Q(customer_record__creditor=user) |
-            Q(customer_record__debtor=user)
-        )
-        qs = qs.order_by('-created')
-        return qs
 
 
 class RecordDetailView(generics.RetrieveAPIView):
@@ -63,9 +46,7 @@ class RecordDetailView(generics.RetrieveAPIView):
 class RecordStrikethroughView(APIView):
 
     def get_permissions(self):
-        self.permission_classes += [
-            IsManager
-        ]
+        self.permission_classes.append(IsManager)
         return super().get_permissions()
 
     def patch(self, request, pk):
@@ -80,12 +61,58 @@ class RecordStrikethroughView(APIView):
             raise NotFound
 
 
+class RecordCreditorListView(generics.ListAPIView):
+
+    lookup_field = 'pk'
+    serializer_class = RecordSerializer
+
+    def get_permissions(self):
+        self.permission_classes.append(IsBuyer)
+        return super().get_permissions()
+
+    def get_queryset(self):
+        user = self.request.user
+        pk = self.kwargs['pk']
+        qs = Record.objects.filter(
+            customer_record__creditor_id=pk,
+            customer_record__debtor=user)
+        qs = qs.order_by('-created')
+        return qs
+
+
+class RecordDebtorListView(generics.ListAPIView):
+
+    lookup_field = 'pk'
+    serializer_class = RecordSerializer
+
+    def get_permissions(self):
+        self.permission_classes.append(IsSeller)
+        return super().get_permissions()
+
+    def get_queryset(self):
+        user = self.request.user
+        pk = self.kwargs['pk']
+        qs = Record.objects.filter(
+            customer_record__debtor_id=pk,
+            customer_record__creditor=user)
+        qs = qs.order_by('-created')
+        return qs
+
+
 class CustomerRecordListView(generics.CreateAPIView):
+
+    def get_permissions(self):
+        self.permission_classes.append(IsManager)
+        return super().get_permissions()
 
     serializer_class = CustomerRecordSerializer
 
 
 class DebtorCustomerRecordView(APIView):
+
+    def get_permissions(self):
+        self.permission_classes.append(IsBuyer)
+        return super().get_permissions()
 
     def get(self, request, pk):  # skipcq
         try:
@@ -102,33 +129,53 @@ class CustomerRecordDetailView(generics.RetrieveUpdateDestroyAPIView):
     lookup_field = 'pk'
     serializer_class = CustomerRecordSerializer
 
+    def get_permissions(self):
+        if self.request.method in ['PUT', 'PATCH', 'DELETE']:
+            self.permission_classes.append(IsManager)
+        return super().get_permissions()
+
     def get_queryset(self):
         user = self.request.user
-        qs = CustomerRecord.objects.filter(creditor=user)
+        qs = CustomerRecord.objects.filter(Q(creditor=user) | Q(debtor=user))
         return qs
 
 
-class DebtorCreditorListView(generics.ListAPIView):
+class CreditorListView(generics.ListAPIView):
 
-    lookup_field = 'switch'
     serializer_class = CreditorDebtorSerializar
     filter_backends = [SearchFilter]
     search_fields = ['user_name']
 
+    def get_permissions(self):
+        self.permission_classes.append(IsBuyer)
+        return super().get_permissions()
+
     def get_queryset(self):
-        switch = self.kwargs['switch']
         user = self.request.user
-        if switch == 'debtors':
-            return CustomerRecord.objects.debtors(user)
-        return CustomerRecord.objects.creditors(user)
+        qs = CustomerRecord.objects.creditors(user)
+        return qs
+
+
+class DebtorListView(generics.ListAPIView):
+
+    serializer_class = CreditorDebtorSerializar
+    filter_backends = [SearchFilter]
+    search_fields = ['user_name']
+
+    def get_permissions(self):
+        self.permission_classes.append(IsSeller)
+        return super().get_permissions()
+
+    def get_queryset(self):
+        user = self.request.user
+        qs = CustomerRecord.objects.debtors(user)
+        return qs
 
 
 class TransactionNewRecordView(APIView):
 
     def get_permissions(self):
-        self.permission_classes += [
-            IsSeller
-        ]
+        self.permission_classes.append(IsSeller)
         return super().get_permissions()
 
     def post(self, request):  # skipcq
@@ -143,9 +190,7 @@ class TransactionNewRecordView(APIView):
 class TransactionNewCustomerRecordView(APIView):
 
     def get_permissions(self):
-        self.permission_classes += [
-            IsManager
-        ]
+        self.permission_classes.append(IsManager)
         return super().get_permissions()
 
     def post(self, request):  # skipcq
@@ -167,6 +212,10 @@ class TransactionDetailView(APIView):
 
 
 class TransactionRejectView(APIView):
+
+    def get_permissions(self):
+        self.permission_classes.append(IsBuyer)
+        return super().get_permissions()
 
     def put(self, request, pk):  # skipcq
         tran = Transaction(pk)

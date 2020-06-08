@@ -9,6 +9,7 @@ from rest_framework_api_key.permissions import HasAPIKey
 from rest_framework_simplejwt import views as simplejwt_views
 
 from .models import User, Profile
+from .permissions import IsOwner, IsManager
 
 from .serializers import (
     UserReadSerializer, UserCreateSerializer, UserUpdateSerializer,
@@ -19,7 +20,9 @@ class UserListView(rwgenerics.CreateAPIView):
 
     read_serializer_class = UserReadSerializer
     write_serializer_class = UserCreateSerializer
-    permission_classes = [HasAPIKey]
+    permission_classes = [
+        HasAPIKey
+    ]
 
 
 class UserDetailView(rwgenerics.RetrieveAPIView):
@@ -28,11 +31,19 @@ class UserDetailView(rwgenerics.RetrieveAPIView):
     queryset = User.objects.filter(is_active=True)
     read_serializer_class = UserReadSerializer
 
+    def get_permissions(self):
+        self.permission_classes.append(IsOwner)
+        return super().get_permissions()
+
 
 class UserUpdateView(rwgenerics.UpdateAPIView):
 
     write_serializer_class = UserUpdateSerializer
     read_serializer_class = UserReadSerializer
+
+    def get_permissions(self):
+        self.permission_classes.append(IsOwner)
+        return super().get_permissions()
 
     def get_object(self):
         user = self.request.user
@@ -40,6 +51,10 @@ class UserUpdateView(rwgenerics.UpdateAPIView):
 
 
 class UserDeactivateView(APIView):
+
+    def get_permissions(self):
+        self.permission_classes.append(IsOwner)
+        return super().get_permissions()
 
     def patch(self, request, *args, **kwargs):
         obj = self.request.user
@@ -52,17 +67,25 @@ class UserDeactivateView(APIView):
 
 class TokenObtainPairView(simplejwt_views.TokenObtainPairView):
 
-    permission_classes = [HasAPIKey]
+    permission_classes = [
+        HasAPIKey
+    ]
 
 
 class TokenRefreshView(simplejwt_views.TokenRefreshView):
 
-    permission_classes = [HasAPIKey]
+    permission_classes = [
+        HasAPIKey
+    ]
 
 
 class ProfileListView(generics.ListCreateAPIView):
 
     serializer_class = ProfileSerializer
+
+    def get_permissions(self):
+        self.permission_classes.append(IsManager)
+        return super().get_permissions()
 
     def get_queryset(self):
         user = self.request.user
@@ -74,6 +97,10 @@ class ProfileDetailView(generics.RetrieveUpdateDestroyAPIView):
 
     lookup_field = 'pk'
     serializer_class = ProfileSerializer
+
+    def get_permissions(self):
+        self.permission_classes.append(IsManager)
+        return super().get_permissions()
 
     def get_queryset(self):
         user = self.request.user
