@@ -9,7 +9,7 @@ class JWTAuthentication(authentication.JWTAuthentication):
         user, validated_token = super().authenticate(request)
         pk = JWTAuthentication.get_profile_pk(request.headers)
         profile = JWTAuthentication.get_profile(user, pk)
-        request.profile = profile
+        user.current_profile = profile
         return user, validated_token
 
     @staticmethod

@@ -63,7 +63,7 @@ class BuyerAccountableValidator:
         request = serializer_field.context['request']
         customer_record = value['customer_record']
         qs = customer_record.debtor.accountable.filter(
-            id=request.profile.id
+            id=request.user.current_profile.id
         )
         if not qs.exists():
             message = _('Accountable for buyer is invalid.')
