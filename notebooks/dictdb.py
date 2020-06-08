@@ -30,9 +30,9 @@ class Transaction:
     }'''
 
     def __init__(self, _id):
-        self.__db = redis.Redis(**settings.TRANSACTION_REDIS_CONFIG)
+        self.__client = redis.from_url(settings.TRANSACTION_REDIS_URL)
         self.__name = ':'.join([self.PREFIX, _id])
-        data = self.__db.get(self.__name)
+        data = self.__client.get(self.__name)
         data = data or self.__DEFAULT_DATA % Transaction.STATUS.no_exist
         self.__data = json.loads(data)
 
@@ -111,7 +111,7 @@ class Transaction:
 
     @property
     def ttl(self):
-        value = self.__db.ttl(self.__name)
+        value = self.__client.ttl(self.__name)
         return value
 
     @ttl.setter
@@ -153,7 +153,7 @@ class Transaction:
         raise NotImplementedError
 
     def exist(self):
-        keys = self.__db.keys(self.__name)
+        keys = self.__client.keys(self.__name)
         count = len(keys)
         return count == 1
 
@@ -162,10 +162,10 @@ class Transaction:
             self.__data['status'] = Transaction.STATUS.awaiting
         value = json.dumps(self.__data)
         ex = self.ttl if self.exist() else expire or 60
-        self.__db.set(self.__name, value, ex=ex)
+        self.__client.set(self.__name, value, ex=ex)
 
     def delete(self):
-        self.__db.delete(*[self.__name])
+        self.__client.delete(*[self.__name])
         self.__data = self.__DEFAULT_DATA % Transaction.STATUS.no_exist
 
     def __str__(self):
