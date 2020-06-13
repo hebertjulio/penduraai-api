@@ -97,6 +97,11 @@ class Profile(TimeStampedModel):
         choices=ROLE
     )
 
+    def is_admin(self):
+        return self.role in [
+            self.ROLE.owner, self.ROLE.manager
+        ]
+
     def __str__(self):
         return self.name
 
