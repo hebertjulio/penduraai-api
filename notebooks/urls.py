@@ -19,14 +19,6 @@ urlpatterns = [
         views.RecordStrikethroughView.as_view(),
         name='record_strikethrough'),
     path(
-        'records/creditor/<int:pk>',
-        views.RecordCreditorListView.as_view(),
-        name='record_creditor_list'),
-    path(
-        'records/debtor/<int:pk>',
-        views.RecordDebtorListView.as_view(),
-        name='record_debtor_list'),
-    path(
         'customer-records',
         views.CustomerRecordListView.as_view(),
         name='customer_record_list'),

@@ -20,12 +20,32 @@ from .serializers import (
 )
 
 
-class RecordListView(generics.CreateAPIView):
+class RecordListView(generics.ListCreateAPIView):
 
     serializer_class = RecordSerializer
+    filterset_fields = [
+        'customer_record__creditor',
+        'customer_record__debtor',
+    ]
+
+    def get_queryset(self):
+        user = self.request.user
+        profile = user.profile
+        where = (
+            Q(customer_record__creditor=user) |
+            Q(customer_record__debtor=user)
+        )
+        if not profile.is_admin():
+            where = where & (
+                Q(seller=profile) | Q(buyer=profile)
+            )
+        qs = Record.objects.filter(where)
+        qs = qs.order_by('-created')
+        return qs
 
     def get_permissions(self):
-        self.permission_classes.append(IsBuyer)
+        if self.request.method == 'POST':
+            self.permission_classes.append(IsBuyer)
         return super().get_permissions()
 
 
@@ -59,44 +79,6 @@ class RecordStrikethroughView(APIView):
             return Response(serializer.data)
         except Record.DoesNotExist:
             raise NotFound
-
-
-class RecordCreditorListView(generics.ListAPIView):
-
-    lookup_field = 'pk'
-    serializer_class = RecordSerializer
-
-    def get_permissions(self):
-        self.permission_classes.append(IsBuyer)
-        return super().get_permissions()
-
-    def get_queryset(self):
-        user = self.request.user
-        pk = self.kwargs['pk']
-        qs = Record.objects.filter(
-            customer_record__creditor_id=pk,
-            customer_record__debtor=user)
-        qs = qs.order_by('-created')
-        return qs
-
-
-class RecordDebtorListView(generics.ListAPIView):
-
-    lookup_field = 'pk'
-    serializer_class = RecordSerializer
-
-    def get_permissions(self):
-        self.permission_classes.append(IsSeller)
-        return super().get_permissions()
-
-    def get_queryset(self):
-        user = self.request.user
-        pk = self.kwargs['pk']
-        qs = Record.objects.filter(
-            customer_record__debtor_id=pk,
-            customer_record__creditor=user)
-        qs = qs.order_by('-created')
-        return qs
 
 
 class CustomerRecordListView(generics.CreateAPIView):

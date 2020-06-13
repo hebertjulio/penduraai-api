@@ -10,29 +10,24 @@ class JWTAuthentication(authentication.JWTAuthentication):
         if not authenticate:
             return None
         user, validated_token = authenticate
-        pk = JWTAuthentication.get_profile_pk(request.headers)
-        profile = JWTAuthentication.get_profile(user, pk)
+        pin = JWTAuthentication.get_PIN(request.headers)
+        profile = JWTAuthentication.get_profile(user, pin)
         user.profile = profile
         return user, validated_token
 
     @staticmethod
-    def get_profile_pk(headers):
+    def get_PIN(headers):
         if 'Profile' not in headers:
             return None
         name, value = headers['Profile'].split()
-        if not name.lower() == 'pk':
+        if not name.upper() == 'PIN':
             return None
-        try:
-            pk = int(value)
-            return pk
-        except TypeError:
-            pass
-        return None
+        return value
 
     @staticmethod
-    def get_profile(user, pk):
+    def get_profile(user, pin):
         try:
-            profile = user.accountable.get(pk=pk)
+            profile = user.accountable.get(pin=pin)
             return profile
         except Profile.DoesNotExist:
             pass

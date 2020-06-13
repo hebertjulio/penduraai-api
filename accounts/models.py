@@ -85,7 +85,7 @@ class Profile(TimeStampedModel):
 
     pin = models.CharField(_('pin'), max_length=4, validators=[
         RegexValidator(PIN_REGEX)
-    ])
+    ], db_index=True)
 
     accountable = models.ForeignKey(
         'User', on_delete=models.CASCADE,
@@ -96,6 +96,11 @@ class Profile(TimeStampedModel):
         _('role'), max_length=30, db_index=True,
         choices=ROLE
     )
+
+    def is_admin(self):
+        return self.role in [
+            self.ROLE.owner, self.ROLE.manager
+        ]
 
     def __str__(self):
         return self.name
