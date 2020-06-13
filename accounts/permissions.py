@@ -13,7 +13,7 @@ class IsOwner(BasePermission):
         )
 
 
-class IsManager(IsOwner):
+class IsAdmin(IsOwner):
 
     def has_permission(self, request, view):
         has_permission = super().has_permission(request, view)
@@ -21,15 +21,12 @@ class IsManager(IsOwner):
             profile = request.user.profile
             return bool(
                 profile is not None
-                and profile.role == Profile.ROLE.manager
+                and profile.role == Profile.ROLE.admin
             )
         return has_permission
 
 
-class IsSeller(IsManager):
-    roles = [
-        Profile.ROLE.seller, Profile.ROLE.both
-    ]
+class CanSell(IsAdmin):
 
     def has_permission(self, request, view):
         has_permission = super().has_permission(request, view)
@@ -37,15 +34,12 @@ class IsSeller(IsManager):
             profile = request.user.profile
             return bool(
                 profile is not None
-                and profile.role in self.roles
+                and profile.can_sell
             )
         return has_permission
 
 
-class IsBuyer(IsManager):
-    roles = [
-        Profile.ROLE.buyer, Profile.ROLE.both
-    ]
+class CanBuy(IsAdmin):
 
     def has_permission(self, request, view):
         has_permission = super().has_permission(request, view)
@@ -53,6 +47,6 @@ class IsBuyer(IsManager):
             profile = request.user.profile
             return bool(
                 profile is not None
-                and profile.role in self.roles
+                and profile.can_buy
             )
         return has_permission

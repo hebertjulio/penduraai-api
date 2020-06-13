@@ -72,10 +72,8 @@ class Profile(TimeStampedModel):
 
     ROLE = Choices(
         ('owner', _('owner')),
-        ('manager', _('manager')),
-        ('seller', _('seller')),
-        ('buyer', _('buyer')),
-        ('both', _('both (sell and buy)')),
+        ('admin', _('admin')),
+        ('guest', _('guest')),
     )
 
     PIN_REGEX = r'\d{4}'
@@ -89,7 +87,7 @@ class Profile(TimeStampedModel):
 
     accountable = models.ForeignKey(
         'User', on_delete=models.CASCADE,
-        related_name='accountable',
+        related_name='profiles',
     )
 
     role = models.CharField(
@@ -97,9 +95,12 @@ class Profile(TimeStampedModel):
         choices=ROLE
     )
 
+    can_sell = models.BooleanField(_('can sell'))
+    can_buy = models.BooleanField(_('can buy'))
+
     def is_admin(self):
         return self.role in [
-            self.ROLE.owner, self.ROLE.manager
+            self.ROLE.owner, self.ROLE.admin
         ]
 
     def __str__(self):

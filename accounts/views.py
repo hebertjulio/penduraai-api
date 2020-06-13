@@ -9,7 +9,7 @@ from rest_framework_api_key.permissions import HasAPIKey
 from rest_framework_simplejwt import views as simplejwt_views
 
 from .models import User, Profile
-from .permissions import IsOwner, IsManager
+from .permissions import IsOwner, IsAdmin
 
 from .serializers import (
     UserReadSerializer, UserCreateSerializer, UserUpdateSerializer,
@@ -32,7 +32,7 @@ class UserDetailView(rwgenerics.RetrieveAPIView):
     read_serializer_class = UserReadSerializer
 
 
-class UserUpdateView(rwgenerics.UpdateAPIView):
+class CurrentUserDetailView(rwgenerics.RetrieveUpdateDestroyAPIView):
 
     write_serializer_class = UserUpdateSerializer
     read_serializer_class = UserReadSerializer
@@ -45,20 +45,9 @@ class UserUpdateView(rwgenerics.UpdateAPIView):
         user = self.request.user
         return user
 
-
-class UserDeactivateView(APIView):
-
-    def get_permissions(self):
-        self.permission_classes.append(IsOwner)
-        return super().get_permissions()
-
-    def patch(self, request, *args, **kwargs):
-        obj = self.request.user
-        obj.is_active = False
-        obj.save()
-        serializer = UserReadSerializer(obj)
-        res = Response(serializer.data, HTTP_200_OK)
-        return res
+    def perform_destroy(self, instance):
+        instance.is_active = False
+        instance.save()
 
 
 class TokenObtainPairView(simplejwt_views.TokenObtainPairView):
@@ -80,7 +69,7 @@ class ProfileListView(generics.ListCreateAPIView):
     serializer_class = ProfileSerializer
 
     def get_permissions(self):
-        self.permission_classes.append(IsManager)
+        self.permission_classes.append(IsAdmin)
         return super().get_permissions()
 
     def get_queryset(self):
@@ -95,7 +84,7 @@ class ProfileDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = ProfileSerializer
 
     def get_permissions(self):
-        self.permission_classes.append(IsManager)
+        self.permission_classes.append(IsAdmin)
         return super().get_permissions()
 
     def get_queryset(self):

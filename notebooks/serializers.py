@@ -5,10 +5,10 @@ from django.db.transaction import atomic
 from rest_framework import serializers
 
 from .decorators import accept_transaction
-from .models import Record, CustomerRecord
+from .models import Record, Sheet
 from .dictdb import Transaction
 from .validators import (
-    IsCustomerRecordOwnerValidator, CustomerFromYourselfValidator,
+    IsSheetOwnerValidator, CustomerFromYourselfValidator,
     AlreadyACustomerValidator, SellerAccountableValidator,
     BuyerAccountableValidator, TransactionExistValidator,
     TransactionSignatureValidator, TransactionStatusValidator
@@ -17,11 +17,11 @@ from .validators import (
 
 class RecordSerializer(serializers.ModelSerializer):
 
-    transaction = serializers.UUIDField(write_only=True, validators=[
+    transaction = serializers.UUIDField(validators=[
         TransactionExistValidator(),
         TransactionSignatureValidator(),
         TransactionStatusValidator()
-    ])
+    ], write_only=True)
 
     @atomic
     @accept_transaction
@@ -39,9 +39,9 @@ class RecordSerializer(serializers.ModelSerializer):
             'buyer'
         ]
         extra_kwargs = {
-            'customer_record': {
+            'sheet': {
                 'validators': [
-                    IsCustomerRecordOwnerValidator()
+                    IsSheetOwnerValidator()
                 ]
             }
         }
@@ -51,39 +51,39 @@ class RecordSerializer(serializers.ModelSerializer):
         ]
 
 
-class CustomerRecordSerializer(serializers.ModelSerializer):
+class SheetSerializer(serializers.ModelSerializer):
 
-    transaction = serializers.UUIDField(write_only=True, validators=[
+    transaction = serializers.UUIDField(validators=[
         TransactionExistValidator(),
         TransactionSignatureValidator(),
         TransactionStatusValidator()
-    ])
+    ], write_only=True)
 
     @atomic
     @accept_transaction
     def create(self, validated_data):
         request = self.context['request']
-        obj = CustomerRecord(**validated_data)
-        obj.debtor = request.user
+        obj = Sheet(**validated_data)
+        obj.customer = request.user
         obj.save()
         return obj
 
     class Meta:
-        model = CustomerRecord
+        model = Sheet
         fields = '__all__'
-        read_only_fields = ['authorized', 'debtor']
+        read_only_fields = ['authorized', 'customer']
         validators = [
             CustomerFromYourselfValidator(),
             AlreadyACustomerValidator()
         ]
         extra_kwargs = {
-            'creditor': {
+            'store': {
                 'write_only': True
             }
         }
 
 
-class CreditorDebtorSerializar(serializers.BaseSerializer):
+class BalanceSerializar(serializers.BaseSerializer):
 
     def create(self, validated_data):
         raise NotImplementedError
@@ -107,7 +107,7 @@ class TransactionSerializer(serializers.Serializer):
     id = serializers.UUIDField(read_only=True)
     action = serializers.ChoiceField(choices=Transaction.ACTION)
     payload = serializers.JSONField(binary=True)
-    creditor = serializers.IntegerField(read_only=True)
+    store = serializers.IntegerField(read_only=True)
 
     status = serializers.ChoiceField(
         choices=Transaction.STATUS, read_only=True
@@ -123,7 +123,7 @@ class TransactionSerializer(serializers.Serializer):
             })
         tran = Transaction(str(uuid.uuid4()))
         tran.action = validated_data['action']
-        tran.creditor = request.user.id
+        tran.store = request.user.id
         tran.payload = validated_data['payload']
         tran.save(60*30)  # 30 minutes
         return tran.data

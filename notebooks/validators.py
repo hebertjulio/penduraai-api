@@ -6,15 +6,15 @@ from .services import generate_signature
 from .dictdb import Transaction
 
 
-class IsCustomerRecordOwnerValidator:
+class IsSheetOwnerValidator:
 
     requires_context = True
 
     def __call__(self, value, serializer_field):
         request = serializer_field.context['request']
         user = request.user
-        if value.debtor.id != user.id:
-            message = _('You aren\'t owner of this customer record.')
+        if value.customer.id != user.id:
+            message = _('You aren\'t owner of this sheet.')
             raise serializers.ValidationError(message)
 
 
@@ -25,7 +25,7 @@ class CustomerFromYourselfValidator:
     def __call__(self, value, serializer_field):
         request = serializer_field.context['request']
         user = request.user
-        if value['creditor'].id == user.id:
+        if value['store'].id == user.id:
             message = _('You can\'t customer from yourself.')
             raise serializers.ValidationError(message)
 
@@ -37,7 +37,7 @@ class AlreadyACustomerValidator:
     def __call__(self, value, serializer_field):
         request = serializer_field.context['request']
         user = request.user
-        qs = user.as_debtor.filter(creditor=value['creditor'])
+        qs = user.customer.filter(store=value['store'])
         if qs.exists():
             message = _('You are already a customer.')
             raise serializers.ValidationError(message)
@@ -46,8 +46,7 @@ class AlreadyACustomerValidator:
 class SellerAccountableValidator:
 
     def __call__(self, value):
-        customer_record = value['customer_record']
-        qs = customer_record.creditor.accountable.filter(
+        qs = value['sheet'].store.profiles.filter(
             id=value['seller'].id
         )
         if not qs.exists():
@@ -61,8 +60,7 @@ class BuyerAccountableValidator:
 
     def __call__(self, value, serializer_field):
         request = serializer_field.context['request']
-        customer_record = value['customer_record']
-        qs = customer_record.debtor.accountable.filter(
+        qs = value['sheet'].customer.profiles.filter(
             id=request.user.profile.id
         )
         if not qs.exists():
@@ -92,7 +90,7 @@ class TransactionSignatureValidator:
             k: v for k, v in parent.initial_data.items()
             if k in tran.payload.keys()
         }
-        data.update({'creditor': tran.creditor})
+        data.update({'store': tran.store})
         signature = generate_signature(data)
         if tran.signature != signature:
             message = _('Invalid transaction signature.')

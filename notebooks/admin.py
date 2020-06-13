@@ -1,45 +1,45 @@
 from django.contrib import admin
 
-from .models import Record, CustomerRecord
+from .models import Record, Sheet
 
 
 @admin.register(Record)
 class RecordAdmin(admin.ModelAdmin):
     list_display = (
-        'id', 'creditor', 'debtor', 'seller', 'buyer',
+        'id', 'store', 'customer', 'seller', 'buyer',
         'value', 'operation',
     )
     search_fields = (
-        'customerrecord__creditor__name', 'customerrecord__creditor__email',
-        'customerrecord__debtor__name', 'customerrecord__debtor__email',
+        'sheetrecord__store__name', 'sheetrecord__store__email',
+        'sheetrecord__customer__name', 'sheetrecord__customer__email',
         'id',
     )
     autocomplete_fields = (
-        'customer_record', 'seller', 'buyer',
+        'sheet', 'seller', 'buyer',
     )
     list_filter = (
-        'operation',
+        'operation', 'deleted',
     )
     ordering = (
         '-created',
     )
 
 
-@admin.register(CustomerRecord)
-class CustomerRecordAdmin(admin.ModelAdmin):
+@admin.register(Sheet)
+class SheetAdmin(admin.ModelAdmin):
     list_display = (
-        'creditor', 'debtor', 'authorized',
+        'store', 'customer', 'authorized',
     )
     search_fields = (
-        'creditor__name', 'creditor__email',
-        'debtor__name', 'debtor__email',
+        'store__name', 'store__email',
+        'customer__name', 'customer__email',
     )
     autocomplete_fields = (
-        'creditor', 'debtor',
+        'store', 'customer',
     )
     list_filter = (
         'authorized',
     )
     ordering = (
-        'creditor__id', 'debtor__name',
+        'store__id', 'customer__name',
     )

@@ -51,7 +51,7 @@ class UserUpdateSerializer(serializers.ModelSerializer):
         user = instance
         # change owner profile name when user change its name
         if 'name' in validated_data and user.name != validated_data['name']:
-            profile = user.accountable.get(role=Profile.ROLE.owner)
+            profile = user.profiles.get(role=Profile.ROLE.owner)
             profile.name = validated_data['name']
             profile.save()
         password = validated_data.pop('password', None)
