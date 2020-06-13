@@ -7,14 +7,14 @@ class SheetQuerySet(QuerySet):
 
     credit_sum = Sum(Case(When(
         Q(records__operation='credit') &
-        Q(records__strikethrough=False),
+        Q(records__deleted=False),
         then=F('records__value')),
         default=0, output_field=DecimalField())
     )
 
     debt_sum = Sum(Case(When(
         Q(records__operation='debt') &
-        Q(records__strikethrough=False),
+        Q(records__deleted=False),
         then=F('records__value')),
         default=0, output_field=DecimalField())
     )
