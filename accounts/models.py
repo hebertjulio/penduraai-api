@@ -85,7 +85,7 @@ class Profile(TimeStampedModel):
 
     pin = models.CharField(_('pin'), max_length=4, validators=[
         RegexValidator(PIN_REGEX)
-    ])
+    ], db_index=True)
 
     accountable = models.ForeignKey(
         'User', on_delete=models.CASCADE,
