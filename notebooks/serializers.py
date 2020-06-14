@@ -13,7 +13,7 @@ from .dictdb import Transaction
 from .validators import (
     IsSheetOwnerValidator, CustomerFromYourselfValidator,
     AlreadyACustomerValidator, AttendantAccountableValidator,
-    AttendedAccountableValidator, TransactionExistValidator,
+    AcceptAccountableValidator, TransactionExistValidator,
     TransactionSignatureValidator, TransactionStatusValidator
 )
 
@@ -30,14 +30,14 @@ class RecordSerializer(serializers.ModelSerializer):
 
     sheet = SheetRelatedField()
     attendant = ProfileRelatedField()
-    attended = ProfileRelatedField(read_only=True)
+    accept = ProfileRelatedField(read_only=True)
 
     @atomic
     @accept_transaction
     def create(self, validated_data):
         request = self.context['request']
         obj = Record(**validated_data)
-        obj.attended = request.user.profile
+        obj.accept = request.user.profile
         obj.save()
         return obj
 
@@ -56,7 +56,7 @@ class RecordSerializer(serializers.ModelSerializer):
         }
         validators = [
             AttendantAccountableValidator(),
-            AttendedAccountableValidator()
+            AcceptAccountableValidator()
         ]
 
 

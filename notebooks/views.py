@@ -33,9 +33,9 @@ class RecordListView(generics.ListCreateAPIView):
         user = self.request.user
         profile = user.profile
         where = (Q(sheet__store=user) | Q(sheet__customer=user))
-        if not profile.is_owner and not profile.can_manage:
-            where = where & (Q(attendant=profile) | Q(attended=profile))
-        qs = Record.objects.select_related('sheet', 'attendant', 'attended')
+        if profile is None or not any([profile.is_owner, profile.can_manage]):
+            where = where & (Q(attendant=profile) | Q(accept=profile))
+        qs = Record.objects.select_related('sheet', 'attendant', 'accept')
         qs = qs.filter(where)
         qs = qs.order_by('-created')
         return qs
@@ -54,18 +54,19 @@ class RecordDetailView(generics.RetrieveDestroyAPIView):
 
     def get_permissions(self):
         permissions = super().get_permissions()
-        if self.request.method == 'DELETE':
+        if self.request.method != 'GET':
             permissions += [CanManage()]
         return permissions
 
     def get_queryset(self):
         user = self.request.user
-        if self.request.method == 'DELETE':
-            where = Q(sheet__store=user)
-        else:
-            where = Q(sheet__store=user) | Q(sheet__customer=user)
+        where = Q(sheet__store=user)
+        if self.request.method == 'GET':
+            where = where | Q(sheet__customer=user)
         qs = Record.objects.select_related(
-            'sheet', 'sheet__customer', 'sheet__store', 'attendant', 'attended')
+            'sheet', 'sheet__customer', 'sheet__store',
+            'attendant', 'accept'
+        )
         qs = qs.filter(where)
         return qs
 
@@ -105,8 +106,8 @@ class SheetDetailView(generics.RetrieveUpdateDestroyAPIView):
 class SheetDetailByStoreView(APIView):
 
     def get(self, request, pk):  # skipcq
-        user = request.user
         try:
+            user = request.user
             obj = user.customer.get(store_id=pk, authorized=True)
             serializer = SheetSerializer(obj)
             response = Response(serializer.data)

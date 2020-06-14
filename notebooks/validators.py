@@ -50,11 +50,11 @@ class AttendantAccountableValidator:
             id=value['attendant'].id
         )
         if not qs.exists():
-            message = _('Accountable for attendant is invalid.')
+            message = _('Profile for attendant is invalid.')
             raise serializers.ValidationError(message)
 
 
-class AttendedAccountableValidator:
+class AcceptAccountableValidator:
 
     requires_context = True
 
@@ -64,7 +64,7 @@ class AttendedAccountableValidator:
             id=request.user.profile.id
         )
         if not qs.exists():
-            message = _('Accountable for attended is invalid.')
+            message = _('Profile for accept is invalid.')
             raise serializers.ValidationError(message)
 
 

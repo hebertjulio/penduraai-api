@@ -40,9 +40,9 @@ class Record(TimeStampedModel):
         related_name='attendant',
     )
 
-    attended = models.ForeignKey(
+    accept = models.ForeignKey(
         'accounts.Profile', on_delete=models.CASCADE,
-        related_name='attended',
+        related_name='accept',
     )
 
     is_deleted = models.BooleanField(
