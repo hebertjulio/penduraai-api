@@ -21,7 +21,9 @@ class UserCreateSerializer(serializers.ModelSerializer):
         profile = Profile(**{
             'name': user.name, 'pin': pin,
             'role': Profile.ROLE.owner,
-            'accountable': user
+            'accountable': user,
+            'can_sell': True,
+            'can_buy': True
         })
         profile.save()
         return user
