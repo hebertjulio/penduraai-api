@@ -44,6 +44,9 @@ class RecordSerializer(serializers.ModelSerializer):
     class Meta:
         model = Record
         fields = '__all__'
+        read_only_fields = [
+            'is_deleted'
+        ]
         extra_kwargs = {
             'sheet': {
                 'validators': [
@@ -80,7 +83,9 @@ class SheetSerializer(serializers.ModelSerializer):
     class Meta:
         model = Sheet
         fields = '__all__'
-        read_only_fields = ['authorized']
+        read_only_fields = [
+            'authorized'
+        ]
         validators = [
             CustomerFromYourselfValidator(),
             AlreadyACustomerValidator()

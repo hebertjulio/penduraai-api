@@ -47,7 +47,7 @@ class Record(TimeStampedModel):
 
     is_deleted = models.BooleanField(
         _('deleted status'),
-        default=True,
+        default=False,
         help_text=_(
             'Designates whether this record should be treated as deleted. '
             'Select this instead of deleting record.'
