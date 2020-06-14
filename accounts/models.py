@@ -7,7 +7,6 @@ from django.contrib.auth.base_user import AbstractBaseUser
 from django.contrib.auth.models import PermissionsMixin
 
 from model_utils.models import TimeStampedModel
-from model_utils import Choices
 
 from .managers import UserManager
 
