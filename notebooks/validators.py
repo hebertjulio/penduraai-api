@@ -43,18 +43,18 @@ class AlreadyACustomerValidator:
             raise serializers.ValidationError(message)
 
 
-class SellerAccountableValidator:
+class AttendantAccountableValidator:
 
     def __call__(self, value):
         qs = value['sheet'].store.profiles.filter(
-            id=value['seller'].id
+            id=value['attendant'].id
         )
         if not qs.exists():
-            message = _('Accountable for seller is invalid.')
+            message = _('Accountable for attendant is invalid.')
             raise serializers.ValidationError(message)
 
 
-class BuyerAccountableValidator:
+class AttendedAccountableValidator:
 
     requires_context = True
 
@@ -64,7 +64,7 @@ class BuyerAccountableValidator:
             id=request.user.profile.id
         )
         if not qs.exists():
-            message = _('Accountable for buyer is invalid.')
+            message = _('Accountable for attended is invalid.')
             raise serializers.ValidationError(message)
 
 

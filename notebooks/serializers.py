@@ -12,8 +12,8 @@ from .dictdb import Transaction
 
 from .validators import (
     IsSheetOwnerValidator, CustomerFromYourselfValidator,
-    AlreadyACustomerValidator, SellerAccountableValidator,
-    BuyerAccountableValidator, TransactionExistValidator,
+    AlreadyACustomerValidator, AttendantAccountableValidator,
+    AttendedAccountableValidator, TransactionExistValidator,
     TransactionSignatureValidator, TransactionStatusValidator
 )
 
@@ -29,15 +29,15 @@ class RecordSerializer(serializers.ModelSerializer):
     ], write_only=True)
 
     sheet = SheetRelatedField()
-    buyer = ProfileRelatedField(read_only=True)
-    seller = ProfileRelatedField()
+    attendant = ProfileRelatedField()
+    attended = ProfileRelatedField(read_only=True)
 
     @atomic
     @accept_transaction
     def create(self, validated_data):
         request = self.context['request']
         obj = Record(**validated_data)
-        obj.buyer = request.user.profile
+        obj.attended = request.user.profile
         obj.save()
         return obj
 
@@ -52,8 +52,8 @@ class RecordSerializer(serializers.ModelSerializer):
             }
         }
         validators = [
-            SellerAccountableValidator(),
-            BuyerAccountableValidator()
+            AttendantAccountableValidator(),
+            AttendedAccountableValidator()
         ]
 
 
@@ -124,7 +124,7 @@ class TransactionSerializer(serializers.Serializer):
         request = self.context['request']
         if validated_data['action'] == Transaction.ACTION.new_record:
             validated_data['payload'].update({
-                'seller': request.user.profile.id
+                'attendant': request.user.profile.id
             })
         tran = Transaction(str(uuid.uuid4()))
         tran.action = validated_data['action']

@@ -6,7 +6,7 @@ from .models import Record, Sheet
 @admin.register(Record)
 class RecordAdmin(admin.ModelAdmin):
     list_display = (
-        'id', 'store', 'customer', 'seller', 'buyer',
+        'id', 'store', 'customer', 'attendant', 'attended',
         'value', 'operation', 'is_deleted',
     )
     search_fields = (
@@ -15,7 +15,7 @@ class RecordAdmin(admin.ModelAdmin):
         'id',
     )
     autocomplete_fields = (
-        'sheet', 'seller', 'buyer',
+        'sheet', 'attendant', 'attended',
     )
     list_filter = (
         'operation', 'is_deleted',

@@ -35,14 +35,14 @@ class Record(TimeStampedModel):
         related_name='records',
     )
 
-    seller = models.ForeignKey(
+    attendant = models.ForeignKey(
         'accounts.Profile', on_delete=models.CASCADE,
-        related_name='seller',
+        related_name='attendant',
     )
 
-    buyer = models.ForeignKey(
+    attended = models.ForeignKey(
         'accounts.Profile', on_delete=models.CASCADE,
-        related_name='buyer',
+        related_name='attended',
     )
 
     is_deleted = models.BooleanField(

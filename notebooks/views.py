@@ -34,8 +34,8 @@ class RecordListView(generics.ListCreateAPIView):
         profile = user.profile
         where = (Q(sheet__store=user) | Q(sheet__customer=user))
         if not profile.is_owner and not profile.can_manage:
-            where = where & (Q(seller=profile) | Q(buyer=profile))
-        qs = Record.objects.select_related('sheet', 'seller', 'buyer')
+            where = where & (Q(attendant=profile) | Q(attended=profile))
+        qs = Record.objects.select_related('sheet', 'attendant', 'attended')
         qs = qs.filter(where)
         qs = qs.order_by('-created')
         return qs
@@ -65,7 +65,7 @@ class RecordDetailView(generics.RetrieveDestroyAPIView):
         else:
             where = Q(sheet__store=user) | Q(sheet__customer=user)
         qs = Record.objects.select_related(
-            'sheet', 'sheet__customer', 'sheet__store', 'seller', 'buyer')
+            'sheet', 'sheet__customer', 'sheet__store', 'attendant', 'attended')
         qs = qs.filter(where)
         return qs
 
