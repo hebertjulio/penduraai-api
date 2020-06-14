@@ -19,24 +19,26 @@ class SheetQuerySet(QuerySet):
         default=0, output_field=DecimalField())
     )
 
-    def store_list(self, customer):
-        qs = self.filter(customer=customer)
+    def balance_list_by_store(self, customer):
+        qs = self.select_related('store', 'record')
         qs = qs.annotate(
             user_id=F('store__id'), user_name=F('store__name'),
             credit_sum=self.credit_sum, debt_sum=self.debt_sum,
-            balance=self.balance_calc
+            balance=self.balance_calc, sheet_id=F('id')
         )
-        qs = qs.values('user_id', 'user_name', 'balance')
+        qs = qs.values('user_id', 'user_name', 'balance', 'sheet_id')
+        qs = qs.filter(customer=customer)
         qs = qs.order_by('user_name')
         return qs
 
-    def customer_list(self, store):
-        qs = self.filter(store=store)
+    def balance_list_by_customer(self, store):
+        qs = self.select_related('customer', 'record')
         qs = qs.annotate(
             user_id=F('customer__id'), user_name=F('customer__name'),
             credit_sum=self.credit_sum, debt_sum=self.debt_sum,
-            balance=self.balance_calc
+            balance=self.balance_calc, sheet_id=F('id')
         )
-        qs = qs.values('user_id', 'user_name', 'balance')
+        qs = qs.values('user_id', 'user_name', 'balance', 'sheet_id')
+        qs = qs.filter(store=store)
         qs = qs.order_by('user_name')
         return qs

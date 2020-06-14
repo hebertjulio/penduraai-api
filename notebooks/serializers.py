@@ -4,15 +4,20 @@ from django.db.transaction import atomic
 
 from rest_framework import serializers
 
+from accounts.relations import UserRelatedField, ProfileRelatedField
+
 from .decorators import accept_transaction
 from .models import Record, Sheet
 from .dictdb import Transaction
+
 from .validators import (
     IsSheetOwnerValidator, CustomerFromYourselfValidator,
     AlreadyACustomerValidator, SellerAccountableValidator,
     BuyerAccountableValidator, TransactionExistValidator,
     TransactionSignatureValidator, TransactionStatusValidator
 )
+
+from .relations import SheetRelatedField
 
 
 class RecordSerializer(serializers.ModelSerializer):
@@ -22,6 +27,10 @@ class RecordSerializer(serializers.ModelSerializer):
         TransactionSignatureValidator(),
         TransactionStatusValidator()
     ], write_only=True)
+
+    sheet = SheetRelatedField()
+    buyer = ProfileRelatedField(read_only=True)
+    seller = ProfileRelatedField()
 
     @atomic
     @accept_transaction
@@ -35,9 +44,6 @@ class RecordSerializer(serializers.ModelSerializer):
     class Meta:
         model = Record
         fields = '__all__'
-        read_only_fields = [
-            'buyer'
-        ]
         extra_kwargs = {
             'sheet': {
                 'validators': [
@@ -59,6 +65,9 @@ class SheetSerializer(serializers.ModelSerializer):
         TransactionStatusValidator()
     ], write_only=True)
 
+    store = UserRelatedField()
+    customer = UserRelatedField(read_only=True)
+
     @atomic
     @accept_transaction
     def create(self, validated_data):
@@ -71,16 +80,11 @@ class SheetSerializer(serializers.ModelSerializer):
     class Meta:
         model = Sheet
         fields = '__all__'
-        read_only_fields = ['authorized', 'customer']
+        read_only_fields = ['authorized']
         validators = [
             CustomerFromYourselfValidator(),
             AlreadyACustomerValidator()
         ]
-        extra_kwargs = {
-            'store': {
-                'write_only': True
-            }
-        }
 
 
 class BalanceSerializar(serializers.BaseSerializer):
@@ -93,6 +97,7 @@ class BalanceSerializar(serializers.BaseSerializer):
 
     def to_representation(self, instance):
         return {
+            'sheet_id': instance['sheet_id'],
             'user_id': instance['user_id'],
             'user_name': instance['user_name'],
             'balance': instance['balance'],

@@ -108,7 +108,7 @@ class Sheet(TimeStampedModel):
             self.store.name, self.customer.name
         )
 
-    balance = SheetQuerySet.as_manager()
+    objects = SheetQuerySet.as_manager()
 
     class Meta:
         verbose_name = _('sheet')

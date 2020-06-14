@@ -35,7 +35,8 @@ class RecordListView(generics.ListCreateAPIView):
         where = (Q(sheet__store=user) | Q(sheet__customer=user))
         if not profile.is_admin():
             where = where & (Q(seller=profile) | Q(buyer=profile))
-        qs = Record.objects.filter(where)
+        qs = Record.objects.select_related('sheet', 'seller', 'buyer')
+        qs = qs.filter(where)
         qs = qs.order_by('-created')
         return qs
 
@@ -63,7 +64,9 @@ class RecordDetailView(generics.RetrieveDestroyAPIView):
             where = Q(sheet__store=user)
         else:
             where = Q(sheet__store=user) | Q(sheet__customer=user)
-        qs = Record.objects.filter(where)
+        qs = Record.objects.select_related(
+            'sheet', 'sheet__customer', 'sheet__store', 'seller', 'buyer')
+        qs = qs.filter(where)
         return qs
 
     def perform_destroy(self, instance):
@@ -125,7 +128,7 @@ class BalanceListByStoreView(generics.ListAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        qs = Sheet.balance.store_list(user)
+        qs = Sheet.objects.balance_list_by_store(user)
         return qs
 
 
@@ -142,7 +145,7 @@ class BalanceListByCustomerView(generics.ListAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        qs = Sheet.balance.customer_list(user)
+        qs = Sheet.objects.balance_list_by_customer(user)
         return qs
 
 
