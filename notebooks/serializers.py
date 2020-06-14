@@ -127,10 +127,6 @@ class TransactionSerializer(serializers.Serializer):
 
     def create(self, validated_data):
         request = self.context['request']
-        if validated_data['action'] == Transaction.ACTION.new_record:
-            validated_data['payload'].update({
-                'attendant': request.user.profile.id
-            })
         tran = Transaction(str(uuid.uuid4()))
         tran.action = validated_data['action']
         tran.store = request.user.id
