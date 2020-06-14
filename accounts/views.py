@@ -1,14 +1,10 @@
-from rest_framework.status import HTTP_200_OK
-from rest_framework.exceptions import NotFound
-from rest_framework.views import APIView
-from rest_framework.response import Response
 from rest_framework import generics
 
+from rest_framework_simplejwt import views as simplejwt_views
 from drf_rw_serializers import generics as rwgenerics
 from rest_framework_api_key.permissions import HasAPIKey
-from rest_framework_simplejwt import views as simplejwt_views
 
-from .models import User, Profile
+from .models import Profile
 from .permissions import IsOwner, IsAdmin
 
 from .serializers import (
@@ -23,13 +19,6 @@ class UserListView(rwgenerics.CreateAPIView):
     permission_classes = [
         HasAPIKey
     ]
-
-
-class UserDetailView(rwgenerics.RetrieveAPIView):
-
-    lookup_field = 'pk'
-    queryset = User.objects.filter(is_active=True)
-    read_serializer_class = UserReadSerializer
 
 
 class CurrentUserDetailView(rwgenerics.RetrieveUpdateDestroyAPIView):
