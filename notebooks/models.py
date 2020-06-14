@@ -45,7 +45,14 @@ class Record(TimeStampedModel):
         related_name='buyer',
     )
 
-    deleted = models.BooleanField(_('deleted'), default=False)
+    is_deleted = models.BooleanField(
+        _('deleted status'),
+        default=True,
+        help_text=_(
+            'Designates whether this record should be treated as deleted. '
+            'Select this instead of deleting record.'
+        ),
+    )
 
     @property
     def store(self):

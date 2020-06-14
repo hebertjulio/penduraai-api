@@ -9,7 +9,7 @@ from rest_framework.exceptions import NotFound
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
-from accounts.permissions import CanBuy, CanSell, IsAdmin
+from accounts.permissions import CanBuy, CanAttend, CanManage
 
 from .models import Record, Sheet
 from .dictdb import Transaction
@@ -33,7 +33,7 @@ class RecordListView(generics.ListCreateAPIView):
         user = self.request.user
         profile = user.profile
         where = (Q(sheet__store=user) | Q(sheet__customer=user))
-        if not profile.is_admin():
+        if not profile.is_owner and not profile.can_manage:
             where = where & (Q(seller=profile) | Q(buyer=profile))
         qs = Record.objects.select_related('sheet', 'seller', 'buyer')
         qs = qs.filter(where)
@@ -55,7 +55,7 @@ class RecordDetailView(generics.RetrieveDestroyAPIView):
     def get_permissions(self):
         permissions = super().get_permissions()
         if self.request.method == 'DELETE':
-            permissions += [IsAdmin()]
+            permissions += [CanManage()]
         return permissions
 
     def get_queryset(self):
@@ -70,7 +70,7 @@ class RecordDetailView(generics.RetrieveDestroyAPIView):
         return qs
 
     def perform_destroy(self, instance):
-        instance.deleted = True
+        instance.is_deleted = True
         instance.save()
         return instance
 
@@ -81,7 +81,7 @@ class SheetListView(generics.CreateAPIView):
 
     def get_permissions(self):
         permissions = super().get_permissions()
-        permissions += [IsAdmin()]
+        permissions += [CanManage()]
         return permissions
 
 
@@ -93,12 +93,12 @@ class SheetDetailView(generics.RetrieveUpdateDestroyAPIView):
     def get_permissions(self):
         permissions = super().get_permissions()
         if self.request.method in ['PUT', 'PATCH', 'DELETE']:
-            permissions += [IsAdmin()]
+            permissions += [CanManage()]
         return permissions
 
     def get_queryset(self):
         user = self.request.user
-        qs = Sheet.objects.filter(Q(store=user) | Q(customer=user))
+        qs = Sheet.objects.filter(store=user)
         return qs
 
 
@@ -140,7 +140,7 @@ class BalanceListByCustomerView(generics.ListAPIView):
 
     def get_permissions(self):
         permissions = super().get_permissions()
-        permissions += [CanSell()]
+        permissions += [CanAttend()]
         return permissions
 
     def get_queryset(self):
@@ -153,7 +153,7 @@ class TransactionNewRecordView(APIView):
 
     def get_permissions(self):
         permissions = super().get_permissions()
-        permissions += [CanSell()]
+        permissions += [CanAttend()]
         return permissions
 
     def post(self, request):  # skipcq
@@ -169,7 +169,7 @@ class TransactionNewSheetView(APIView):
 
     def get_permissions(self):
         permissions = super().get_permissions()
-        permissions += [IsAdmin()]
+        permissions += [CanManage()]
         return permissions
 
     def post(self, request):  # skipcq

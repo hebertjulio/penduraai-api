@@ -3,7 +3,7 @@ from django.db.transaction import atomic
 from rest_framework import serializers
 
 from .models import User, Profile
-from .validators import IsRoleOwnerValidator
+from .validators import AccountablePINUniqueTogetherValidator
 
 
 class UserCreateSerializer(serializers.ModelSerializer):
@@ -19,11 +19,9 @@ class UserCreateSerializer(serializers.ModelSerializer):
         user.save()
         # create owner profile
         profile = Profile(**{
-            'name': user.name, 'pin': pin,
-            'role': Profile.ROLE.owner,
-            'accountable': user,
-            'can_sell': True,
-            'can_buy': True
+            'name': user.name, 'pin': pin, 'accountable': user,
+            'is_owner': True, 'can_manage': True,
+            'can_attend': True, 'can_buy': True
         })
         profile.save()
         return user
@@ -53,7 +51,7 @@ class UserUpdateSerializer(serializers.ModelSerializer):
         user = instance
         # change owner profile name when user change its name
         if 'name' in validated_data and user.name != validated_data['name']:
-            profile = user.profiles.get(role=Profile.ROLE.owner)
+            profile = user.profiles.get(is_owner=True)
             profile.name = validated_data['name']
             profile.save()
         password = validated_data.pop('password', None)
@@ -102,10 +100,9 @@ class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
         fields = '__all__'
-        extra_kwargs = {
-            'role': {
-                'validators': [
-                    IsRoleOwnerValidator()
-                ]
-            }
-        }
+        read_only_fields = [
+            'is_owner'
+        ]
+        validators = [
+            AccountablePINUniqueTogetherValidator()
+        ]

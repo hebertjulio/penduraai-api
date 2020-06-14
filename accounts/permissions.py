@@ -1,52 +1,46 @@
 from rest_framework.permissions import BasePermission
 
-from .models import Profile
-
 
 class IsOwner(BasePermission):
 
     def has_permission(self, request, view):
         profile = request.user.profile
         return bool(
-            profile is not None
-            and profile.role == Profile.ROLE.owner
+            profile is not None and profile.is_owner
         )
 
 
-class IsAdmin(IsOwner):
+class CanManage(IsOwner):
 
     def has_permission(self, request, view):
         has_permission = super().has_permission(request, view)
         if not has_permission:
             profile = request.user.profile
             return bool(
-                profile is not None
-                and profile.role == Profile.ROLE.admin
+                profile is not None and profile.can_manage
             )
         return has_permission
 
 
-class CanSell(IsAdmin):
+class CanAttend(IsOwner):
 
     def has_permission(self, request, view):
         has_permission = super().has_permission(request, view)
         if not has_permission:
             profile = request.user.profile
             return bool(
-                profile is not None
-                and profile.can_sell
+                profile is not None and profile.can_attend
             )
         return has_permission
 
 
-class CanBuy(IsAdmin):
+class CanBuy(IsOwner):
 
     def has_permission(self, request, view):
         has_permission = super().has_permission(request, view)
         if not has_permission:
             profile = request.user.profile
             return bool(
-                profile is not None
-                and profile.can_buy
+                profile is not None and profile.can_buy
             )
         return has_permission

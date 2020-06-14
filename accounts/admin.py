@@ -44,7 +44,8 @@ class UserAdmin(BaseUserAdmin):
 class ProfileAdmin(admin.ModelAdmin):
     list_display = (
         'accountable', 'name', 'pin',
-        'role', 'can_sell', 'can_buy'
+        'is_owner', 'can_manage', 'can_attend',
+        'can_buy'
     )
     search_fields = (
         'accountable__name', 'accountable__email',
@@ -54,7 +55,8 @@ class ProfileAdmin(admin.ModelAdmin):
         'accountable',
     )
     list_filter = (
-        'role', 'can_sell', 'can_buy'
+        'is_owner', 'can_manage', 'can_attend',
+        'can_buy'
     )
     ordering = (
         'accountable__id', 'name',

@@ -2,12 +2,12 @@ from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers
 
-from .models import Profile
 
-
-class IsRoleOwnerValidator:
+class AccountablePINUniqueTogetherValidator:
 
     def __call__(self, value):
-        if value == Profile.ROLE.owner:
-            message = _('Role "owner" not allowed.')
+        qs = value['accountable'].profiles.filter(
+            pin=value['pin'], is_active=True)
+        if qs.exists():
+            message = _('PIN must be unique by account.')
             raise serializers.ValidationError(message)

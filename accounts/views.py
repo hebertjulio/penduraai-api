@@ -4,7 +4,7 @@ from rest_framework_simplejwt import views as simplejwt_views
 from drf_rw_serializers import generics as rwgenerics
 from rest_framework_api_key.permissions import HasAPIKey
 
-from .permissions import IsOwner, IsAdmin
+from .permissions import IsOwner, CanManage
 
 from .serializers import (
     UserReadSerializer, UserCreateSerializer, UserUpdateSerializer,
@@ -59,12 +59,12 @@ class ProfileListView(generics.ListCreateAPIView):
 
     def get_permissions(self):
         permissions = super().get_permissions()
-        permissions += [IsAdmin()]
+        permissions += [CanManage()]
         return permissions
 
     def get_queryset(self):
         user = self.request.user
-        qs = user.profiles.all()
+        qs = user.profiles.filter(is_active=True)
         return qs
 
 
@@ -75,10 +75,10 @@ class ProfileDetailView(generics.RetrieveUpdateDestroyAPIView):
 
     def get_permissions(self):
         permissions = super().get_permissions()
-        permissions += [IsAdmin()]
+        permissions += [CanManage()]
         return permissions
 
     def get_queryset(self):
         user = self.request.user
-        qs = user.profiles.all()
+        qs = user.profiles.filter(is_active=True)
         return qs

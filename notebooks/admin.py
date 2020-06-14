@@ -7,7 +7,7 @@ from .models import Record, Sheet
 class RecordAdmin(admin.ModelAdmin):
     list_display = (
         'id', 'store', 'customer', 'seller', 'buyer',
-        'value', 'operation',
+        'value', 'operation', 'is_deleted',
     )
     search_fields = (
         'sheetrecord__store__name', 'sheetrecord__store__email',
@@ -18,7 +18,7 @@ class RecordAdmin(admin.ModelAdmin):
         'sheet', 'seller', 'buyer',
     )
     list_filter = (
-        'operation', 'deleted',
+        'operation', 'is_deleted',
     )
     ordering = (
         '-created',
