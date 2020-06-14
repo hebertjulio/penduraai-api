@@ -4,7 +4,6 @@ from rest_framework_simplejwt import views as simplejwt_views
 from drf_rw_serializers import generics as rwgenerics
 from rest_framework_api_key.permissions import HasAPIKey
 
-from .models import Profile
 from .permissions import IsOwner, IsAdmin
 
 from .serializers import (
@@ -65,7 +64,7 @@ class ProfileListView(generics.ListCreateAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        qs = Profile.objects.filter(accountable=user)
+        qs = user.profiles.all()
         return qs
 
 
@@ -81,5 +80,5 @@ class ProfileDetailView(generics.RetrieveUpdateDestroyAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        qs = Profile.objects.filter(accountable=user)
+        qs = user.profiles.all()
         return qs
