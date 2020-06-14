@@ -43,7 +43,9 @@ class UserAdmin(BaseUserAdmin):
 @admin.register(Profile)
 class ProfileAdmin(admin.ModelAdmin):
     list_display = (
-        'accountable', 'name', 'role', 'pin',
+        'accountable', 'name', 'pin',
+        'is_owner', 'can_manage', 'can_attend',
+        'can_buy'
     )
     search_fields = (
         'accountable__name', 'accountable__email',
@@ -53,7 +55,8 @@ class ProfileAdmin(admin.ModelAdmin):
         'accountable',
     )
     list_filter = (
-        'role',
+        'is_owner', 'can_manage', 'can_attend',
+        'can_buy'
     )
     ordering = (
         'accountable__id', 'name',

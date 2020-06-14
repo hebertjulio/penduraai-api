@@ -13,7 +13,7 @@ class Transaction:
 
     ACTION = Choices(
         ('new_record', _('new record')),
-        ('new_customer_record', _('new customer record')),
+        ('new_sheet', _('new sheet')),
     )
 
     STATUS = Choices(
@@ -80,18 +80,18 @@ class Transaction:
         raise NotImplementedError
 
     @property
-    def creditor(self):
-        value = self.__data['creditor']
+    def store(self):
+        value = self.__data['store']
         return value
 
-    @creditor.setter
-    def creditor(self, value):
+    @store.setter
+    def store(self, value):
         if not isinstance(value, int):
             raise ValueError
-        self.__data['creditor'] = value
+        self.__data['store'] = value
 
-    @creditor.deleter
-    def creditor(self):
+    @store.deleter
+    def store(self):
         raise NotImplementedError
 
     @property
@@ -124,7 +124,7 @@ class Transaction:
 
     @property
     def signature(self):
-        data = {'creditor': self.creditor}
+        data = {'store': self.store}
         data.update(**self.payload)
         value = generate_signature(data)
         return value

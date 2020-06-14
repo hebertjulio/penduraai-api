@@ -9,13 +9,14 @@ from rest_framework.exceptions import NotFound
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
-from accounts.permissions import IsManager, IsSeller, IsBuyer
+from accounts.permissions import CanBuy, CanAttend, CanManage
 
-from .models import Record, CustomerRecord
+from .models import Record, Sheet
 from .dictdb import Transaction
 from .services import send_message
+
 from .serializers import (
-    RecordSerializer, CustomerRecordSerializer, CreditorDebtorSerializar,
+    RecordSerializer, SheetSerializer, BalanceSerializar,
     TransactionSerializer
 )
 
@@ -24,141 +25,137 @@ class RecordListView(generics.ListCreateAPIView):
 
     serializer_class = RecordSerializer
     filterset_fields = [
-        'customer_record__creditor',
-        'customer_record__debtor',
+        'sheet__store',
+        'sheet__customer',
     ]
 
     def get_queryset(self):
         user = self.request.user
         profile = user.profile
-        where = (
-            Q(customer_record__creditor=user) |
-            Q(customer_record__debtor=user)
-        )
-        if not profile.is_admin():
-            where = where & (
-                Q(seller=profile) | Q(buyer=profile)
-            )
-        qs = Record.objects.filter(where)
+        where = (Q(sheet__store=user) | Q(sheet__customer=user))
+        if profile is None or not any([profile.is_owner, profile.can_manage]):
+            where = where & (Q(attendant=profile) | Q(accept=profile))
+        qs = Record.objects.select_related('sheet', 'attendant', 'accept')
+        qs = qs.filter(where)
         qs = qs.order_by('-created')
         return qs
 
     def get_permissions(self):
+        permissions = super().get_permissions()
         if self.request.method == 'POST':
-            self.permission_classes.append(IsBuyer)
-        return super().get_permissions()
+            permissions += [CanBuy()]
+        return permissions
 
 
-class RecordDetailView(generics.RetrieveAPIView):
+class RecordDetailView(generics.RetrieveDestroyAPIView):
 
     lookup_field = 'pk'
     serializer_class = RecordSerializer
 
+    def get_permissions(self):
+        permissions = super().get_permissions()
+        if self.request.method != 'GET':
+            permissions += [CanManage()]
+        return permissions
+
     def get_queryset(self):
         user = self.request.user
-        qs = Record.objects.filter(
-            Q(customer_record__creditor=user) |
-            Q(customer_record__debtor=user)
+        where = Q(sheet__store=user)
+        if self.request.method == 'GET':
+            where = where | Q(sheet__customer=user)
+        qs = Record.objects.select_related(
+            'sheet', 'sheet__customer', 'sheet__store',
+            'attendant', 'accept'
         )
+        qs = qs.filter(where)
+        return qs
+
+    def perform_destroy(self, instance):
+        instance.is_deleted = True
+        instance.save()
+        return instance
+
+
+class SheetListView(generics.CreateAPIView):
+
+    serializer_class = SheetSerializer
+
+    def get_permissions(self):
+        permissions = super().get_permissions()
+        permissions += [CanManage()]
+        return permissions
+
+
+class SheetDetailView(generics.RetrieveUpdateDestroyAPIView):
+
+    lookup_field = 'pk'
+    serializer_class = SheetSerializer
+
+    def get_permissions(self):
+        permissions = super().get_permissions()
+        if self.request.method in ['PUT', 'PATCH', 'DELETE']:
+            permissions += [CanManage()]
+        return permissions
+
+    def get_queryset(self):
+        user = self.request.user
+        qs = Sheet.objects.filter(store=user)
         return qs
 
 
-class RecordStrikethroughView(APIView):
-
-    def get_permissions(self):
-        self.permission_classes.append(IsManager)
-        return super().get_permissions()
-
-    def patch(self, request, pk):
-        try:
-            user = self.request.user
-            obj = Record.objects.get(pk=pk, creditor=user)
-            obj.strikethrough = True
-            obj.save()
-            serializer = RecordSerializer(obj)
-            return Response(serializer.data)
-        except Record.DoesNotExist:
-            raise NotFound
-
-
-class CustomerRecordListView(generics.CreateAPIView):
-
-    def get_permissions(self):
-        self.permission_classes.append(IsManager)
-        return super().get_permissions()
-
-    serializer_class = CustomerRecordSerializer
-
-
-class DebtorCustomerRecordView(APIView):
-
-    def get_permissions(self):
-        self.permission_classes.append(IsBuyer)
-        return super().get_permissions()
+class SheetDetailByStoreView(APIView):
 
     def get(self, request, pk):  # skipcq
         try:
             user = request.user
-            obj = user.as_debtor.get(creditor_id=pk)
-            serializer = CustomerRecordSerializer(obj)
-            return Response(serializer.data)
-        except CustomerRecord.DoesNotExist:
+            obj = user.customer.get(store_id=pk, authorized=True)
+            serializer = SheetSerializer(obj)
+            response = Response(serializer.data)
+            return response
+        except Sheet.DoesNotExist:
             raise NotFound
 
 
-class CustomerRecordDetailView(generics.RetrieveUpdateDestroyAPIView):
+class BalanceListByStoreView(generics.ListAPIView):
 
-    lookup_field = 'pk'
-    serializer_class = CustomerRecordSerializer
-
-    def get_permissions(self):
-        if self.request.method in ['PUT', 'PATCH', 'DELETE']:
-            self.permission_classes.append(IsManager)
-        return super().get_permissions()
-
-    def get_queryset(self):
-        user = self.request.user
-        qs = CustomerRecord.objects.filter(Q(creditor=user) | Q(debtor=user))
-        return qs
-
-
-class CreditorListView(generics.ListAPIView):
-
-    serializer_class = CreditorDebtorSerializar
+    serializer_class = BalanceSerializar
     filter_backends = [SearchFilter]
     search_fields = ['user_name']
 
     def get_permissions(self):
-        self.permission_classes.append(IsBuyer)
-        return super().get_permissions()
+        permissions = super().get_permissions()
+        permissions += [CanBuy()]
+        return permissions
 
     def get_queryset(self):
         user = self.request.user
-        qs = CustomerRecord.objects.creditors(user)
+        qs = Sheet.objects.balance_list_by_store(user)
         return qs
 
 
-class DebtorListView(generics.ListAPIView):
+class BalanceListByCustomerView(generics.ListAPIView):
 
-    serializer_class = CreditorDebtorSerializar
+    serializer_class = BalanceSerializar
     filter_backends = [SearchFilter]
     search_fields = ['user_name']
 
     def get_permissions(self):
-        self.permission_classes.append(IsSeller)
-        return super().get_permissions()
+        permissions = super().get_permissions()
+        permissions += [CanAttend()]
+        return permissions
 
     def get_queryset(self):
         user = self.request.user
-        qs = CustomerRecord.objects.debtors(user)
+        qs = Sheet.objects.balance_list_by_customer(user)
         return qs
 
 
 class TransactionNewRecordView(APIView):
 
     def get_permissions(self):
-        self.permission_classes.append(IsSeller)
-        return super().get_permissions()
+        permissions = super().get_permissions()
+        permissions += [CanAttend()]
+        return permissions
 
     def post(self, request):  # skipcq
         context = {'request': request}
@@ -169,15 +166,16 @@ class TransactionNewRecordView(APIView):
         return Response(serializer.data, status=HTTP_201_CREATED)
 
 
-class TransactionNewCustomerRecordView(APIView):
+class TransactionNewSheetView(APIView):
 
     def get_permissions(self):
-        self.permission_classes.append(IsManager)
-        return super().get_permissions()
+        permissions = super().get_permissions()
+        permissions += [CanManage()]
+        return permissions
 
     def post(self, request):  # skipcq
         context = {'request': request}
-        request.data.update({'action': Transaction.ACTION.new_customer_record})
+        request.data.update({'action': Transaction.ACTION.new_sheet})
         serializer = TransactionSerializer(data=request.data, context=context)
         serializer.is_valid(raise_exception=True)
         serializer.save()
@@ -194,10 +192,6 @@ class TransactionDetailView(APIView):
 
 
 class TransactionRejectView(APIView):
-
-    def get_permissions(self):
-        self.permission_classes.append(IsBuyer)
-        return super().get_permissions()
 
     def put(self, request, pk):  # skipcq
         tran = Transaction(pk)

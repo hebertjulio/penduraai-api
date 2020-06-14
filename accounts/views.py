@@ -1,15 +1,10 @@
-from rest_framework.status import HTTP_200_OK
-from rest_framework.exceptions import NotFound
-from rest_framework.views import APIView
-from rest_framework.response import Response
 from rest_framework import generics
 
+from rest_framework_simplejwt import views as simplejwt_views
 from drf_rw_serializers import generics as rwgenerics
 from rest_framework_api_key.permissions import HasAPIKey
-from rest_framework_simplejwt import views as simplejwt_views
 
-from .models import User, Profile
-from .permissions import IsOwner, IsManager
+from .permissions import IsOwner, CanManage
 
 from .serializers import (
     UserReadSerializer, UserCreateSerializer, UserUpdateSerializer,
@@ -25,40 +20,23 @@ class UserListView(rwgenerics.CreateAPIView):
     ]
 
 
-class UserDetailView(rwgenerics.RetrieveAPIView):
-
-    lookup_field = 'pk'
-    queryset = User.objects.filter(is_active=True)
-    read_serializer_class = UserReadSerializer
-
-
-class UserUpdateView(rwgenerics.UpdateAPIView):
+class CurrentUserDetailView(rwgenerics.RetrieveUpdateDestroyAPIView):
 
     write_serializer_class = UserUpdateSerializer
     read_serializer_class = UserReadSerializer
 
     def get_permissions(self):
-        self.permission_classes.append(IsOwner)
-        return super().get_permissions()
+        permissions = super().get_permissions()
+        permissions += [IsOwner()]
+        return permissions
 
     def get_object(self):
         user = self.request.user
         return user
 
-
-class UserDeactivateView(APIView):
-
-    def get_permissions(self):
-        self.permission_classes.append(IsOwner)
-        return super().get_permissions()
-
-    def patch(self, request, *args, **kwargs):
-        obj = self.request.user
-        obj.is_active = False
-        obj.save()
-        serializer = UserReadSerializer(obj)
-        res = Response(serializer.data, HTTP_200_OK)
-        return res
+    def perform_destroy(self, instance):
+        instance.is_active = False
+        instance.save()
 
 
 class TokenObtainPairView(simplejwt_views.TokenObtainPairView):
@@ -80,12 +58,13 @@ class ProfileListView(generics.ListCreateAPIView):
     serializer_class = ProfileSerializer
 
     def get_permissions(self):
-        self.permission_classes.append(IsManager)
-        return super().get_permissions()
+        permissions = super().get_permissions()
+        permissions += [CanManage()]
+        return permissions
 
     def get_queryset(self):
         user = self.request.user
-        qs = Profile.objects.filter(accountable=user)
+        qs = user.profiles.filter(is_active=True)
         return qs
 
 
@@ -95,22 +74,11 @@ class ProfileDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = ProfileSerializer
 
     def get_permissions(self):
-        self.permission_classes.append(IsManager)
-        return super().get_permissions()
+        permissions = super().get_permissions()
+        permissions += [CanManage()]
+        return permissions
 
     def get_queryset(self):
         user = self.request.user
-        qs = Profile.objects.filter(accountable=user)
+        qs = user.profiles.filter(is_active=True)
         return qs
-
-
-class ProfilePinView(APIView):
-
-    def get(self, request, pin):
-        try:
-            user = self.request.user
-            profile = user.accountable.get(pin=pin)
-            serializer = ProfileSerializer(profile)
-            return Response(serializer.data, HTTP_200_OK)
-        except Profile.DoesNotExist:
-            raise NotFound

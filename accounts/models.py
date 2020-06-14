@@ -7,7 +7,6 @@ from django.contrib.auth.base_user import AbstractBaseUser
 from django.contrib.auth.models import PermissionsMixin
 
 from model_utils.models import TimeStampedModel
-from model_utils import Choices
 
 from .managers import UserManager
 
@@ -70,14 +69,6 @@ class User(AbstractBaseUser, PermissionsMixin, TimeStampedModel):
 
 class Profile(TimeStampedModel):
 
-    ROLE = Choices(
-        ('owner', _('owner')),
-        ('manager', _('manager')),
-        ('seller', _('seller')),
-        ('buyer', _('buyer')),
-        ('both', _('both (sell and buy)')),
-    )
-
     PIN_REGEX = r'\d{4}'
 
     id = models.BigAutoField(primary_key=True, editable=False)
@@ -89,18 +80,28 @@ class Profile(TimeStampedModel):
 
     accountable = models.ForeignKey(
         'User', on_delete=models.CASCADE,
-        related_name='accountable',
+        related_name='profiles',
     )
 
-    role = models.CharField(
-        _('role'), max_length=30, db_index=True,
-        choices=ROLE
+    is_owner = models.BooleanField(
+        _('owner status'),
+        default=False,
+        help_text=_(
+            'Designates whether the profile is from account owner.'),
     )
 
-    def is_admin(self):
-        return self.role in [
-            self.ROLE.owner, self.ROLE.manager
-        ]
+    is_active = models.BooleanField(
+        _('active status'),
+        default=True,
+        help_text=_(
+            'Designates whether this profile should be treated as active. '
+            'Unselect this instead of deleting profile.'
+        ),
+    )
+
+    can_manage = models.BooleanField(_('can manage'))
+    can_attend = models.BooleanField(_('can attend'))
+    can_buy = models.BooleanField(_('can buy'))
 
     def __str__(self):
         return self.name
@@ -111,6 +112,3 @@ class Profile(TimeStampedModel):
     class Meta:
         verbose_name = _('profile')
         verbose_name_plural = _('profiles')
-        unique_together = [
-            ['accountable', 'pin']
-        ]

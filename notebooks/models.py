@@ -5,13 +5,13 @@ from django.core.validators import MinValueValidator
 from model_utils.models import TimeStampedModel
 from model_utils import Choices
 
-from .querysets import CustomerQuerySet
+from .querysets import SheetQuerySet
 
 
 class Record(TimeStampedModel):
 
     OPERATION = Choices(
-        ('payment', _('payment')),
+        ('credit', _('credit')),
         ('debt', _('debt')),
     )
 
@@ -30,45 +30,52 @@ class Record(TimeStampedModel):
         choices=OPERATION
     )
 
-    customer_record = models.ForeignKey(
-        'CustomerRecord', on_delete=models.CASCADE,
-        related_name='customer_record',
+    sheet = models.ForeignKey(
+        'Sheet', on_delete=models.CASCADE,
+        related_name='records',
     )
 
-    seller = models.ForeignKey(
+    attendant = models.ForeignKey(
         'accounts.Profile', on_delete=models.CASCADE,
-        related_name='as_seller',
+        related_name='attendant',
     )
 
-    buyer = models.ForeignKey(
+    accept = models.ForeignKey(
         'accounts.Profile', on_delete=models.CASCADE,
-        related_name='as_buyer',
+        related_name='accept',
     )
 
-    strikethrough = models.BooleanField(_('strikethrough'), default=False)
+    is_deleted = models.BooleanField(
+        _('deleted status'),
+        default=False,
+        help_text=_(
+            'Designates whether this record should be treated as deleted. '
+            'Select this instead of deleting record.'
+        ),
+    )
 
     @property
-    def creditor(self):
-        return self.customer_record.creditor.name
+    def store(self):
+        return self.sheet.store.name
 
-    @creditor.setter
-    def creditor(self, _):
+    @store.setter
+    def store(self, _):
         raise NotImplementedError
 
-    @creditor.deleter
-    def creditor(self):
+    @store.deleter
+    def store(self):
         raise NotImplementedError
 
     @property
-    def debtor(self):
-        return self.customer_record.debtor.name
+    def customer(self):
+        return self.sheet.customer.name
 
-    @debtor.setter
-    def debtor(self, _):
+    @customer.setter
+    def customer(self, _):
         raise NotImplementedError
 
-    @debtor.deleter
-    def debtor(self):
+    @customer.deleter
+    def customer(self):
         raise NotImplementedError
 
     def __str__(self):
@@ -82,33 +89,37 @@ class Record(TimeStampedModel):
         verbose_name_plural = _('records')
 
 
-class CustomerRecord(TimeStampedModel):
+class Sheet(TimeStampedModel):
 
     id = models.BigAutoField(primary_key=True, editable=False)
 
-    creditor = models.ForeignKey(
+    store = models.ForeignKey(
         'accounts.User', on_delete=models.CASCADE,
-        related_name='as_creditor',
+        related_name='store',
     )
 
-    debtor = models.ForeignKey(
+    customer = models.ForeignKey(
         'accounts.User', on_delete=models.CASCADE,
-        related_name='as_debtor',
+        related_name='customer',
     )
 
     authorized = models.BooleanField(_('authorized'), default=True)
 
     def __str__(self):
-        return self.debtor.name
+        return '%s | %s' % (
+            self.store.name, self.customer.name
+        )
 
     def __repr__(self):
-        return self.debtor.name
+        return '%s | %s' % (
+            self.store.name, self.customer.name
+        )
 
-    objects = CustomerQuerySet.as_manager()
+    objects = SheetQuerySet.as_manager()
 
     class Meta:
-        verbose_name = _('customer record')
-        verbose_name_plural = _('customer records')
+        verbose_name = _('sheet')
+        verbose_name_plural = _('sheets')
         unique_together = [
-            ['creditor', 'debtor']
+            ['store', 'customer']
         ]
