@@ -40,9 +40,10 @@ class RecordListView(generics.ListCreateAPIView):
         return qs
 
     def get_permissions(self):
+        permissions = super().get_permissions()
         if self.request.method == 'POST':
-            self.permission_classes.append(CanBuy)
-        return super().get_permissions()
+            permissions += [CanBuy()]
+        return permissions
 
 
 class RecordDetailView(generics.RetrieveDestroyAPIView):
@@ -51,9 +52,10 @@ class RecordDetailView(generics.RetrieveDestroyAPIView):
     serializer_class = RecordSerializer
 
     def get_permissions(self):
+        permissions = super().get_permissions()
         if self.request.method == 'DELETE':
-            self.permission_classes.append(IsAdmin)
-        return super().get_permissions()
+            permissions += [IsAdmin()]
+        return permissions
 
     def get_queryset(self):
         user = self.request.user
@@ -75,8 +77,9 @@ class SheetListView(generics.CreateAPIView):
     serializer_class = SheetSerializer
 
     def get_permissions(self):
-        self.permission_classes.append(IsAdmin)
-        return super().get_permissions()
+        permissions = super().get_permissions()
+        permissions += [IsAdmin()]
+        return permissions
 
 
 class SheetDetailView(generics.RetrieveUpdateDestroyAPIView):
@@ -85,9 +88,10 @@ class SheetDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = SheetSerializer
 
     def get_permissions(self):
+        permissions = super().get_permissions()
         if self.request.method in ['PUT', 'PATCH', 'DELETE']:
-            self.permission_classes.append(IsAdmin)
-        return super().get_permissions()
+            permissions += [IsAdmin()]
+        return permissions
 
     def get_queryset(self):
         user = self.request.user
@@ -102,7 +106,8 @@ class SheetDetailByStoreView(APIView):
         try:
             obj = user.customer.get(store_id=pk, authorized=True)
             serializer = SheetSerializer(obj)
-            return Response(serializer.data)
+            response = Response(serializer.data)
+            return response
         except Sheet.DoesNotExist:
             raise NotFound
 
@@ -114,8 +119,9 @@ class BalanceListByStoreView(generics.ListAPIView):
     search_fields = ['user_name']
 
     def get_permissions(self):
-        self.permission_classes.append(CanBuy)
-        return super().get_permissions()
+        permissions = super().get_permissions()
+        permissions += [CanBuy()]
+        return permissions
 
     def get_queryset(self):
         user = self.request.user
@@ -130,8 +136,9 @@ class BalanceListByCustomerView(generics.ListAPIView):
     search_fields = ['user_name']
 
     def get_permissions(self):
-        self.permission_classes.append(CanSell)
-        return super().get_permissions()
+        permissions = super().get_permissions()
+        permissions += [CanSell()]
+        return permissions
 
     def get_queryset(self):
         user = self.request.user
@@ -142,8 +149,9 @@ class BalanceListByCustomerView(generics.ListAPIView):
 class TransactionNewRecordView(APIView):
 
     def get_permissions(self):
-        self.permission_classes.append(CanSell)
-        return super().get_permissions()
+        permissions = super().get_permissions()
+        permissions += [CanSell()]
+        return permissions
 
     def post(self, request):  # skipcq
         context = {'request': request}
@@ -157,8 +165,9 @@ class TransactionNewRecordView(APIView):
 class TransactionNewSheetView(APIView):
 
     def get_permissions(self):
-        self.permission_classes.append(IsAdmin)
-        return super().get_permissions()
+        permissions = super().get_permissions()
+        permissions += [IsAdmin()]
+        return permissions
 
     def post(self, request):  # skipcq
         context = {'request': request}

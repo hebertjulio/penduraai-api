@@ -38,8 +38,9 @@ class CurrentUserDetailView(rwgenerics.RetrieveUpdateDestroyAPIView):
     read_serializer_class = UserReadSerializer
 
     def get_permissions(self):
-        self.permission_classes.append(IsOwner)
-        return super().get_permissions()
+        permissions = super().get_permissions()
+        permissions += [IsOwner()]
+        return permissions
 
     def get_object(self):
         user = self.request.user
@@ -69,8 +70,9 @@ class ProfileListView(generics.ListCreateAPIView):
     serializer_class = ProfileSerializer
 
     def get_permissions(self):
-        self.permission_classes.append(IsAdmin)
-        return super().get_permissions()
+        permissions = super().get_permissions()
+        permissions += [IsAdmin()]
+        return permissions
 
     def get_queryset(self):
         user = self.request.user
@@ -84,22 +86,11 @@ class ProfileDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = ProfileSerializer
 
     def get_permissions(self):
-        self.permission_classes.append(IsAdmin)
-        return super().get_permissions()
+        permissions = super().get_permissions()
+        permissions += [IsAdmin()]
+        return permissions
 
     def get_queryset(self):
         user = self.request.user
         qs = Profile.objects.filter(accountable=user)
         return qs
-
-
-class ProfilePinView(APIView):
-
-    def get(self, request, pin):
-        try:
-            user = self.request.user
-            profile = user.accountable.get(pin=pin)
-            serializer = ProfileSerializer(profile)
-            return Response(serializer.data, HTTP_200_OK)
-        except Profile.DoesNotExist:
-            raise NotFound

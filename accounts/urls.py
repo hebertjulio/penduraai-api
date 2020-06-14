@@ -27,10 +27,6 @@ urlpatterns = [
         views.ProfileDetailView.as_view(),
         name='profile_detail'),
     path(
-        'profiles/pin/<int:pin>',
-        views.ProfilePinView.as_view(),
-        name='profile_pin'),
-    path(
         'token-obtain-pair',
         views.TokenObtainPairView.as_view(),
         name='token_obtain_pair'),
