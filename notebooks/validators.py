@@ -12,15 +12,14 @@ class IsStoreCustomerValidator:
 
     def __call__(self, value, serializer_field):
         request = serializer_field.context['request']
-        qs = request.user.customer.filter(
-            store=value, is_authorized=True
-        )
+        qs = request.user.customersheets.filter(
+            store=value, is_authorized=True)
         if not qs.exists():
             message = _('You aren\'t customer of this store.')
             raise serializers.ValidationError(message)
 
 
-class CustomerOfYourStoreValidator:
+class CustomerOfYourselfValidator:
 
     requires_context = True
 
@@ -32,27 +31,41 @@ class CustomerOfYourStoreValidator:
             raise serializers.ValidationError(message)
 
 
-class AlreadyStoreCustomerValidator:
+class AlreadyAStoreCustomerValidator:
 
     requires_context = True
 
     def __call__(self, value, serializer_field):
         request = serializer_field.context['request']
         user = request.user
-        qs = user.customer.filter(store=value)
+        qs = user.customersheets.filter(store=value)
         if qs.exists():
             message = _('You are already a customer of this store.')
             raise serializers.ValidationError(message)
 
 
-class IsStoreAttendantValidator:
+class StoreEmployeeValidator:
 
     def __call__(self, value):
-        qs = value['store'].profiles.filter(
-            id=value['attendant'].id, is_active=True
-        )
+        if 'store' in value and 'attendant' in value:
+            user = value['store']
+            qs = user.userprofiles.filter(
+                id=value['attendant'].id, is_active=True)
+            if not qs.exists():
+                message = _('Attendant isn\'t store employee.')
+                raise serializers.ValidationError(message)
+
+
+class SheetBelongCustomerValidator:
+
+    requires_context = True
+
+    def __call__(self, value, serializer_field):
+        request = serializer_field.context['request']
+        user = request.user
+        qs = user.customersheets.filter(id=value.id)
         if not qs.exists():
-            message = _('Attendant isn\'t store profile.')
+            message = _('This sheet does not belong to you.')
             raise serializers.ValidationError(message)
 
 
@@ -76,8 +89,7 @@ class TransactionSignatureValidator:
         parent = serializer_field.parent
         data = {
             k: v for k, v in parent.initial_data.items()
-            if k != 'transaction'
-        }
+            if k != 'transaction'}
         signature = generate_signature(data)
         if tran.signature != signature:
             message = _('Invalid transaction signature.')

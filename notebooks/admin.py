@@ -1,21 +1,21 @@
 from django.contrib import admin
 
-from .models import Record, Sheet
+from .models import Record, Sheet, Buyer
 
 
 @admin.register(Record)
 class RecordAdmin(admin.ModelAdmin):
     list_display = (
-        'id', 'sheet', 'attendant', 'subscriber',
+        'id', 'sheet', 'attendant', 'signature',
         'value', 'operation', 'is_deleted',
     )
     search_fields = (
-        'sheetrecord__store__name', 'sheetrecord__store__email',
-        'sheetrecord__customer__name', 'sheetrecord__customer__email',
+        'sheet__store__name', 'sheet__store__email',
+        'sheet__customer__name', 'sheet__customer__email',
         'id',
     )
     autocomplete_fields = (
-        'sheet', 'attendant', 'subscriber',
+        'sheet', 'attendant', 'signature',
     )
     list_filter = (
         'operation', 'is_deleted',
@@ -42,4 +42,17 @@ class SheetAdmin(admin.ModelAdmin):
     )
     ordering = (
         'store__id', 'customer__name',
+    )
+
+
+@admin.register(Buyer)
+class BuyerAdmin(admin.ModelAdmin):
+    list_display = (
+        'sheet', 'profile',
+    )
+    search_fields = (
+        'sheet__store__name', 'sheet__store__email',
+    )
+    autocomplete_fields = (
+        'sheet', 'profile',
     )

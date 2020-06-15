@@ -5,15 +5,16 @@ from django.db.transaction import atomic
 from rest_framework import serializers
 
 from accounts.relations import UserRelatedField, ProfileRelatedField
+from accounts.validators import ProfileBelongUserValidator
 
 from .decorators import accept_transaction
-from .models import Record, Sheet
+from .models import Record, Sheet, Buyer
 from .dictdb import Transaction
 from .validators import (
-    CustomerOfYourStoreValidator, AlreadyStoreCustomerValidator,
-    IsStoreAttendantValidator, TransactionExistValidator,
+    CustomerOfYourselfValidator, AlreadyAStoreCustomerValidator,
+    StoreEmployeeValidator, TransactionExistValidator,
     TransactionSignatureValidator, TransactionStatusValidator,
-    IsStoreCustomerValidator
+    IsStoreCustomerValidator, SheetBelongCustomerValidator
 )
 from .relations import SheetRelatedField
 
@@ -28,7 +29,7 @@ class RecordSerializer(serializers.ModelSerializer):
 
     sheet = SheetRelatedField(read_only=True)
     attendant = ProfileRelatedField()
-    subscriber = ProfileRelatedField(read_only=True)
+    signature = ProfileRelatedField(read_only=True)
     store = UserRelatedField(write_only=True, validators=[
         IsStoreCustomerValidator()
     ])
@@ -38,10 +39,10 @@ class RecordSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         request = self.context['request']
         store = validated_data.pop('store')
-        sheet = request.user.customer.get(store=store)
+        sheet = request.user.customersheets.get(store=store)
         obj = Record(**validated_data)
         obj.sheet = sheet
-        obj.subscriber = request.user.profile
+        obj.signature = request.user.profile
         obj.save()
         return obj
 
@@ -52,7 +53,7 @@ class RecordSerializer(serializers.ModelSerializer):
             'is_deleted'
         ]
         validators = [
-            IsStoreAttendantValidator()
+            StoreEmployeeValidator()
         ]
 
 
@@ -65,8 +66,8 @@ class SheetSerializer(serializers.ModelSerializer):
     ], write_only=True)
 
     store = UserRelatedField(validators=[
-        CustomerOfYourStoreValidator(),
-        AlreadyStoreCustomerValidator()
+        CustomerOfYourselfValidator(),
+        AlreadyAStoreCustomerValidator()
     ])
     customer = UserRelatedField(read_only=True)
 
@@ -81,6 +82,21 @@ class SheetSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Sheet
+        fields = '__all__'
+
+
+class BuyerSerializer(serializers.ModelSerializer):
+
+    sheet = SheetRelatedField(validators=[
+        SheetBelongCustomerValidator()
+    ])
+
+    profile = ProfileRelatedField(validators=[
+        ProfileBelongUserValidator()
+    ])
+
+    class Meta:
+        model = Buyer
         fields = '__all__'
 
 

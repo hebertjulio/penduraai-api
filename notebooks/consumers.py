@@ -49,8 +49,7 @@ class TransactionConsumer(BaseConsumer):
             await self.accept()
             await self.send(json.dumps(tran.data))
             await self.channel_layer.group_add(
-                event['pk'], self.channel_name
-            )
+                event['pk'], self.channel_name)
         else:
             await self.reject()
             await self.close()
@@ -65,5 +64,4 @@ class TransactionConsumer(BaseConsumer):
     async def websocket_disconnect(self, event):
         await self.close()
         await self.channel_layer.group_discard(
-            event['pk'], self.channel_name
-        )
+            event['pk'], self.channel_name)

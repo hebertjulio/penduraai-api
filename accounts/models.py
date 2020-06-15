@@ -70,12 +70,6 @@ class User(AbstractBaseUser, PermissionsMixin, TimeStampedModel):
 
 class Profile(TimeStampedModel):
 
-    ROLE = Choices(
-        ('owner', _('owner')),
-        ('admin', _('admin')),
-        ('guest', _('guest')),
-    )
-
     PIN_REGEX = r'\d{4}'
 
     id = models.BigAutoField(primary_key=True, editable=False)
@@ -85,14 +79,9 @@ class Profile(TimeStampedModel):
         RegexValidator(PIN_REGEX)
     ], db_index=True)
 
-    accountable = models.ForeignKey(
+    user = models.ForeignKey(
         'User', on_delete=models.CASCADE,
-        related_name='profiles',
-    )
-
-    role = models.CharField(
-        _('role'), max_length=30, choices=ROLE,
-        db_index=True
+        related_name='userprofiles',
     )
 
     is_active = models.BooleanField(
@@ -104,13 +93,23 @@ class Profile(TimeStampedModel):
         ),
     )
 
-    can_attend = models.BooleanField(_('can attend'))
-    can_buy = models.BooleanField(_('can buy'))
+    is_owner = models.BooleanField(
+        _('owner status'), default=False,
+        db_index=True
+    )
+
+    is_manager = models.BooleanField(
+        _('manager status'), default=False,
+        db_index=True
+    )
+
+    is_attendant = models.BooleanField(
+        _('attendant status'), default=False,
+        db_index=True
+    )
 
     def is_admin(self):
-        return self.role in [
-            self.ROLE.owner, self.ROLE.admin
-        ]
+        return self.is_owner or self.is_manager
 
     def __str__(self):
         return self.name

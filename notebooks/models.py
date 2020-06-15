@@ -32,17 +32,17 @@ class Record(TimeStampedModel):
 
     sheet = models.ForeignKey(
         'Sheet', on_delete=models.CASCADE,
-        related_name='records',
+        related_name='sheetrecords',
     )
 
     attendant = models.ForeignKey(
         'accounts.Profile', on_delete=models.CASCADE,
-        related_name='attendant',
+        related_name='attendantrecords',
     )
 
-    subscriber = models.ForeignKey(
+    signature = models.ForeignKey(
         'accounts.Profile', on_delete=models.CASCADE,
-        related_name='subscriber',
+        related_name='signaturerecords',
     )
 
     is_deleted = models.BooleanField(
@@ -71,12 +71,12 @@ class Sheet(TimeStampedModel):
 
     store = models.ForeignKey(
         'accounts.User', on_delete=models.CASCADE,
-        related_name='store',
+        related_name='storesheets',
     )
 
     customer = models.ForeignKey(
         'accounts.User', on_delete=models.CASCADE,
-        related_name='customer',
+        related_name='customersheets',
     )
 
     is_authorized = models.BooleanField(
@@ -96,4 +96,26 @@ class Sheet(TimeStampedModel):
         verbose_name_plural = _('sheets')
         unique_together = [
             ['store', 'customer']
+        ]
+
+
+class Buyer(TimeStampedModel):
+
+    id = models.BigAutoField(primary_key=True, editable=False)
+
+    sheet = models.ForeignKey(
+        'Sheet', on_delete=models.CASCADE,
+        related_name='sheetbuyers',
+    )
+
+    profile = models.ForeignKey(
+        'accounts.Profile', on_delete=models.CASCADE,
+        related_name='profilebuyers',
+    )
+
+    class Meta:
+        verbose_name = _('buyer')
+        verbose_name_plural = _('buyers')
+        unique_together = [
+            ['sheet', 'profile']
         ]

@@ -43,19 +43,18 @@ class UserAdmin(BaseUserAdmin):
 @admin.register(Profile)
 class ProfileAdmin(admin.ModelAdmin):
     list_display = (
-        'accountable', 'name', 'pin', 'role', 'can_attend',
-        'can_buy'
+        'user', 'name', 'pin', 'is_owner', 'is_manager',
+        'is_attendant',
     )
     search_fields = (
-        'accountable__name', 'accountable__email',
-        'name',
+        'user__name', 'user__email', 'name',
     )
     autocomplete_fields = (
-        'accountable',
+        'user',
     )
     list_filter = (
-        'role', 'can_attend', 'can_buy',
+        'is_owner', 'is_manager', 'is_attendant',
     )
     ordering = (
-        'accountable__id', 'name',
+        'user__id', 'name',
     )
