@@ -23,10 +23,6 @@ urlpatterns = [
         views.SheetDetailView.as_view(),
         name='sheet_detail'),
     path(
-        'sheets/store/<int:pk>',
-        views.SheetDetailByStoreView.as_view(),
-        name='sheet_detail_by_store'),
-    path(
         'balances-by-store',
         views.BalanceListByStoreView.as_view(),
         name='balance_list_by_store'),

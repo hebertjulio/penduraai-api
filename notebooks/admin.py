@@ -6,7 +6,7 @@ from .models import Record, Sheet
 @admin.register(Record)
 class RecordAdmin(admin.ModelAdmin):
     list_display = (
-        'id', 'store', 'customer', 'attendant', 'accept',
+        'id', 'sheet', 'attendant', 'subscriber',
         'value', 'operation', 'is_deleted',
     )
     search_fields = (
@@ -15,7 +15,7 @@ class RecordAdmin(admin.ModelAdmin):
         'id',
     )
     autocomplete_fields = (
-        'sheet', 'attendant', 'accept',
+        'sheet', 'attendant', 'subscriber',
     )
     list_filter = (
         'operation', 'is_deleted',
@@ -28,7 +28,7 @@ class RecordAdmin(admin.ModelAdmin):
 @admin.register(Sheet)
 class SheetAdmin(admin.ModelAdmin):
     list_display = (
-        'store', 'customer', 'authorized',
+        'store', 'customer', 'is_authorized',
     )
     search_fields = (
         'store__name', 'store__email',
@@ -38,7 +38,7 @@ class SheetAdmin(admin.ModelAdmin):
         'store', 'customer',
     )
     list_filter = (
-        'authorized',
+        'is_authorized',
     )
     ordering = (
         'store__id', 'customer__name',
