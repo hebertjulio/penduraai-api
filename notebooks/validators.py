@@ -2,7 +2,7 @@ from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers
 
-from .services import generate_signature
+from .services import generate_hash
 from .dictdb import Transaction
 
 
@@ -78,7 +78,7 @@ class TransactionExistValidator:
             raise serializers.ValidationError(message)
 
 
-class TransactionSignatureValidator:
+class TransactionIntegrityValidator:
 
     requires_context = True
 
@@ -90,9 +90,9 @@ class TransactionSignatureValidator:
         data = {
             k: v for k, v in parent.initial_data.items()
             if k != 'transaction'}
-        signature = generate_signature(data)
-        if tran.signature != signature:
-            message = _('Invalid transaction signature.')
+        hash_ = generate_hash(data)
+        if tran.hash != hash_:
+            message = _('Transaction has no integrity.')
             raise serializers.ValidationError(message)
 
 
