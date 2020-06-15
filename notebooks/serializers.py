@@ -9,14 +9,12 @@ from accounts.relations import UserRelatedField, ProfileRelatedField
 from .decorators import accept_transaction
 from .models import Record, Sheet
 from .dictdb import Transaction
-
 from .validators import (
-    IsSheetOwnerValidator, CustomerFromYourselfValidator,
-    AlreadyACustomerValidator, AttendantAccountableValidator,
-    AcceptAccountableValidator, TransactionExistValidator,
-    TransactionSignatureValidator, TransactionStatusValidator
+    CustomerOfYourStoreValidator, AlreadyStoreCustomerValidator,
+    IsStoreAttendantValidator, TransactionExistValidator,
+    TransactionSignatureValidator, TransactionStatusValidator,
+    IsStoreCustomerValidator
 )
-
 from .relations import SheetRelatedField
 
 
@@ -28,16 +26,22 @@ class RecordSerializer(serializers.ModelSerializer):
         TransactionStatusValidator()
     ], write_only=True)
 
-    sheet = SheetRelatedField()
+    sheet = SheetRelatedField(read_only=True)
     attendant = ProfileRelatedField()
-    accept = ProfileRelatedField(read_only=True)
+    subscriber = ProfileRelatedField(read_only=True)
+    store = UserRelatedField(write_only=True, validators=[
+        IsStoreCustomerValidator()
+    ])
 
     @atomic
     @accept_transaction
     def create(self, validated_data):
         request = self.context['request']
+        store = validated_data.pop('store')
+        sheet = request.user.customer.get(store=store)
         obj = Record(**validated_data)
-        obj.accept = request.user.profile
+        obj.sheet = sheet
+        obj.subscriber = request.user.profile
         obj.save()
         return obj
 
@@ -47,16 +51,8 @@ class RecordSerializer(serializers.ModelSerializer):
         read_only_fields = [
             'is_deleted'
         ]
-        extra_kwargs = {
-            'sheet': {
-                'validators': [
-                    IsSheetOwnerValidator()
-                ]
-            }
-        }
         validators = [
-            AttendantAccountableValidator(),
-            AcceptAccountableValidator()
+            IsStoreAttendantValidator()
         ]
 
 
@@ -68,7 +64,10 @@ class SheetSerializer(serializers.ModelSerializer):
         TransactionStatusValidator()
     ], write_only=True)
 
-    store = UserRelatedField()
+    store = UserRelatedField(validators=[
+        CustomerOfYourStoreValidator(),
+        AlreadyStoreCustomerValidator()
+    ])
     customer = UserRelatedField(read_only=True)
 
     @atomic
@@ -83,13 +82,6 @@ class SheetSerializer(serializers.ModelSerializer):
     class Meta:
         model = Sheet
         fields = '__all__'
-        read_only_fields = [
-            'authorized'
-        ]
-        validators = [
-            CustomerFromYourselfValidator(),
-            AlreadyACustomerValidator()
-        ]
 
 
 class BalanceSerializar(serializers.BaseSerializer):

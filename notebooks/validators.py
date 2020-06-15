@@ -6,65 +6,53 @@ from .services import generate_signature
 from .dictdb import Transaction
 
 
-class IsSheetOwnerValidator:
+class IsStoreCustomerValidator:
 
     requires_context = True
 
     def __call__(self, value, serializer_field):
         request = serializer_field.context['request']
-        user = request.user
-        if value.customer.id != user.id:
-            message = _('You aren\'t owner of this sheet.')
+        qs = request.user.customer.filter(
+            store=value, is_authorized=True
+        )
+        if not qs.exists():
+            message = _('You aren\'t customer of this store.')
             raise serializers.ValidationError(message)
 
 
-class CustomerFromYourselfValidator:
+class CustomerOfYourStoreValidator:
 
     requires_context = True
 
     def __call__(self, value, serializer_field):
         request = serializer_field.context['request']
         user = request.user
-        if value['store'].id == user.id:
-            message = _('You can\'t customer from yourself.')
+        if value.id == user.id:
+            message = _('You can\'t customer of your store.')
             raise serializers.ValidationError(message)
 
 
-class AlreadyACustomerValidator:
+class AlreadyStoreCustomerValidator:
 
     requires_context = True
 
     def __call__(self, value, serializer_field):
         request = serializer_field.context['request']
         user = request.user
-        qs = user.customer.filter(store=value['store'])
+        qs = user.customer.filter(store=value)
         if qs.exists():
-            message = _('You are already a customer.')
+            message = _('You are already a customer of this store.')
             raise serializers.ValidationError(message)
 
 
-class AttendantAccountableValidator:
+class IsStoreAttendantValidator:
 
     def __call__(self, value):
-        qs = value['sheet'].store.profiles.filter(
-            id=value['attendant'].id
+        qs = value['store'].profiles.filter(
+            id=value['attendant'].id, is_active=True
         )
         if not qs.exists():
-            message = _('Profile for attendant is invalid.')
-            raise serializers.ValidationError(message)
-
-
-class AcceptAccountableValidator:
-
-    requires_context = True
-
-    def __call__(self, value, serializer_field):
-        request = serializer_field.context['request']
-        qs = value['sheet'].customer.profiles.filter(
-            id=request.user.profile.id
-        )
-        if not qs.exists():
-            message = _('Profile for accept is invalid.')
+            message = _('Attendant isn\'t store profile.')
             raise serializers.ValidationError(message)
 
 
@@ -88,9 +76,8 @@ class TransactionSignatureValidator:
         parent = serializer_field.parent
         data = {
             k: v for k, v in parent.initial_data.items()
-            if k in tran.payload.keys()
+            if k != 'transaction'
         }
-        data.update({'store': tran.store})
         signature = generate_signature(data)
         if tran.signature != signature:
             message = _('Invalid transaction signature.')

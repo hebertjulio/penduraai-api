@@ -4,7 +4,7 @@ from rest_framework_simplejwt import views as simplejwt_views
 from drf_rw_serializers import generics as rwgenerics
 from rest_framework_api_key.permissions import HasAPIKey
 
-from .permissions import IsOwner, CanManage
+from .permissions import IsOwner, IsAdmin
 
 from .serializers import (
     UserReadSerializer, UserCreateSerializer, UserUpdateSerializer,
@@ -26,8 +26,11 @@ class CurrentUserDetailView(rwgenerics.RetrieveUpdateDestroyAPIView):
     read_serializer_class = UserReadSerializer
 
     def get_permissions(self):
+        self.permission_classes = super().permission_classes
+        self.permission_classes = [
+            self.permission_classes[0] & IsOwner
+        ]
         permissions = super().get_permissions()
-        permissions += [IsOwner()]
         return permissions
 
     def get_object(self):
@@ -58,8 +61,11 @@ class ProfileListView(generics.ListCreateAPIView):
     serializer_class = ProfileSerializer
 
     def get_permissions(self):
+        self.permission_classes = super().permission_classes
+        self.permission_classes = [
+            self.permission_classes[0] & IsAdmin
+        ]
         permissions = super().get_permissions()
-        permissions += [CanManage()]
         return permissions
 
     def get_queryset(self):
@@ -74,8 +80,11 @@ class ProfileDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = ProfileSerializer
 
     def get_permissions(self):
+        self.permission_classes = super().permission_classes
+        self.permission_classes = [
+            self.permission_classes[0] & IsAdmin
+        ]
         permissions = super().get_permissions()
-        permissions += [CanManage()]
         return permissions
 
     def get_queryset(self):

@@ -7,6 +7,7 @@ from django.contrib.auth.base_user import AbstractBaseUser
 from django.contrib.auth.models import PermissionsMixin
 
 from model_utils.models import TimeStampedModel
+from model_utils import Choices
 
 from .managers import UserManager
 
@@ -69,6 +70,12 @@ class User(AbstractBaseUser, PermissionsMixin, TimeStampedModel):
 
 class Profile(TimeStampedModel):
 
+    ROLE = Choices(
+        ('owner', _('owner')),
+        ('admin', _('admin')),
+        ('guest', _('guest')),
+    )
+
     PIN_REGEX = r'\d{4}'
 
     id = models.BigAutoField(primary_key=True, editable=False)
@@ -83,11 +90,9 @@ class Profile(TimeStampedModel):
         related_name='profiles',
     )
 
-    is_owner = models.BooleanField(
-        _('owner status'),
-        default=False,
-        help_text=_(
-            'Designates whether the profile is from account owner.'),
+    role = models.CharField(
+        _('role'), max_length=30, choices=ROLE,
+        db_index=True
     )
 
     is_active = models.BooleanField(
@@ -99,9 +104,13 @@ class Profile(TimeStampedModel):
         ),
     )
 
-    can_manage = models.BooleanField(_('can manage'))
     can_attend = models.BooleanField(_('can attend'))
     can_buy = models.BooleanField(_('can buy'))
+
+    def is_admin(self):
+        return self.role in [
+            self.ROLE.owner, self.ROLE.admin
+        ]
 
     def __str__(self):
         return self.name

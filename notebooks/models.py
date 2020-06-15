@@ -40,9 +40,9 @@ class Record(TimeStampedModel):
         related_name='attendant',
     )
 
-    accept = models.ForeignKey(
+    subscriber = models.ForeignKey(
         'accounts.Profile', on_delete=models.CASCADE,
-        related_name='accept',
+        related_name='subscriber',
     )
 
     is_deleted = models.BooleanField(
@@ -53,30 +53,6 @@ class Record(TimeStampedModel):
             'Select this instead of deleting record.'
         ),
     )
-
-    @property
-    def store(self):
-        return self.sheet.store.name
-
-    @store.setter
-    def store(self, _):
-        raise NotImplementedError
-
-    @store.deleter
-    def store(self):
-        raise NotImplementedError
-
-    @property
-    def customer(self):
-        return self.sheet.customer.name
-
-    @customer.setter
-    def customer(self, _):
-        raise NotImplementedError
-
-    @customer.deleter
-    def customer(self):
-        raise NotImplementedError
 
     def __str__(self):
         return str(self.id)
@@ -103,17 +79,15 @@ class Sheet(TimeStampedModel):
         related_name='customer',
     )
 
-    authorized = models.BooleanField(_('authorized'), default=True)
+    is_authorized = models.BooleanField(
+        _('authorized status'), default=True
+    )
 
     def __str__(self):
-        return '%s | %s' % (
-            self.store.name, self.customer.name
-        )
+        return 'No. %s' % self.id
 
     def __repr__(self):
-        return '%s | %s' % (
-            self.store.name, self.customer.name
-        )
+        return 'No. %s' % self.id
 
     objects = SheetQuerySet.as_manager()
 

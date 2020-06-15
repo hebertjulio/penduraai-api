@@ -1,28 +1,30 @@
 from rest_framework.permissions import BasePermission
 
+from .models import Profile
+
 
 class IsOwner(BasePermission):
 
     def has_permission(self, request, view):
         profile = request.user.profile
         return bool(
-            profile is not None and profile.is_owner
+            profile is not None and profile.role == Profile.ROLE.owner
         )
 
 
-class CanManage(IsOwner):
+class IsAdmin(IsOwner):
 
     def has_permission(self, request, view):
         has_permission = super().has_permission(request, view)
         if not has_permission:
             profile = request.user.profile
             return bool(
-                profile is not None and profile.can_manage
+                profile is not None and profile.role == Profile.ROLE.admin
             )
         return has_permission
 
 
-class CanAttend(IsOwner):
+class CanAttend(IsAdmin):
 
     def has_permission(self, request, view):
         has_permission = super().has_permission(request, view)
@@ -34,7 +36,7 @@ class CanAttend(IsOwner):
         return has_permission
 
 
-class CanBuy(IsOwner):
+class CanBuy(IsAdmin):
 
     def has_permission(self, request, view):
         has_permission = super().has_permission(request, view)
