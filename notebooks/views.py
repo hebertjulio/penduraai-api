@@ -9,14 +9,15 @@ from rest_framework.exceptions import NotFound
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
-from accounts.permissions import IsAdmin, CanBuy, CanAttend
+from accounts.permissions import IsManager, IsAttendant
 
-from .models import Record, Sheet
+from .permissions import CanBuy
+from .models import Record, Sheet, Buyer
 from .dictdb import Transaction
 from .services import send_message
 from .serializers import (
     RecordSerializer, SheetSerializer, BalanceSerializar,
-    TransactionSerializer
+    TransactionSerializer, BuyerSerializer
 )
 
 
@@ -29,25 +30,21 @@ class RecordListView(generics.ListCreateAPIView):
     ]
 
     def get_permissions(self):
-        self.permission_classes = super().permission_classes
-        if self.request.method == 'GET':
-            self.permission_classes = [
-                self.permission_classes[0] & (IsAdmin | CanBuy | CanAttend)
-            ]
-        if self.request.method == 'POST':
-            self.permission_classes = [
-                self.permission_classes[0] & CanBuy
-            ]
         permissions = super().get_permissions()
+        if self.request.method == 'POST':
+            permissions += [CanBuy()]
         return permissions
 
     def get_queryset(self):
         user = self.request.user
         profile = user.profile
-        where = (Q(sheet__store=user) | Q(sheet__customer=user))
-        if not profile.is_admin():
-            where = where & (Q(attendant=profile) | Q(subscriber=profile))
-        qs = Record.objects.select_related('sheet', 'attendant', 'subscriber')
+        if profile.is_owner:
+            where = Q(sheet__store=user) | Q(sheet__customer=user)
+        elif profile.is_attendant or profile.is_manager:
+            where = Q(sheet__store=user)
+        else:
+            where = Q(sheet__customer=user) & Q(signature=profile)
+        qs = Record.objects.select_related('sheet', 'attendant', 'signature')
         qs = qs.filter(where)
         qs = qs.order_by('-created')
         return qs
@@ -59,16 +56,9 @@ class RecordDetailView(generics.RetrieveDestroyAPIView):
     serializer_class = RecordSerializer
 
     def get_permissions(self):
-        self.permission_classes = super().permission_classes
-        if self.request.method == 'GET':
-            self.permission_classes = [
-                self.permission_classes[0] & (IsAdmin | CanBuy | CanAttend)
-            ]
-        if self.request.method == 'DELETE':
-            self.permission_classes = [
-                self.permission_classes[0] & IsAdmin
-            ]
         permissions = super().get_permissions()
+        if self.request.method == 'DELETE':
+            permissions += [IsManager()]
         return permissions
 
     def get_queryset(self):
@@ -77,9 +67,8 @@ class RecordDetailView(generics.RetrieveDestroyAPIView):
         if self.request.method == 'GET':
             where = where | Q(sheet__customer=user)
         qs = Record.objects.select_related(
-            'sheet', 'sheet__customer', 'sheet__store', 'attendant',
-            'subscriber'
-        )
+            'sheet', 'sheet__customer', 'sheet__store',
+            'attendant', 'signature')
         qs = qs.filter(where)
         return qs
 
@@ -93,11 +82,8 @@ class SheetListView(generics.CreateAPIView):
     serializer_class = SheetSerializer
 
     def get_permissions(self):
-        self.permission_classes = super().permission_classes
-        self.permission_classes = [
-            self.permission_classes[0] & IsAdmin
-        ]
         permissions = super().get_permissions()
+        permissions += [IsManager()]
         return permissions
 
 
@@ -107,72 +93,92 @@ class SheetDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = SheetSerializer
 
     def get_permissions(self):
-        self.permission_classes = super().permission_classes
-        if self.request.method == 'GET':
-            self.permission_classes = [
-                self.permission_classes[0] & (IsAdmin | CanBuy | CanAttend)
-            ]
-        if self.request.method in ['PUT', 'PATCH', 'DELETE']:
-            self.permission_classes = [
-                self.permission_classes[0] & IsAdmin
-            ]
         permissions = super().get_permissions()
+        if self.request.method in ['PUT', 'PATCH', 'DELETE']:
+            permissions += [IsManager()]
         return permissions
 
     def get_queryset(self):
         user = self.request.user
-        qs = Sheet.objects.filter(store=user)
+        qs = Sheet.objects.select_related('customer', 'store')
+        qs = qs.filter(store=user)
+        qs = qs.order_by('customer__name')
+        return qs
+
+
+class BuyerListView(generics.ListCreateAPIView):
+
+    serializer_class = BuyerSerializer
+
+    def get_permissions(self):
+        permissions = super().get_permissions()
+        permissions += [IsManager()]
+        return permissions
+
+    def get_queryset(self):
+        user = self.request.user
+        qs = Buyer.objects.select_related('sheet', 'profile')
+        qs = qs.filter(profile__user=user)
+        qs = qs.order_by('profile__name')
+        return qs
+
+
+class BuyerDetailView(generics.DestroyAPIView):
+
+    serializer_class = BuyerSerializer
+
+    def get_permissions(self):
+        permissions = super().get_permissions()
+        permissions += [IsManager()]
+        return permissions
+
+    def get_queryset(self):
+        user = self.request.user
+        qs = Buyer.objects.filter(profile__user=user)
         return qs
 
 
 class BalanceListByStoreView(generics.ListAPIView):
 
     serializer_class = BalanceSerializar
-    filter_backends = [SearchFilter]
-    search_fields = ['user_name']
 
-    def get_permissions(self):
-        self.permission_classes = super().permission_classes
-        self.permission_classes = [
-            self.permission_classes[0] & (IsAdmin | CanBuy)
-        ]
-        permissions = super().get_permissions()
-        return permissions
+    filter_backends = [
+        SearchFilter
+    ]
+    search_fields = [
+        'user_name'
+    ]
 
     def get_queryset(self):
         user = self.request.user
-        qs = Sheet.objects.balance_list_by_store(user)
+        profile = user.profile
+        qs = Sheet.objects.balance_list_by_store(user, profile)
         return qs
 
 
 class BalanceListByCustomerView(generics.ListAPIView):
 
     serializer_class = BalanceSerializar
-    filter_backends = [SearchFilter]
-    search_fields = ['user_name']
 
-    def get_permissions(self):
-        self.permission_classes = super().permission_classes
-        self.permission_classes = [
-            self.permission_classes[0] & (IsAdmin | CanAttend)
-        ]
-        permissions = super().get_permissions()
-        return permissions
+    filter_backends = [
+        SearchFilter
+    ]
+    search_fields = [
+        'user_name'
+    ]
 
     def get_queryset(self):
         user = self.request.user
-        qs = Sheet.objects.balance_list_by_customer(user)
+        profile = user.profile
+        qs = Sheet.objects.balance_list_by_customer(user, profile)
         return qs
 
 
 class TransactionNewRecordView(APIView):
 
     def get_permissions(self):
-        self.permission_classes = super().permission_classes
-        self.permission_classes = [
-            self.permission_classes[0] & (IsAdmin | CanAttend)
-        ]
         permissions = super().get_permissions()
+        permissions += [IsAttendant()]
         return permissions
 
     def post(self, request):  # skipcq
@@ -187,11 +193,8 @@ class TransactionNewRecordView(APIView):
 class TransactionNewSheetView(APIView):
 
     def get_permissions(self):
-        self.permission_classes = super().permission_classes
-        self.permission_classes = [
-            self.permission_classes[0] & IsAdmin
-        ]
         permissions = super().get_permissions()
+        permissions += [IsManager()]
         return permissions
 
     def post(self, request):  # skipcq
@@ -205,14 +208,6 @@ class TransactionNewSheetView(APIView):
 
 class TransactionDetailView(APIView):
 
-    def get_permissions(self):
-        self.permission_classes = super().permission_classes
-        self.permission_classes = [
-            self.permission_classes[0] & (IsAdmin | CanAttend)
-        ]
-        permissions = super().get_permissions()
-        return permissions
-
     def get(self, request, pk):  # skipcq
         tran = Transaction(pk)
         if not tran.exist():
@@ -221,14 +216,6 @@ class TransactionDetailView(APIView):
 
 
 class TransactionRejectView(APIView):
-
-    def get_permissions(self):
-        self.permission_classes = super().permission_classes
-        self.permission_classes = [
-            self.permission_classes[0] & (IsAdmin | CanAttend)
-        ]
-        permissions = super().get_permissions()
-        return permissions
 
     def put(self, request, pk):  # skipcq
         tran = Transaction(pk)

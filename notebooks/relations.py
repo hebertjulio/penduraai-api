@@ -1,4 +1,7 @@
+from django.utils.translation import gettext_lazy as _
+
 from rest_framework import serializers
+from rest_framework.validators import ValidationError
 
 from .models import Sheet
 
@@ -19,8 +22,7 @@ class SheetRelatedField(serializers.RelatedField):
             obj = qs.get(pk=data)
             return obj
         except Sheet.DoesNotExist:
-            pass
-        return data
+            raise ValidationError(_('Id non-existent.'))
 
     def to_representation(self, value):
         data = {

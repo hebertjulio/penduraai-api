@@ -23,6 +23,14 @@ urlpatterns = [
         views.SheetDetailView.as_view(),
         name='sheet_detail'),
     path(
+        'buyers',
+        views.BuyerListView.as_view(),
+        name='buyer_list'),
+    path(
+        'buyers/<int:pk>',
+        views.BuyerDetailView.as_view(),
+        name='buyer_detail'),
+    path(
         'balances-by-store',
         views.BalanceListByStoreView.as_view(),
         name='balance_list_by_store'),

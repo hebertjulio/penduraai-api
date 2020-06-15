@@ -7,38 +7,35 @@ class JWTAuthentication(authentication.JWTAuthentication):
 
     def authenticate(self, request):
         authenticate = super().authenticate(request)
-        if not authenticate:
-            return None
-        user, validated_token = authenticate
-        pk = JWTAuthentication.get_PIN(request.headers)
-        profile = JWTAuthentication.get_profile(user, pk)
-        if profile is not None:
-            user.profile = profile
-            return user, validated_token
+        if authenticate:
+            user, validated_token = authenticate
+            pk = JWTAuthentication.get_PIN(request.headers)
+            profile = JWTAuthentication.get_profile(user, pk)
+            if profile is not None:
+                user.profile = profile
+                return user, validated_token
         return None
 
     @staticmethod
     def get_PIN(headers):
-        if 'Profile' not in headers:
-            return None
-        values = headers['Profile'].split()
-        if len(values) != 2:
-            return None
-        name, value = values
-        if not name.upper() == 'PK':
-            return None
-        try:
-            value = int(value)
-            return value
-        except ValueError:
-            return None
+        if 'Profile' in headers:
+            values = headers['Profile'].split()
+            if len(values) == 2:
+                name, value = values
+                if name.upper() == 'PK':
+                    try:
+                        value = int(value)
+                        return value
+                    except ValueError:
+                        pass
+        return None
 
     @staticmethod
     def get_profile(user, pk):
-        if pk is None:
-            return None
-        try:
-            profile = user.profiles.get(pk=pk, is_active=True)
-            return profile
-        except Profile.DoesNotExist:
-            return None
+        if pk is not None:
+            try:
+                profile = user.userprofiles.get(pk=pk, is_active=True)
+                return profile
+            except Profile.DoesNotExist:
+                pass
+        return None
