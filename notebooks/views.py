@@ -181,7 +181,7 @@ class TransactionNewRecordView(APIView):
         permissions += [IsAttendant()]
         return permissions
 
-    def post(self, request):  # skipcq
+    def post(self, request, version):  # skipcq
         context = {'request': request}
         request.data.update({'action': Transaction.ACTION.new_record})
         serializer = TransactionSerializer(data=request.data, context=context)
@@ -197,7 +197,7 @@ class TransactionNewSheetView(APIView):
         permissions += [IsManager()]
         return permissions
 
-    def post(self, request):  # skipcq
+    def post(self, request, version):  # skipcq
         context = {'request': request}
         request.data.update({'action': Transaction.ACTION.new_sheet})
         serializer = TransactionSerializer(data=request.data, context=context)
@@ -208,7 +208,7 @@ class TransactionNewSheetView(APIView):
 
 class TransactionDetailView(APIView):
 
-    def get(self, request, pk):  # skipcq
+    def get(self, request, version, pk):  # skipcq
         tran = Transaction(pk)
         if not tran.exist():
             raise NotFound
@@ -217,7 +217,7 @@ class TransactionDetailView(APIView):
 
 class TransactionRejectView(APIView):
 
-    def put(self, request, pk):  # skipcq
+    def put(self, request, version, pk):  # skipcq
         tran = Transaction(pk)
         if not tran.exist():
             raise NotFound
