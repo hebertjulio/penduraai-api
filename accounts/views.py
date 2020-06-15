@@ -5,10 +5,10 @@ from drf_rw_serializers import generics as rwgenerics
 from rest_framework_api_key.permissions import HasAPIKey
 
 from .permissions import IsOwner, IsManager
-
 from .serializers import (
     UserReadSerializer, UserCreateSerializer, UserUpdateSerializer,
-    ProfileSerializer)
+    ProfileSerializer
+)
 
 
 class UserListView(rwgenerics.CreateAPIView):
