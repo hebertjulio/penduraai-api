@@ -8,10 +8,6 @@ from .models import User, Profile
 
 class UserRelatedField(serializers.RelatedField):
 
-    validators = [
-
-    ]
-
     def get_queryset(self):
         if self.read_only:
             return None
