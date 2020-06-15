@@ -13,7 +13,7 @@ from .dictdb import Transaction
 from .validators import (
     CustomerOfYourselfValidator, AlreadyAStoreCustomerValidator,
     StoreEmployeeValidator, TransactionExistValidator,
-    TransactionSignatureValidator, TransactionStatusValidator,
+    TransactionIntegrityValidator, TransactionStatusValidator,
     IsStoreCustomerValidator, SheetBelongCustomerValidator
 )
 from .relations import SheetRelatedField
@@ -23,7 +23,7 @@ class RecordSerializer(serializers.ModelSerializer):
 
     transaction = serializers.UUIDField(validators=[
         TransactionExistValidator(),
-        TransactionSignatureValidator(),
+        TransactionIntegrityValidator(),
         TransactionStatusValidator()
     ], write_only=True)
 
@@ -61,7 +61,7 @@ class SheetSerializer(serializers.ModelSerializer):
 
     transaction = serializers.UUIDField(validators=[
         TransactionExistValidator(),
-        TransactionSignatureValidator(),
+        TransactionIntegrityValidator(),
         TransactionStatusValidator()
     ], write_only=True)
 

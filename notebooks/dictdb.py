@@ -6,7 +6,7 @@ from django.conf import settings
 
 from model_utils import Choices
 
-from .services import generate_signature
+from .services import generate_hash
 
 
 class Transaction:
@@ -123,18 +123,18 @@ class Transaction:
         raise NotImplementedError
 
     @property
-    def signature(self):
+    def hash(self):
         data = {'store': self.store}
         data.update(**self.payload)
-        value = generate_signature(data)
+        value = generate_hash(data)
         return value
 
-    @signature.setter
-    def signature(self, _):
+    @hash.setter
+    def hash(self, _):
         raise NotImplementedError
 
-    @signature.deleter
-    def signature(self):
+    @hash.deleter
+    def hash(self):
         raise NotImplementedError
 
     @property
