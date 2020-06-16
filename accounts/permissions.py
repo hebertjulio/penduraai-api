@@ -20,7 +20,7 @@ class IsManager(IsOwner):
         return has_permission
 
 
-class IsAttendant(IsOwner):
+class IsAttendant(IsManager):
 
     def has_permission(self, request, view):
         has_permission = super().has_permission(request, view)
