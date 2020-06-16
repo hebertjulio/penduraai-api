@@ -79,8 +79,13 @@ class Sheet(TimeStampedModel):
         related_name='customersheets',
     )
 
-    is_authorized = models.BooleanField(
-        _('authorized status'), default=True
+    is_active = models.BooleanField(
+        _('active status'),
+        default=True,
+        help_text=_(
+            'Designates whether this sheet should be treated as active. '
+            'Unselect this instead of deleting sheet.'
+        ),
     )
 
     def __str__(self):

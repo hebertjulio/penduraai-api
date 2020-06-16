@@ -12,8 +12,7 @@ class IsStoreCustomerValidator:
 
     def __call__(self, value, serializer_field):
         request = serializer_field.context['request']
-        qs = request.user.customersheets.filter(
-            store=value, is_authorized=True)
+        qs = request.user.customersheets.filter(store=value, is_active=True)
         if not qs.exists():
             message = _('You aren\'t customer of this store.')
             raise serializers.ValidationError(message)
