@@ -93,17 +93,31 @@ class SheetDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = SheetSerializer
 
     def get_permissions(self):
+        permission_classes = super().permission_classes
+        permission_classes = [
+            permission_classes[0] & (IsAttendant)
+        ]
+        if self.request.method in ['DELETE', 'PATCH', 'PUT']:
+            permission_classes = [
+                permission_classes[0] & IsManager
+            ]
+        self.permission_classes = permission_classes
         permissions = super().get_permissions()
-        if self.request.method in ['PUT', 'PATCH', 'DELETE']:
-            permissions += [IsManager()]
         return permissions
 
     def get_queryset(self):
         user = self.request.user
+        where = Q(store=user)
+        if self.request.method == 'GET':
+            where = where | Q(customer=user)
         qs = Sheet.objects.select_related('customer', 'store')
-        qs = qs.filter(store=user)
+        qs = qs.filter(where)
         qs = qs.order_by('customer__name')
         return qs
+
+    def perform_destroy(self, instance):
+        instance.is_active = False
+        instance.save()
 
 
 class BuyerListView(generics.ListCreateAPIView):
