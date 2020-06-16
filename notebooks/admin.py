@@ -28,7 +28,7 @@ class RecordAdmin(admin.ModelAdmin):
 @admin.register(Sheet)
 class SheetAdmin(admin.ModelAdmin):
     list_display = (
-        'store', 'customer', 'is_authorized',
+        'store', 'customer', 'is_active',
     )
     search_fields = (
         'store__name', 'store__email',
@@ -38,7 +38,7 @@ class SheetAdmin(admin.ModelAdmin):
         'store', 'customer',
     )
     list_filter = (
-        'is_authorized',
+        'is_active',
     )
     ordering = (
         'store__id', 'customer__name',
