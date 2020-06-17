@@ -1,5 +1,3 @@
-import uuid
-
 from django.db.transaction import atomic
 
 from rest_framework import serializers
@@ -7,25 +5,16 @@ from rest_framework import serializers
 from accounts.relations import UserRelatedField, ProfileRelatedField
 from accounts.validators import ProfileBelongUserValidator
 
-from .decorators import accept_transaction
+from .relations import SheetRelatedField
 from .models import Record, Sheet, Buyer
-from .dictdb import Transaction
 from .validators import (
     CustomerOfYourselfValidator, AlreadyAStoreCustomerValidator,
-    StoreEmployeeValidator, TransactionExistValidator,
-    TransactionIntegrityValidator, TransactionStatusValidator,
-    IsStoreCustomerValidator, SheetBelongCustomerValidator
+    StoreEmployeeValidator, IsStoreCustomerValidator,
+    SheetBelongCustomerValidator
 )
-from .relations import SheetRelatedField
 
 
 class RecordSerializer(serializers.ModelSerializer):
-
-    transaction = serializers.UUIDField(validators=[
-        TransactionExistValidator(),
-        TransactionIntegrityValidator(),
-        TransactionStatusValidator()
-    ], write_only=True)
 
     sheet = SheetRelatedField(read_only=True)
     attendant = ProfileRelatedField()
@@ -35,7 +24,6 @@ class RecordSerializer(serializers.ModelSerializer):
     ])
 
     @atomic
-    @accept_transaction
     def create(self, validated_data):
         request = self.context['request']
         store = validated_data.pop('store')
@@ -50,7 +38,7 @@ class RecordSerializer(serializers.ModelSerializer):
         model = Record
         fields = '__all__'
         read_only_fields = [
-            'is_deleted'
+            'is_active'
         ]
         validators = [
             StoreEmployeeValidator()
@@ -59,12 +47,6 @@ class RecordSerializer(serializers.ModelSerializer):
 
 class SheetSerializer(serializers.ModelSerializer):
 
-    transaction = serializers.UUIDField(validators=[
-        TransactionExistValidator(),
-        TransactionIntegrityValidator(),
-        TransactionStatusValidator()
-    ], write_only=True)
-
     store = UserRelatedField(validators=[
         CustomerOfYourselfValidator(),
         AlreadyAStoreCustomerValidator()
@@ -72,7 +54,6 @@ class SheetSerializer(serializers.ModelSerializer):
     customer = UserRelatedField(read_only=True)
 
     @atomic
-    @accept_transaction
     def create(self, validated_data):
         request = self.context['request']
         obj = Sheet(**validated_data)
@@ -117,30 +98,4 @@ class BalanceSerializar(serializers.BaseSerializer):
         }
 
     def to_internal_value(self, data):
-        raise NotImplementedError
-
-
-class TransactionSerializer(serializers.Serializer):
-
-    id = serializers.UUIDField(read_only=True)
-    action = serializers.ChoiceField(choices=Transaction.ACTION)
-    payload = serializers.JSONField(binary=True)
-    store = serializers.IntegerField(read_only=True)
-
-    status = serializers.ChoiceField(
-        choices=Transaction.STATUS, read_only=True
-    )
-
-    ttl = serializers.IntegerField(read_only=True)
-
-    def create(self, validated_data):
-        request = self.context['request']
-        tran = Transaction(str(uuid.uuid4()))
-        tran.action = validated_data['action']
-        tran.store = request.user.id
-        tran.payload = validated_data['payload']
-        tran.save(60*30)  # 30 minutes
-        return tran.data
-
-    def update(self, instance, validated_data):
         raise NotImplementedError

@@ -7,6 +7,10 @@ app_name = 'notebooks'
 
 urlpatterns = [
     path(
+        'records/create/<str:token>',
+        views.RecordCreateView.as_view(),
+        name='record_create'),
+    path(
         'records',
         views.RecordListView.as_view(),
         name='record_list'),
@@ -15,9 +19,9 @@ urlpatterns = [
         views.RecordDetailView.as_view(),
         name='record_detail'),
     path(
-        'sheets',
-        views.SheetListView.as_view(),
-        name='sheet_list'),
+        'sheets/create/<str:token>',
+        views.SheetCreateView.as_view(),
+        name='sheet_create'),
     path(
         'sheets/<int:pk>',
         views.SheetDetailView.as_view(),
@@ -38,20 +42,4 @@ urlpatterns = [
         'balances-by-customer',
         views.BalanceListByCustomerView.as_view(),
         name='balance_list_by_customer'),
-    path(
-        'transactions/new-record',
-        views.TransactionNewRecordView.as_view(),
-        name='transaction_new_record'),
-    path(
-        'transactions/new-sheet',
-        views.TransactionNewSheetView.as_view(),
-        name='transaction_new_sheet'),
-    path(
-        'transactions/<str:pk>',
-        views.TransactionDetailView.as_view(),
-        name='transaction_detail'),
-    path(
-        'transactions/<str:pk>/reject',
-        views.TransactionRejectView.as_view(),
-        name='transaction_reject'),
 ]

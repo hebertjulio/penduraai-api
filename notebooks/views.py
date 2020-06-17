@@ -2,38 +2,49 @@ import json
 
 from django.db.models import Q
 
-from rest_framework.status import HTTP_200_OK, HTTP_201_CREATED
-from rest_framework import generics
+from rest_framework.status import HTTP_201_CREATED
+from rest_framework import generics, views
 from rest_framework.filters import SearchFilter
-from rest_framework.exceptions import NotFound
-from rest_framework.views import APIView
 from rest_framework.response import Response
 
 from accounts.permissions import IsManager, IsAttendant
 
+from bridges.decorators import use_transaction_token
+from bridges.services import send_message
+
 from .permissions import CanBuy
 from .models import Record, Sheet, Buyer
-from .dictdb import Transaction
-from .services import send_message
 from .serializers import (
-    RecordSerializer, SheetSerializer, BalanceSerializar,
-    TransactionSerializer, BuyerSerializer
+    RecordSerializer, SheetSerializer, BalanceSerializar, BuyerSerializer
 )
 
 
-class RecordListView(generics.ListCreateAPIView):
+class RecordCreateView(views.APIView):
+
+    def get_permissions(self):
+        permissions = super().get_permissions()
+        permissions += [CanBuy()]
+        return permissions
+
+    @use_transaction_token(scope='record')
+    def post(self, request, version, token, transaction=None):
+        payload = transaction.payload
+        context = {'request': request}
+        serializer = RecordSerializer(data=payload, context=context)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        response = Response(serializer.data, status=HTTP_201_CREATED)
+        send_message(token, json.dumps(transaction.data))
+        return response
+
+
+class RecordListView(generics.ListAPIView):
 
     serializer_class = RecordSerializer
     filterset_fields = [
         'sheet__store',
         'sheet__customer',
     ]
-
-    def get_permissions(self):
-        permissions = super().get_permissions()
-        if self.request.method == 'POST':
-            permissions += [CanBuy()]
-        return permissions
 
     def get_queryset(self):
         user = self.request.user
@@ -73,18 +84,27 @@ class RecordDetailView(generics.RetrieveDestroyAPIView):
         return qs
 
     def perform_destroy(self, instance):
-        instance.is_deleted = True
+        instance.is_active = False
         instance.save()
 
 
-class SheetListView(generics.CreateAPIView):
-
-    serializer_class = SheetSerializer
+class SheetCreateView(views.APIView):
 
     def get_permissions(self):
         permissions = super().get_permissions()
         permissions += [IsManager()]
         return permissions
+
+    @use_transaction_token(scope='sheet')
+    def post(self, request, version, token, transaction=None):
+        payload = transaction.payload
+        context = {'request': request}
+        serializer = SheetSerializer(data=payload, context=context)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        response = Response(serializer.data, status=HTTP_201_CREATED)
+        send_message(token, json.dumps(transaction.data))
+        return response
 
 
 class SheetDetailView(generics.RetrieveUpdateDestroyAPIView):
@@ -186,56 +206,3 @@ class BalanceListByCustomerView(generics.ListAPIView):
         profile = user.profile
         qs = Sheet.objects.balance_list_by_customer(user, profile)
         return qs
-
-
-class TransactionNewRecordView(APIView):
-
-    def get_permissions(self):
-        permissions = super().get_permissions()
-        permissions += [IsAttendant()]
-        return permissions
-
-    def post(self, request, version):  # skipcq
-        context = {'request': request}
-        request.data.update({'action': Transaction.ACTION.new_record})
-        serializer = TransactionSerializer(data=request.data, context=context)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data, status=HTTP_201_CREATED)
-
-
-class TransactionNewSheetView(APIView):
-
-    def get_permissions(self):
-        permissions = super().get_permissions()
-        permissions += [IsManager()]
-        return permissions
-
-    def post(self, request, version):  # skipcq
-        context = {'request': request}
-        request.data.update({'action': Transaction.ACTION.new_sheet})
-        serializer = TransactionSerializer(data=request.data, context=context)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data, status=HTTP_201_CREATED)
-
-
-class TransactionDetailView(APIView):
-
-    def get(self, request, version, pk):  # skipcq
-        tran = Transaction(pk)
-        if not tran.exist():
-            raise NotFound
-        return Response(tran.data, status=HTTP_200_OK)
-
-
-class TransactionRejectView(APIView):
-
-    def put(self, request, version, pk):  # skipcq
-        tran = Transaction(pk)
-        if not tran.exist():
-            raise NotFound
-        tran.status = Transaction.STATUS.rejected
-        tran.save()
-        send_message(tran.id, json.dumps(tran.data))
-        return Response(tran.data, status=HTTP_200_OK)

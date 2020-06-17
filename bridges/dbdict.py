@@ -6,14 +6,15 @@ from django.conf import settings
 
 from model_utils import Choices
 
-from .services import generate_hash
+from .encoders import DecimalEncoder
 
 
 class Transaction:
 
-    ACTION = Choices(
-        ('new_record', _('new record')),
-        ('new_sheet', _('new sheet')),
+    SCOPE = Choices(
+        ('profile', _('profile')),
+        ('sheet', _('sheet')),
+        ('record', _('record')),
     )
 
     STATUS = Choices(
@@ -26,43 +27,31 @@ class Transaction:
     PREFIX = 'transaction'
 
     __DEFAULT_DATA = '''{
-        "payload": {}, "status": "%s"
+        "payload": {}, "scope": "", "status": "%s"
     }'''
 
-    def __init__(self, _id):
+    def __init__(self, token):
         self.__client = redis.from_url(settings.TRANSACTION_REDIS_URL)
-        self.__name = ':'.join([self.PREFIX, _id])
+        self.__name = ':'.join([self.PREFIX, token])
         data = self.__client.get(self.__name)
         data = data or self.__DEFAULT_DATA % Transaction.STATUS.no_exist
         self.__data = json.loads(data)
 
     @property
-    def id(self):
+    def token(self):
         value = self.__name.split(':')[1]
         return value
 
-    @id.setter
-    def id(self, value):
-        raise NotImplementedError
-
-    @id.deleter
-    def id(self):
-        raise NotImplementedError
-
     @property
-    def action(self):
-        value = self.__data['action']
+    def scope(self):
+        value = self.__data['scope']
         return value
 
-    @action.setter
-    def action(self, value):
-        if value not in self.ACTION:
+    @scope.setter
+    def scope(self, value):
+        if value not in self.SCOPE:
             raise ValueError
-        self.__data['action'] = value
-
-    @action.deleter
-    def action(self):
-        raise NotImplementedError
+        self.__data['scope'] = value
 
     @property
     def payload(self):
@@ -75,25 +64,6 @@ class Transaction:
             raise ValueError
         self.__data['payload'] = value
 
-    @payload.deleter
-    def payload(self):
-        raise NotImplementedError
-
-    @property
-    def store(self):
-        value = self.__data['store']
-        return value
-
-    @store.setter
-    def store(self, value):
-        if not isinstance(value, int):
-            raise ValueError
-        self.__data['store'] = value
-
-    @store.deleter
-    def store(self):
-        raise NotImplementedError
-
     @property
     def status(self):
         value = self.__data['status']
@@ -105,52 +75,17 @@ class Transaction:
             raise ValueError
         self.__data['status'] = value
 
-    @status.deleter
-    def status(self):
-        raise NotImplementedError
-
     @property
     def ttl(self):
         value = self.__client.ttl(self.__name)
         return value
 
-    @ttl.setter
-    def ttl(self, _):
-        raise NotImplementedError
-
-    @ttl.deleter
-    def ttl(self):
-        raise NotImplementedError
-
-    @property
-    def hash(self):
-        data = {'store': self.store}
-        data.update(**self.payload)
-        value = generate_hash(data)
-        return value
-
-    @hash.setter
-    def hash(self, _):
-        raise NotImplementedError
-
-    @hash.deleter
-    def hash(self):
-        raise NotImplementedError
-
     @property
     def data(self):
         value = {**{
-            'id': self.id, 'ttl': self.ttl
+            'token': self.token, 'ttl': self.ttl
         }, **self.__data}
         return value
-
-    @data.setter
-    def data(self, _):
-        raise NotImplementedError
-
-    @data.deleter
-    def data(self):
-        raise NotImplementedError
 
     def exist(self):
         keys = self.__client.keys(self.__name)
@@ -160,7 +95,7 @@ class Transaction:
     def save(self, expire=None):
         if not self.exist():
             self.__data['status'] = Transaction.STATUS.awaiting
-        value = json.dumps(self.__data)
+        value = json.dumps(self.__data, cls=DecimalEncoder)
         ex = self.ttl if self.exist() else expire or 60
         self.__client.set(self.__name, value, ex=ex)
 

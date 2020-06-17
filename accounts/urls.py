@@ -7,9 +7,9 @@ app_name = 'accounts'
 
 urlpatterns = [
     path(
-        'users',
-        views.UserListView.as_view(),
-        name='user_list'),
+        'signup',
+        views.SignUpView.as_view(),
+        name='signup'),
     path(
         'current-user',
         views.CurrentUserDetailView.as_view(),
@@ -22,6 +22,10 @@ urlpatterns = [
         'profiles/<int:pk>',
         views.ProfileDetailView.as_view(),
         name='profile_detail'),
+    path(
+        'profiles/create/<str:token>',
+        views.ProfileCreateView.as_view(),
+        name='profile_create'),
     path(
         'token-obtain-pair',
         views.TokenObtainPairView.as_view(),
