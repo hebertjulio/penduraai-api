@@ -26,9 +26,9 @@ class RecordCreateView(views.APIView):
     @use_transaction(
         scope='record', current_status='awaiting', new_status='accepted')
     def post(self, request, version, token, transaction=None):  # skipcq
-        payload = transaction.payload
         context = {'request': request}
-        serializer = RecordSerializer(data=payload, context=context)
+        data = transaction.data
+        serializer = RecordSerializer(data=data, context=context)
         serializer.is_valid(raise_exception=True)
         serializer.save()
         response = Response(serializer.data, status=HTTP_201_CREATED)
@@ -95,9 +95,9 @@ class SheetCreateView(views.APIView):
     @use_transaction(
         scope='sheet', current_status='awaiting', new_status='accepted')
     def post(self, request, version, token, transaction=None):  # skipcq
-        payload = transaction.payload
         context = {'request': request}
-        serializer = SheetSerializer(data=payload, context=context)
+        data = transaction.data
+        serializer = SheetSerializer(data=data, context=context)
         serializer.is_valid(raise_exception=True)
         serializer.save()
         response = Response(serializer.data, status=HTTP_201_CREATED)

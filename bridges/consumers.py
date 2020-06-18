@@ -47,7 +47,7 @@ class TransactionConsumer(BaseConsumer):
         transaction = Transaction(event['token'])
         if transaction.exist():
             await self.accept()
-            await self.send(json.dumps(transaction.data))
+            await self.send(json.dumps(dict(transaction)))
             await self.channel_layer.group_add(
                 event['token'], self.channel_name)
         else:

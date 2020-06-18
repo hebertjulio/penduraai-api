@@ -17,7 +17,7 @@ class TransactionBaseSerializer(serializers.Serializer):
 class TransactionSerializer(TransactionBaseSerializer):
 
     scope = serializers.CharField(read_only=True)
-    payload = serializers.JSONField(read_only=True)
+    data = serializers.JSONField(read_only=True)
     status = serializers.CharField(read_only=True)
     ttl = serializers.IntegerField(read_only=True)
 
@@ -38,8 +38,9 @@ class TransactionProfileSerializer(TransactionBaseSerializer):
         validated_data.update({'user': request.user.id})
         transaction = Transaction()
         transaction.scope = 'profile'
-        transaction.payload = validated_data
-        transaction.save(60*30)
+        transaction.data = validated_data
+        transaction.ttl = 60*30
+        transaction.save()
         return {'token': transaction.token}
 
     def update(self, instance, validated_data):
@@ -62,8 +63,9 @@ class TransactionRecordSerializer(TransactionBaseSerializer):
         validated_data.update({'store': user.id, 'attendant': profile.id})
         transaction = Transaction()
         transaction.scope = 'record'
-        transaction.payload = validated_data
-        transaction.save(60*30)
+        transaction.data = validated_data
+        transaction.ttl = 60*30
+        transaction.save()
         return {'token': transaction.token}
 
     def update(self, instance, validated_data):
@@ -77,8 +79,9 @@ class TransactionSheetSerializer(TransactionBaseSerializer):
         user = request.user
         transaction = Transaction()
         transaction.scope = 'sheet'
-        transaction.payload = {'store': user.id}
-        transaction.save(60*30)
+        transaction.data = {'store': user.id}
+        transaction.ttl = 60*30
+        transaction.save()
         return {'token': transaction.token}
 
     def update(self, instance, validated_data):

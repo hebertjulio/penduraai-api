@@ -17,28 +17,35 @@ class Transaction:
     ]
 
     STATUS = [
-        'no_exist', 'awaiting', 'accepted', 'rejected',
+        'awaiting', 'accepted', 'rejected',
     ]
 
     PREFIX = 'transaction'
 
+    DEFAULT = """
+        {"scope": null, "data": {}, "status": "awaiting"}
+    """
+
+    client = redis.from_url(settings.TRANSACTION_REDIS_URL)
+
     def __init__(self, token=None):
         if token is None:
-            token = urlsafe_base64_encode(force_bytes(str(uuid.uuid4())))
-        self.__client = redis.from_url(settings.TRANSACTION_REDIS_URL)
-        self.__name = ':'.join([self.PREFIX, token])
-        data = self.__client.get(self.__name)
-        self.__data = json.loads(data or '{}')
+            token = urlsafe_base64_encode(
+                force_bytes(str(uuid.uuid4())))
+        self.token = token
+        self.load()
+        if not self.exist():
+            self.save()
 
     @property
-    def token(self):
-        value = self.__name.split(':')[1]
-        return value
+    def name(self):
+        name = ':'.join([self.PREFIX, self.token])
+        return name
 
     @property
     def scope(self):
-        if 'scope' in self.__data.keys():
-            value = self.__data['scope']
+        if 'scope' in self.dataset.keys():
+            value = self.dataset['scope']
             return value
         return None
 
@@ -46,25 +53,25 @@ class Transaction:
     def scope(self, value):
         if value not in self.SCOPES:
             raise ValueError
-        self.__data.update({'scope': value})
+        self.dataset.update({'scope': value})
 
     @property
-    def payload(self):
-        if 'payload' in self.__data.keys():
-            value = self.__data['payload']
+    def data(self):
+        if 'data' in self.dataset.keys():
+            value = self.dataset['data']
             return value
         return {}
 
-    @payload.setter
-    def payload(self, value):
+    @data.setter
+    def data(self, value):
         if not isinstance(value, dict):
             raise ValueError
-        self.__data.update({'payload': value})
+        self.dataset.update({'data': value})
 
     @property
     def status(self):
-        if 'status' in self.__data.keys():
-            value = self.__data['status']
+        if 'status' in self.dataset.keys():
+            value = self.dataset['status']
             return value
         return None
 
@@ -72,39 +79,39 @@ class Transaction:
     def status(self, value):
         if value not in self.STATUS:
             raise ValueError
-        self.__data.update({'status': value})
+        self.dataset.update({'status': value})
 
     @property
     def ttl(self):
-        value = self.__client.ttl(self.__name)
+        value = self.client.ttl(self.name)
         return value
 
-    @property
-    def data(self):
-        value = {**{
-            'token': self.token, 'ttl': self.ttl
-        }, **self.__data}
-        return value
+    @ttl.setter
+    def ttl(self, expire):
+        self.client.expire(self.name, expire)
 
     def exist(self):
-        keys = self.__client.keys(self.__name)
+        keys = self.client.keys(self.name)
         count = len(keys)
         return count == 1
 
-    def save(self, expire=None):
-        if not self.exist():
-            self.__data['status'] = 'awaiting'
-        value = json.dumps(self.__data, cls=DecimalEncoder)
-        ex = self.ttl if self.exist() else expire or 60
-        self.__client.set(self.__name, value, ex=ex)
+    def load(self):
+        value = self.client.get(self.name)
+        value = value or self.DEFAULT
+        self.dataset = json.loads(value)
 
-    def delete(self):
-        self.__client.delete(*[self.__name])
-        self.__data = {}
+    def save(self):
+        value = json.dumps(self.dataset, cls=DecimalEncoder)
+        ex = self.ttl if self.exist() else 60
+        self.client.set(self.name, value, ex=ex)
 
     def __str__(self):
-        return self.__name
+        return self.name
 
     def __repr__(self):
-        value = json.dumps(self.data)
-        return value
+        return self.name
+
+    def __iter__(self):
+        dataset = {**self.dataset, **{'token': self.token}}
+        for key, value in dataset.items():
+            yield key, value
