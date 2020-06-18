@@ -1,5 +1,3 @@
-import json
-
 from django.db.models import Q
 
 from rest_framework.status import HTTP_201_CREATED
@@ -9,8 +7,7 @@ from rest_framework.response import Response
 
 from accounts.permissions import IsManager, IsAttendant
 
-from bridges.decorators import use_transaction_token
-from bridges.services import send_message
+from bridges.decorators import load_transaction
 
 from .permissions import CanBuy
 from .models import Record, Sheet, Buyer
@@ -26,7 +23,7 @@ class RecordCreateView(views.APIView):
         permissions += [CanBuy()]
         return permissions
 
-    @use_transaction_token(scope='record')
+    @load_transaction(scope='record', status='awaiting')
     def post(self, request, version, token, transaction=None):  # skipcq
         payload = transaction.payload
         context = {'request': request}
@@ -34,7 +31,6 @@ class RecordCreateView(views.APIView):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         response = Response(serializer.data, status=HTTP_201_CREATED)
-        send_message(token, json.dumps(transaction.data))
         return response
 
 
@@ -95,7 +91,7 @@ class SheetCreateView(views.APIView):
         permissions += [IsManager()]
         return permissions
 
-    @use_transaction_token(scope='sheet')
+    @load_transaction(scope='sheet', status='awaiting')
     def post(self, request, version, token, transaction=None):  # skipcq
         payload = transaction.payload
         context = {'request': request}
@@ -103,7 +99,6 @@ class SheetCreateView(views.APIView):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         response = Response(serializer.data, status=HTTP_201_CREATED)
-        send_message(token, json.dumps(transaction.data))
         return response
 
 

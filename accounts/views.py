@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from rest_framework_simplejwt import views as simplejwt_views
 from rest_framework_api_key.permissions import HasAPIKey
 
-from bridges.decorators import use_transaction_token
+from bridges.decorators import load_transaction
 
 from .permissions import IsOwner, IsManager
 from .serializers import UserSerializer, SignUpSerializer, ProfileSerializer
@@ -95,11 +95,13 @@ class ProfileCreateView(views.APIView):
         HasAPIKey
     ]
 
-    @use_transaction_token(scope='profile')
+    @load_transaction(scope='profile', status='awaiting')
     def post(self, request, version, token, transaction=None):  # skipcq
         request.data.update(transaction.payload)
         serializer = ProfileSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
+        transaction.status = 'accepted'
+        transaction.save()
         response = Response(serializer.data, status=HTTP_201_CREATED)
         return response

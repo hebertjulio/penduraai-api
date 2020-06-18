@@ -19,7 +19,11 @@ urlpatterns = [
         views.TransactionProfileView.as_view(),
         name='transaction_profile'),
     path(
-        'transactions/<str:key>',
+        'transactions/<str:token>',
         views.TransactionDetailView.as_view(),
         name='transaction_detail'),
+    path(
+        'transactions/<str:token>/reject',
+        views.TransactionRejectView.as_view(),
+        name='transaction_reject'),
 ]
