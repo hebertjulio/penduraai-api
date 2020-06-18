@@ -18,6 +18,12 @@ class TransactionBaseSerializer(serializers.Serializer):
         token = urlsafe_base64_encode(force_bytes(token))
         return token
 
+    def create(self, validated_data):
+        raise NotImplementedError
+
+    def update(self, instance, validated_data):
+        raise NotImplementedError
+
 
 class TransactionSerializer(TransactionBaseSerializer):
 
