@@ -4,7 +4,7 @@ from rest_framework.response import Response
 
 from accounts.permissions import IsManager, IsAttendant
 
-from .decorators import load_transaction
+from .decorators import use_transaction
 from .serializers import (
     TransactionSerializer, TransactionProfileSerializer,
     TransactionRecordSerializer, TransactionSheetSerializer
@@ -13,7 +13,7 @@ from .serializers import (
 
 class TransactionDetailView(views.APIView):
 
-    @load_transaction
+    @use_transaction
     def get(self, request, version, token, transaction):  # skipcq
         serializer = TransactionSerializer(transaction)
         response = Response(serializer.data, status=HTTP_200_OK)
@@ -22,12 +22,10 @@ class TransactionDetailView(views.APIView):
 
 class TransactionRejectView(views.APIView):
 
-    @load_transaction(status='awaiting')
+    @use_transaction(new_status='rejected')
     def put(self, request, version, token, transaction):  # skipcq
         serializer = TransactionSerializer(transaction)
         response = Response(serializer.data, status=HTTP_200_OK)
-        transaction.status = 'rejected'
-        transaction.save()
         return response
 
 

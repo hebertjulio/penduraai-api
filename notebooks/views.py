@@ -7,7 +7,7 @@ from rest_framework.response import Response
 
 from accounts.permissions import IsManager, IsAttendant
 
-from bridges.decorators import load_transaction
+from bridges.decorators import use_transaction
 
 from .permissions import CanBuy
 from .models import Record, Sheet, Buyer
@@ -23,7 +23,8 @@ class RecordCreateView(views.APIView):
         permissions += [CanBuy()]
         return permissions
 
-    @load_transaction(scope='record', status='awaiting')
+    @use_transaction(
+        scope='record', current_status='awaiting', new_status='accepted')
     def post(self, request, version, token, transaction=None):  # skipcq
         payload = transaction.payload
         context = {'request': request}
@@ -91,7 +92,8 @@ class SheetCreateView(views.APIView):
         permissions += [IsManager()]
         return permissions
 
-    @load_transaction(scope='sheet', status='awaiting')
+    @use_transaction(
+        scope='sheet', current_status='awaiting', new_status='accepted')
     def post(self, request, version, token, transaction=None):  # skipcq
         payload = transaction.payload
         context = {'request': request}
