@@ -1,16 +1,5 @@
-import hashlib
-
-from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
-
-
-def generate_hash(data):
-    """generate hash to integrity check"""
-    if not isinstance(data, dict):
-        raise ValueError
-    value = ';'.join(str(v) for _, v in sorted(data.items()))
-    h = hashlib.sha256(value.encode())
-    return h.hexdigest()
+from asgiref.sync import async_to_sync
 
 
 def send_message(group, message):

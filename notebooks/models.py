@@ -45,20 +45,20 @@ class Record(TimeStampedModel):
         related_name='signaturerecords',
     )
 
-    is_deleted = models.BooleanField(
-        _('deleted status'),
-        default=False,
+    is_active = models.BooleanField(
+        _('active status'),
+        default=True,
         help_text=_(
-            'Designates whether this record should be treated as deleted. '
-            'Select this instead of deleting record.'
+            'Designates whether this record should be treated as active. '
+            'Unselect this instead of deleting record.'
         ),
     )
 
     def __str__(self):
-        return str(self.id)
+        return 'ID. %s' % self.id
 
     def __repr__(self):
-        return str(self.id)
+        return 'ID. %s' % self.id
 
     class Meta:
         verbose_name = _('record')
@@ -79,6 +79,10 @@ class Sheet(TimeStampedModel):
         related_name='customersheets',
     )
 
+    buyers = models.ManyToManyField(
+        'accounts.Profile', through='Buyer', related_name='buyersheets'
+    )
+
     is_active = models.BooleanField(
         _('active status'),
         default=True,
@@ -89,10 +93,10 @@ class Sheet(TimeStampedModel):
     )
 
     def __str__(self):
-        return 'No. %s' % self.id
+        return 'ID. %s' % self.id
 
     def __repr__(self):
-        return 'No. %s' % self.id
+        return 'ID. %s' % self.id
 
     objects = SheetQuerySet.as_manager()
 

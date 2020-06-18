@@ -2,9 +2,6 @@ from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers
 
-from .services import generate_hash
-from .dictdb import Transaction
-
 
 class IsStoreCustomerValidator:
 
@@ -65,42 +62,4 @@ class SheetBelongCustomerValidator:
         qs = user.customersheets.filter(id=value.id)
         if not qs.exists():
             message = _('This sheet does not belong to you.')
-            raise serializers.ValidationError(message)
-
-
-class TransactionExistValidator:
-
-    def __call__(self, value):
-        tran = Transaction(str(value))
-        if not tran.exist():
-            message = _('Transaction non-existent.')
-            raise serializers.ValidationError(message)
-
-
-class TransactionIntegrityValidator:
-
-    requires_context = True
-
-    def __call__(self, value, serializer_field):
-        tran = Transaction(str(value))
-        if not tran.exist():
-            return None
-        parent = serializer_field.parent
-        data = {
-            k: v for k, v in parent.initial_data.items()
-            if k != 'transaction'}
-        hash_ = generate_hash(data)
-        if tran.hash != hash_:
-            message = _('Transaction has no integrity.')
-            raise serializers.ValidationError(message)
-
-
-class TransactionStatusValidator:
-
-    def __call__(self, value):
-        tran = Transaction(str(value))
-        if not tran.exist():
-            return None
-        if tran.status != Transaction.STATUS.awaiting:
-            message = _('Transaction status is %s.' % tran.status)
             raise serializers.ValidationError(message)

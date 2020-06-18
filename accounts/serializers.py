@@ -1,16 +1,15 @@
-from django.db.transaction import atomic
+from django.db import transaction
 
 from rest_framework import serializers
 
 from .models import User, Profile
-from .validators import UserPINUniqueTogetherValidator
 
 
-class UserCreateSerializer(serializers.ModelSerializer):
+class SignUpSerializer(serializers.ModelSerializer):
 
     pin = serializers.RegexField(regex=Profile.PIN_REGEX, write_only=True)
 
-    @atomic
+    @transaction.atomic
     def create(self, validated_data):
         pin = validated_data.pop('pin')
         user = User(**validated_data)
@@ -40,19 +39,13 @@ class UserCreateSerializer(serializers.ModelSerializer):
         ]
 
 
-class UserUpdateSerializer(serializers.ModelSerializer):
+class UserSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         raise NotImplementedError
 
-    @atomic
     def update(self, instance, validated_data):
         user = instance
-        # change owner profile name when user change its name
-        if 'name' in validated_data and user.name != validated_data['name']:
-            profile = user.userprofiles.get(is_owner=True)
-            profile.name = validated_data['name']
-            profile.save()
         password = validated_data.pop('password', None)
         if password:
             user.set_password(password)
@@ -69,32 +62,14 @@ class UserUpdateSerializer(serializers.ModelSerializer):
             'id', 'is_active', 'last_login', 'created',
             'modified'
         ]
-
-
-class UserReadSerializer(serializers.ModelSerializer):
-
-    def create(self, validated_data):
-        raise NotImplementedError
-
-    def update(self, instance, validated_data):
-        raise NotImplementedError
-
-    class Meta:
-        model = User
-        exclude = [
-            'user_permissions', 'groups', 'is_superuser',
-            'is_staff', 'password'
-        ]
-        read_only_fields = [
-            f for f in User.get_fields()
-        ]
+        extra_kwargs = {
+            'password': {
+                'write_only': True
+            }
+        }
 
 
 class ProfileSerializer(serializers.ModelSerializer):
-
-    user = serializers.HiddenField(
-        default=serializers.CurrentUserDefault()
-    )
 
     class Meta:
         model = Profile
@@ -102,6 +77,8 @@ class ProfileSerializer(serializers.ModelSerializer):
         read_only_fields = [
             'is_owner'
         ]
-        validators = [
-            UserPINUniqueTogetherValidator()
-        ]
+        extra_kwargs = {
+            'user': {
+                'write_only': True
+            }
+        }

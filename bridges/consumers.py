@@ -3,7 +3,7 @@ import json
 from channels.consumer import AsyncConsumer
 from channels.exceptions import StopConsumer
 
-from .dictdb import Transaction
+from .dbdict import Transaction
 
 
 class BaseConsumer(AsyncConsumer):
@@ -44,12 +44,12 @@ class BaseConsumer(AsyncConsumer):
 class TransactionConsumer(BaseConsumer):
 
     async def websocket_connect(self, event):
-        tran = Transaction(event['pk'])
-        if tran.exist():
+        transaction = Transaction(event['token'])
+        if transaction.exist():
             await self.accept()
-            await self.send(json.dumps(tran.data))
+            await self.send(json.dumps(transaction.data))
             await self.channel_layer.group_add(
-                event['pk'], self.channel_name)
+                event['token'], self.channel_name)
         else:
             await self.reject()
             await self.close()
@@ -64,4 +64,4 @@ class TransactionConsumer(BaseConsumer):
     async def websocket_disconnect(self, event):
         await self.close()
         await self.channel_layer.group_discard(
-            event['pk'], self.channel_name)
+            event['token'], self.channel_name)

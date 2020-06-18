@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'silk',
     'accounts',
     'notebooks',
+    'bridges',
 ]
 
 MIDDLEWARE = [
@@ -199,6 +200,11 @@ DATABASES = {
         engine='django.db.backends.postgresql'
     )
 }
+
+# https://github.com/yunojuno/django-request-token
+
+REQUEST_TOKEN_EXPIRY = 60  # 1h
+REQUEST_TOKEN_LOG_TOKEN_ERRORS = '1' if DEBUG else '0'
 
 
 # Define django-silk configs.

@@ -28,4 +28,7 @@ urlpatterns = [
     path(
         '<str:version>/', include(
             'notebooks.urls', namespace='notebooks')),
+    path(
+        '<str:version>/', include(
+            'bridges.urls', namespace='bridges')),
 ]

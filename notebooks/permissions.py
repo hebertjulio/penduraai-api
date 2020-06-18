@@ -9,10 +9,12 @@ class CanBuy(IsOwner):
     def has_permission(self, request, view):
         has_permission = super().has_permission(request, view)
         if not has_permission:
-            if 'store' in request.data and 'operation' in request.data:
+            # Ignore buy permission if payment
+            if 'operation' in request.data:
                 operation = request.data['operation']
                 if operation == Record.OPERATION.credit:
-                    return True  # payment
+                    return True
+            if 'store' in request.data:
                 store = request.data['store']
                 profile = request.user.profile
                 qs = profile.profilebuyers.select_related('sheet')
