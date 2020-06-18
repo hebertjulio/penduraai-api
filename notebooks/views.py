@@ -27,7 +27,7 @@ class RecordCreateView(views.APIView):
         return permissions
 
     @use_transaction_token(scope='record')
-    def post(self, request, version, token, transaction=None):
+    def post(self, request, version, token, transaction=None):  # skipcq
         payload = transaction.payload
         context = {'request': request}
         serializer = RecordSerializer(data=payload, context=context)
@@ -96,7 +96,7 @@ class SheetCreateView(views.APIView):
         return permissions
 
     @use_transaction_token(scope='sheet')
-    def post(self, request, version, token, transaction=None):
+    def post(self, request, version, token, transaction=None):  # skipcq
         payload = transaction.payload
         context = {'request': request}
         serializer = SheetSerializer(data=payload, context=context)

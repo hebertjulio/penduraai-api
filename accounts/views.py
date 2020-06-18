@@ -96,7 +96,7 @@ class ProfileCreateView(views.APIView):
     ]
 
     @use_transaction_token(scope='profile')
-    def post(self, request, version, token, transaction=None):
+    def post(self, request, version, token, transaction=None):  # skipcq
         request.data.update(transaction.payload)
         serializer = ProfileSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
