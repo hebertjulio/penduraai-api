@@ -8,7 +8,10 @@ from rest_framework_api_key.permissions import HasAPIKey
 from bridges.decorators import use_transaction
 
 from .permissions import IsOwner, IsManager
-from .serializers import UserSerializer, SignUpSerializer, ProfileSerializer
+from .serializers import (
+    UserSerializer, SignUpSerializer, ProfileSerializer,
+    ProfileCreateSerializer
+)
 
 
 class SignUpView(views.APIView):
@@ -99,7 +102,7 @@ class ProfileCreateView(views.APIView):
         scope='profile', current_status='awaiting', new_status='accepted')
     def post(self, request, version, token, transaction=None):  # skipcq
         request.data.update(transaction.payload)
-        serializer = ProfileSerializer(data=request.data)
+        serializer = ProfileCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
         response = Response(serializer.data, status=HTTP_201_CREATED)

@@ -2,6 +2,8 @@ from django.db import transaction
 
 from rest_framework import serializers
 
+from rest_framework_simplejwt.tokens import RefreshToken
+
 from .models import User, Profile
 
 
@@ -82,3 +84,25 @@ class ProfileSerializer(serializers.ModelSerializer):
                 'write_only': True
             }
         }
+
+
+class ProfileCreateSerializer(ProfileSerializer):
+
+    access = serializers.CharField(read_only=True)
+    refresh = serializers.CharField(read_only=True)
+
+    @classmethod
+    def get_token(cls, user):
+        refresh = RefreshToken.for_user(user)
+        return refresh
+
+    def create(self, validated_data):
+        user = validated_data['user']
+        profile = super().create(validated_data)
+        # to do login after profile create
+        refresh = self.get_token(user)
+        data = {
+            'refresh': str(refresh),
+            'access': str(refresh.access_token)
+        }
+        return {**profile.__dict__, **data}
