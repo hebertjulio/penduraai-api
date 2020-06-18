@@ -1,5 +1,5 @@
 from rest_framework import generics, views
-from rest_framework.status import HTTP_201_CREATED, HTTP_200_OK
+from rest_framework.status import HTTP_201_CREATED
 from rest_framework.response import Response
 
 from rest_framework_simplejwt import views as simplejwt_views
@@ -101,5 +101,5 @@ class ProfileCreateView(views.APIView):
         serializer = ProfileSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        response = Response(serializer.data, status=HTTP_200_OK)
+        response = Response(serializer.data, status=HTTP_201_CREATED)
         return response
