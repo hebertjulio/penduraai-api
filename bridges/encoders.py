@@ -4,7 +4,8 @@ from decimal import Decimal
 
 
 class DecimalEncoder(JSONEncoder):
-    def default(self, o):
+
+    def default(self, o):  # noqa
         if isinstance(o, Decimal):
             return float(o)
         return super().default(o)
