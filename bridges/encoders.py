@@ -7,4 +7,4 @@ class DecimalEncoder(JSONEncoder):
     def default(self, obj):
         if isinstance(obj, Decimal):
             return float(obj)
-        return JSONEncoder.default(self, obj)
+        return super().default(obj)
