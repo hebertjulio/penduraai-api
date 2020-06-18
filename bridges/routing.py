@@ -1,8 +1,8 @@
 from django.urls import path
 
-from .consumers import TokenConsumer
+from .consumers import TransactionConsumer
 
 
 urlpatterns = [
-    path('tokens/<str:key>', TokenConsumer),
+    path('transactions/<str:token>', TransactionConsumer),
 ]

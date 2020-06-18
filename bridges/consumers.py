@@ -41,7 +41,7 @@ class BaseConsumer(AsyncConsumer):
         raise StopConsumer
 
 
-class TokenConsumer(BaseConsumer):
+class TransactionConsumer(BaseConsumer):
 
     async def websocket_connect(self, event):
         transaction = Transaction(event['token'])
