@@ -34,31 +34,31 @@ class UserUrlsTestCase(TestCase):
         self.resolve_token_refresh_url()
 
     def resolve_user_list_url(self):
-        r = UserUrlsTestCase.resolve_by_name('accounts:user_list')
+        r = self.resolve_by_name('accounts:user_list')
         self.assertEqual(r.func.cls, UserListView)
 
     def resolve_user_detail_url(self):
-        pk = UserUrlsTestCase.user.id
-        r = UserUrlsTestCase.resolve_by_name('accounts:user_detail', pk=pk)
+        pk = self.user.id
+        r = self.resolve_by_name('accounts:user_detail', pk=pk)
         self.assertEqual(r.func.cls, UserDetailView)
 
     def resolve_logged_user_detail_url(self):
-        r = UserUrlsTestCase.resolve_by_name('accounts:user_change')
+        r = self.resolve_by_name('accounts:user_change')
         self.assertEqual(r.func.cls, UserChangeView)
 
     def resolve_logged_user_deactivate_url(self):
-        r = UserUrlsTestCase.resolve_by_name('accounts:user_deactivate')
+        r = self.resolve_by_name('accounts:user_deactivate')
         self.assertEqual(r.func.cls, UserDeactivateView)
 
     def resolve_token_obtain_pair_url(self):
-        r = UserUrlsTestCase.resolve_by_name('accounts:token_obtain_pair')
+        r = self.resolve_by_name('accounts:token_obtain_pair')
         self.assertEqual(r.func.cls, TokenObtainPairView)
 
     def resolve_token_refresh_url(self):
-        r = UserUrlsTestCase.resolve_by_name('accounts:token_refresh')
+        r = self.resolve_by_name('accounts:token_refresh')
         self.assertEqual(r.func.cls, TokenRefreshView)
 
-    @staticmethod
-    def resolve_by_name(name, **kwargs):
+    @classmethod
+    def resolve_by_name(cls, name, **kwargs):
         url = reverse(name, kwargs=kwargs)
         return resolve(url)
