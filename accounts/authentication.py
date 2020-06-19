@@ -1,4 +1,4 @@
-from rest_framework.exceptions import NotAcceptable, AuthenticationFailed
+from rest_framework.exceptions import NotAcceptable
 
 from rest_framework_simplejwt import authentication
 
@@ -20,7 +20,7 @@ class JWTAuthentication(authentication.JWTAuthentication):
     @classmethod
     def get_PK(cls, headers):
         if 'Profile' not in headers:
-            raise NotAcceptable
+            return None
         values = headers['Profile'].split()
         if len(values) != 2:
             raise NotAcceptable
@@ -39,4 +39,4 @@ class JWTAuthentication(authentication.JWTAuthentication):
             profile = user.userprofiles.get(pk=pk, is_active=True)
             return profile
         except Profile.DoesNotExist:
-            raise AuthenticationFailed
+            return None

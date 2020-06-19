@@ -64,11 +64,9 @@ class TokenRefreshView(simplejwt_views.TokenRefreshView):
 class ProfileListView(generics.ListAPIView):
 
     serializer_class = ProfileSerializer
-
-    def get_permissions(self):
-        permissions = super().get_permissions()
-        permissions += [IsManager()]
-        return permissions
+    filterset_fields = [
+        'is_owner', 'is_manager', 'is_attendant'
+    ]
 
     def get_queryset(self):
         user = self.request.user
