@@ -13,4 +13,3 @@ __mypy__/
 *.db
 
 .secrets.*
-settings.toml

@@ -1,0 +1,12 @@
+[development]
+
+DEBUG = true
+
+DATABASES__default__ENGINE = "django.db.backends.sqlite3"
+DATABASES__default__NAME = "db.sqlite3"
+
+TRANSACTION_REDIS_URL = "redis://:penduraai@localhost:6379/0"
+
+CHANNEL_LAYERS__default__CONFIG__hosts = ["redis://:penduraai@localhost:6379/1"]
+
+CACHES__default__LOCATION = "redis://:penduraai@localhost:6379/2"
