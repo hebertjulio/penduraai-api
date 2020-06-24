@@ -32,7 +32,7 @@ class RecordRequestSerializer(serializers.ModelSerializer):
         validated_data.update({'transaction': tran.id})
         return validated_data
 
-    def update(self, validated_data):
+    def update(self, instance, validated_data):
         raise NotImplementedError
 
     class Meta:
@@ -85,7 +85,7 @@ class RecordCreateSerializer(serializers.ModelSerializer):
         obj = super().create(validated_data)
         return obj
 
-    def update(self, validated_data):
+    def update(self, instance, validated_data):
         raise NotImplementedError
 
     class Meta:
@@ -124,7 +124,7 @@ class SheetRequestSerializer(serializers.ModelSerializer):
         validated_data.update({'transaction': tran.id})
         return validated_data
 
-    def update(self, validated_data):
+    def update(self, instance, validated_data):
         raise NotImplementedError
 
     class Meta:

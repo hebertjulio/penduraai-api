@@ -97,7 +97,7 @@ class ProfileRequestSerializer(serializers.ModelSerializer):
         validated_data.update({'transaction': tran.id})
         return validated_data
 
-    def update(self, validated_data):
+    def update(self, instance, validated_data):
         raise NotImplementedError
 
     class Meta:
@@ -115,7 +115,7 @@ class ProfileRequestSerializer(serializers.ModelSerializer):
 
 class ProfileCreateSerializer(serializers.ModelSerializer):
 
-    def update(self, validated_data):
+    def update(self, instance, validated_data):
         raise NotImplementedError
 
     class Meta:
