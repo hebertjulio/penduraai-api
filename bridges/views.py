@@ -28,7 +28,7 @@ class TransactionDiscardView(views.APIView):
         except Transaction.DoesNotExist:
             raise NotFound
 
-    def put(self, request, version, pk):
+    def put(self, request, version, pk):  # skipcq
         obj = self.get_object(pk)
         obj.status = Transaction.STATUS.discarded
         obj.save()
