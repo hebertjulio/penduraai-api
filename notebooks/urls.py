@@ -7,9 +7,13 @@ app_name = 'notebooks'
 
 urlpatterns = [
     path(
-        'records/create/<str:token>',
-        views.RecordCreateView.as_view(),
-        name='record_create'),
+        'records/request',
+        views.RecordRequestView.as_view(),
+        name='record_request'),
+    path(
+        'records/transaction/<int:pk>',
+        views.RecordTransactionView.as_view(),
+        name='record_transaction'),
     path(
         'records',
         views.RecordListView.as_view(),
@@ -19,9 +23,13 @@ urlpatterns = [
         views.RecordDetailView.as_view(),
         name='record_detail'),
     path(
-        'sheets/create/<str:token>',
-        views.SheetCreateView.as_view(),
-        name='sheet_create'),
+        'sheets/request',
+        views.SheetRequestView.as_view(),
+        name='sheet_request'),
+    path(
+        'sheets/transaction/<int:pk>',
+        views.SheetTransactionView.as_view(),
+        name='sheet_transaction'),
     path(
         'sheets/<int:pk>',
         views.SheetDetailView.as_view(),

@@ -10,7 +10,7 @@ from bridges.decorators import use_transaction
 from .permissions import IsOwner, IsManager
 from .serializers import (
     UserSerializer, SignUpSerializer, ProfileSerializer,
-    ProfileCreateSerializer
+    ProfileRequestSerializer, ProfileCreateSerializer
 )
 
 
@@ -65,7 +65,7 @@ class ProfileListView(generics.ListAPIView):
 
     serializer_class = ProfileSerializer
     filterset_fields = [
-        'is_owner', 'is_manager', 'is_attendant'
+        'role'
     ]
 
     def get_queryset(self):
@@ -90,17 +90,28 @@ class ProfileDetailView(generics.RetrieveUpdateDestroyAPIView):
         return qs
 
 
-class ProfileCreateView(views.APIView):
+class ProfileRequestView(generics.CreateAPIView):
+
+    serializer_class = ProfileRequestSerializer
+
+    def get_permissions(self):
+        permissions = super().get_permissions()
+        permissions += [IsManager()]
+        return permissions
+
+
+class ProfileTransactionView(views.APIView):
 
     permission_classes = [
         HasAPIKey
     ]
 
-    @use_transaction(
-        scope='profile', current_status='awaiting', new_status='accepted')
-    def post(self, request, version, token, transaction=None):  # skipcq
-        request.data.update(transaction.data)
-        serializer = ProfileCreateSerializer(data=request.data)
+    @classmethod
+    @use_transaction(scope='profile', lookup_field='pk')
+    def post(cls, request, version, pk):
+        context = {'request': request}
+        data = request.data
+        serializer = ProfileCreateSerializer(data=data, context=context)
         serializer.is_valid(raise_exception=True)
         serializer.save()
         response = Response(serializer.data, status=HTTP_201_CREATED)

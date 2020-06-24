@@ -1,88 +1,15 @@
 from rest_framework import serializers
 
-from .dbdict import Transaction
+from .models import Transaction
 
 
-class TransactionBaseSerializer(serializers.Serializer):
+class TransactionReadSerializer(serializers.ModelSerializer):
 
-    token = serializers.CharField(read_only=True)
+    data = serializers.JSONField(read_only=True, source='json')
 
-    def create(self, validated_data):
-        raise NotImplementedError
-
-    def update(self, instance, validated_data):
-        raise NotImplementedError
-
-
-class TransactionSerializer(TransactionBaseSerializer):
-
-    scope = serializers.CharField(read_only=True)
-    data = serializers.JSONField(read_only=True)
-    status = serializers.CharField(read_only=True)
-    ttl = serializers.IntegerField(read_only=True)
-
-    def create(self, validated_data):
-        raise NotImplementedError
-
-    def update(self, instance, validated_data):
-        raise NotImplementedError
-
-
-class TransactionProfileSerializer(TransactionBaseSerializer):
-
-    is_attendant = serializers.BooleanField(write_only=True)
-    is_manager = serializers.BooleanField(write_only=True)
-
-    def create(self, validated_data):
-        request = self.context['request']
-        validated_data.update({'user': request.user.id})
-        transaction = Transaction()
-        transaction.scope = 'profile'
-        transaction.data = validated_data
-        transaction.ttl = 60*30
-        transaction.save()
-        return {'token': transaction.token}
-
-    def update(self, instance, validated_data):
-        raise NotImplementedError
-
-
-class TransactionRecordSerializer(TransactionBaseSerializer):
-
-    note = serializers.CharField(required=False, write_only=True)
-    operation = serializers.CharField(write_only=True)
-
-    value = serializers.DecimalField(
-        max_digits=10, decimal_places=2, write_only=True
-    )
-
-    def create(self, validated_data):
-        request = self.context['request']
-        user = request.user
-        profile = user.profile
-        validated_data.update({'store': user.id, 'attendant': profile.id})
-        transaction = Transaction()
-        transaction.scope = 'record'
-        transaction.data = validated_data
-        transaction.ttl = 60*30
-        transaction.save()
-        return {'token': transaction.token}
-
-    def update(self, instance, validated_data):
-        raise NotImplementedError
-
-
-class TransactionSheetSerializer(TransactionBaseSerializer):
-
-    def create(self, validated_data):
-        request = self.context['request']
-        user = request.user
-        transaction = Transaction()
-        transaction.scope = 'sheet'
-        transaction.data = {'store': user.id}
-        transaction.ttl = 60*30
-        transaction.save()
-        return {'token': transaction.token}
-
-    def update(self, instance, validated_data):
-        raise NotImplementedError
+    class Meta:
+        model = Transaction
+        fields = '__all__'
+        read_only_fields = [
+            f for f in Transaction.get_fields()
+        ]

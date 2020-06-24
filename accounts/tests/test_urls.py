@@ -31,10 +31,15 @@ class UrlsTestCase(TestCase):
         r = self.resolve_by_name('accounts:profile_list', **kwargs)
         self.assertEqual(r.func.cls, views.ProfileListView)
 
-    def test_resolve_profile_create_url(self):
-        kwargs = {'version': 'v1', 'token': 'mytoken'}
-        r = self.resolve_by_name('accounts:profile_create', **kwargs)
-        self.assertEqual(r.func.cls, views.ProfileCreateView)
+    def test_resolve_profile_request_url(self):
+        kwargs = {'version': 'v1'}
+        r = self.resolve_by_name('accounts:profile_request', **kwargs)
+        self.assertEqual(r.func.cls, views.ProfileRequestView)
+
+    def test_resolve_profile_transaction_url(self):
+        kwargs = {'version': 'v1', 'pk': 1}
+        r = self.resolve_by_name('accounts:profile_transaction', **kwargs)
+        self.assertEqual(r.func.cls, views.ProfileTransactionView)
 
     def test_resolve_profile_detail_url(self):
         kwargs = {'version': 'v1', 'pk': 84}

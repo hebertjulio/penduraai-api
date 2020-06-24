@@ -1,83 +1,37 @@
-from rest_framework import views
-from rest_framework.status import HTTP_201_CREATED, HTTP_200_OK
+from rest_framework.status import HTTP_200_OK
+from rest_framework import generics, views
+from rest_framework.exceptions import NotFound
 from rest_framework.response import Response
 
-from accounts.permissions import IsManager, IsAttendant
-
-from .decorators import use_transaction
-from .serializers import (
-    TransactionSerializer, TransactionProfileSerializer,
-    TransactionRecordSerializer, TransactionSheetSerializer
-)
+from .serializers import TransactionReadSerializer
+from .models import Transaction
 
 
-class TransactionDetailView(views.APIView):
+class TransactionDetailView(generics.RetrieveAPIView):
 
-    @use_transaction
-    def get(self, request, version, token, transaction):  # skipcq
-        serializer = TransactionSerializer(transaction)
+    lookup_field = 'pk'
+    serializer_class = TransactionReadSerializer
+    queryset = Transaction.objects.all()
+
+
+class TransactionDiscardView(views.APIView):
+
+    lookup_field = 'pk'
+    serializer_class = TransactionReadSerializer
+    queryset = Transaction.objects.all()
+
+    @classmethod
+    def get_object(cls, pk):
+        try:
+            tran = Transaction.objects.get(pk=pk)
+            return tran
+        except Transaction.DoesNotExist:
+            raise NotFound
+
+    def put(self, request, version, pk):  # skipcq
+        obj = self.get_object(pk)
+        obj.status = Transaction.STATUS.discarded
+        obj.save()
+        serializer = TransactionReadSerializer(obj)
         response = Response(serializer.data, status=HTTP_200_OK)
-        return response
-
-
-class TransactionRejectView(views.APIView):
-
-    @use_transaction(new_status='rejected')
-    def put(self, request, version, token, transaction):  # skipcq
-        serializer = TransactionSerializer(transaction)
-        response = Response(serializer.data, status=HTTP_200_OK)
-        return response
-
-
-class TransactionProfileView(views.APIView):
-
-    def get_permissions(self):
-        permissions = super().get_permissions()
-        permissions += [IsManager()]
-        return permissions
-
-    def post(self, request, version):  # skipcq
-        context = {'request': request}
-        serializer = TransactionProfileSerializer(
-            data=request.data, context=context
-        )
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        response = Response(serializer.data, status=HTTP_201_CREATED)
-        return response
-
-
-class TransactionRecordView(views.APIView):
-
-    def get_permissions(self):
-        permissions = super().get_permissions()
-        permissions += [IsAttendant()]
-        return permissions
-
-    def post(self, request, version):  # skipcq
-        context = {'request': request}
-        serializer = TransactionRecordSerializer(
-            data=request.data, context=context
-        )
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        response = Response(serializer.data, status=HTTP_201_CREATED)
-        return response
-
-
-class TransactionSheetView(views.APIView):
-
-    def get_permissions(self):
-        permissions = super().get_permissions()
-        permissions += [IsManager()]
-        return permissions
-
-    def post(self, request, version):  # skipcq
-        context = {'request': request}
-        serializer = TransactionSheetSerializer(
-            data=request.data, context=context
-        )
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        response = Response(serializer.data, status=HTTP_201_CREATED)
         return response

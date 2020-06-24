@@ -10,7 +10,7 @@ def owner_profile_name_update(sender, instance, created, **kwargs):
     if created:
         return
     try:
-        profile = instance.userprofiles.get(is_owner=True)
+        profile = instance.userprofiles.get(role=Profile.ROLE.owner)
         if profile.name == instance.name:
             return
         profile.name = instance.name

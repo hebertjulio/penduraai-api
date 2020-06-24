@@ -54,11 +54,12 @@ class Record(TimeStampedModel):
         ),
     )
 
-    def __str__(self):
-        return 'ID. %s' % self.id
+    @classmethod
+    def get_fields(cls):
+        return cls._meta.get_fields()
 
     def __repr__(self):
-        return 'ID. %s' % self.id
+        return 'Record %s' % self.id
 
     class Meta:
         verbose_name = _('record')
@@ -92,11 +93,12 @@ class Sheet(TimeStampedModel):
         ),
     )
 
-    def __str__(self):
-        return 'ID. %s' % self.id
+    @classmethod
+    def get_fields(cls):
+        return cls._meta.get_fields()
 
     def __repr__(self):
-        return 'ID. %s' % self.id
+        return 'Sheet %s' % self.id
 
     objects = SheetQuerySet.as_manager()
 
@@ -121,6 +123,9 @@ class Buyer(TimeStampedModel):
         'accounts.Profile', on_delete=models.CASCADE,
         related_name='profilebuyers',
     )
+
+    def __repr__(self):
+        return 'Buyer %s' % self.id
 
     class Meta:
         verbose_name = _('buyer')
