@@ -103,7 +103,11 @@ class ProfileRequestSerializer(serializers.ModelSerializer):
         ]
         extra_kwargs = {
             'user': {
-                'default': serializers.CurrentUserDefault()
+                'default': serializers.CurrentUserDefault(),
+                'write_only': True
+            },
+            'role': {
+                'write_only': True
             }
         }
 

@@ -21,7 +21,8 @@ class RecordRequestSerializer(serializers.ModelSerializer):
     transaction = serializers.IntegerField(read_only=True)
 
     store = UserRelatedField(
-        default=serializers.CurrentUserDefault()
+        default=serializers.CurrentUserDefault(),
+        write_only=True
     )
 
     @new_transaction(scope='record')
@@ -43,7 +44,13 @@ class RecordRequestSerializer(serializers.ModelSerializer):
                 'write_only': True
             },
             'note': {
-                'default': ''
+                'write_only': True
+            },
+            'value': {
+                'write_only': True
+            },
+            'operation': {
+                'write_only': True
             }
         }
 
@@ -126,7 +133,8 @@ class SheetRequestSerializer(serializers.ModelSerializer):
         ]
         extra_kwargs = {
             'store': {
-                'default': serializers.CurrentUserDefault()
+                'default': serializers.CurrentUserDefault(),
+                'write_only': True
             }
         }
 
