@@ -2,7 +2,7 @@ from django.db.transaction import atomic
 
 from rest_framework import serializers
 
-from bridges.decorators import new_transaction
+from bridges.services import new_transaction
 
 from .models import User, Profile
 
@@ -89,9 +89,12 @@ class ProfileRequestSerializer(serializers.ModelSerializer):
 
     transaction = serializers.IntegerField(read_only=True)
 
-    @new_transaction(scope='profile')
     def create(self, validated_data):
-        return validated_data
+        request = self.context['request']
+        user = request.user
+        profile = user.profile
+        obj = new_transaction('profile', user, profile, validated_data)
+        return {'transaction': obj.id}
 
     def update(self, instance, validated_data):
         raise NotImplementedError

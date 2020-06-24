@@ -5,7 +5,7 @@ from accounts.relations import UserRelatedField, ProfileRelatedField
 from accounts.fields import CurrentProfileDefault
 from accounts.validators import ProfileBelongUserValidator
 
-from bridges.decorators import new_transaction
+from bridges.services import new_transaction
 
 from .relations import SheetRelatedField
 from .models import Record, Sheet, Buyer
@@ -25,9 +25,12 @@ class RecordRequestSerializer(serializers.ModelSerializer):
         write_only=True
     )
 
-    @new_transaction(scope='record')
     def create(self, validated_data):
-        return validated_data
+        request = self.context['request']
+        user = request.user
+        profile = user.profile
+        obj = new_transaction('record', user, profile, validated_data)
+        return {'transaction': obj.id}
 
     def update(self, instance, validated_data):
         raise NotImplementedError
@@ -119,9 +122,12 @@ class SheetRequestSerializer(serializers.ModelSerializer):
 
     transaction = serializers.IntegerField(read_only=True)
 
-    @new_transaction(scope='sheet')
     def create(self, validated_data):
-        return validated_data
+        request = self.context['request']
+        user = request.user
+        profile = user.profile
+        obj = new_transaction('sheet', user, profile, validated_data)
+        return {'transaction': obj.id}
 
     def update(self, instance, validated_data):
         raise NotImplementedError
