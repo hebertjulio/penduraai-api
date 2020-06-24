@@ -100,19 +100,14 @@ class ProfileRequestView(generics.CreateAPIView):
         return permissions
 
 
-class ProfileTransactionView(views.APIView):
+class ProfileTransactionView(generics.CreateAPIView):
 
+    lookup_field = 'pk'
+    serializer_class = ProfileCreateSerializer
     permission_classes = [
         HasAPIKey
     ]
 
-    @classmethod
-    @use_transaction(scope='profile', lookup_field='pk')
-    def post(cls, request, version, pk):
-        context = {'request': request}
-        data = request.data
-        serializer = ProfileCreateSerializer(data=data, context=context)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        response = Response(serializer.data, status=HTTP_201_CREATED)
-        return response
+    @use_transaction(scope='profile')
+    def create(self, request, *args, **kwargs):
+        return super().create(request, *args, *kwargs)

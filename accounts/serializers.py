@@ -2,7 +2,7 @@ from django.db.transaction import atomic
 
 from rest_framework import serializers
 
-from bridges.services import new_transaction
+from bridges.decorators import new_transaction
 
 from .models import User, Profile
 
@@ -89,12 +89,8 @@ class ProfileRequestSerializer(serializers.ModelSerializer):
 
     transaction = serializers.IntegerField(read_only=True)
 
+    @new_transaction(scope='profile')
     def create(self, validated_data):
-        request = self.context['request']
-        user = request.user
-        profile = user.profile
-        tran = new_transaction(user, profile, 'profile', validated_data)
-        validated_data.update({'transaction': tran.id})
         return validated_data
 
     def update(self, instance, validated_data):
@@ -107,8 +103,7 @@ class ProfileRequestSerializer(serializers.ModelSerializer):
         ]
         extra_kwargs = {
             'user': {
-                'default': serializers.CurrentUserDefault(),
-                'write_only': True
+                'default': serializers.CurrentUserDefault()
             }
         }
 

@@ -5,7 +5,7 @@ from accounts.relations import UserRelatedField, ProfileRelatedField
 from accounts.fields import CurrentProfileDefault
 from accounts.validators import ProfileBelongUserValidator
 
-from bridges.services import new_transaction
+from bridges.decorators import new_transaction
 
 from .relations import SheetRelatedField
 from .models import Record, Sheet, Buyer
@@ -24,12 +24,8 @@ class RecordRequestSerializer(serializers.ModelSerializer):
         default=serializers.CurrentUserDefault()
     )
 
+    @new_transaction(scope='record')
     def create(self, validated_data):
-        request = self.context['request']
-        user = request.user
-        profile = user.profile
-        tran = new_transaction(user, profile, 'record', validated_data)
-        validated_data.update({'transaction': tran.id})
         return validated_data
 
     def update(self, instance, validated_data):
@@ -38,8 +34,8 @@ class RecordRequestSerializer(serializers.ModelSerializer):
     class Meta:
         model = Record
         fields = [
-            'transaction', 'store', 'attendant', 'value',
-            'operation', 'note'
+            'store', 'attendant', 'value',
+            'operation', 'note', 'transaction'
         ]
         extra_kwargs = {
             'attendant': {
@@ -116,12 +112,8 @@ class SheetRequestSerializer(serializers.ModelSerializer):
 
     transaction = serializers.IntegerField(read_only=True)
 
+    @new_transaction(scope='sheet')
     def create(self, validated_data):
-        request = self.context['request']
-        user = request.user
-        profile = user.profile
-        tran = new_transaction(user, profile, 'sheet', validated_data)
-        validated_data.update({'transaction': tran.id})
         return validated_data
 
     def update(self, instance, validated_data):
@@ -130,7 +122,7 @@ class SheetRequestSerializer(serializers.ModelSerializer):
     class Meta:
         model = Sheet
         fields = [
-            'transaction', 'store'
+            'store', 'transaction'
         ]
         extra_kwargs = {
             'store': {
