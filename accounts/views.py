@@ -106,8 +106,9 @@ class ProfileTransactionView(views.APIView):
         HasAPIKey
     ]
 
+    @classmethod
     @use_transaction(scope='profile', lookup_field='pk')
-    def post(self, request, version, pk):
+    def post(cls, request, version, pk):
         context = {'request': request}
         data = request.data
         serializer = ProfileCreateSerializer(data=data, context=context)

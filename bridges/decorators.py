@@ -33,7 +33,7 @@ def use_transaction(func=None, scope=None, lookup_field='pk'):
                 'Scope \'%s\' invalid for this transaction.' % tran.scope)
             raise BadRequest(detail)
 
-        if tran.status != Transaction.STATUS.awaiting:
+        if tran.status != Transaction.STATUS.not_used:
             detail = _(
                 'Transaction status \'%s\' not allowed.' % tran.status)
             raise BadRequest(detail)
