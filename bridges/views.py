@@ -14,7 +14,7 @@ class TransactionDetailView(generics.RetrieveAPIView):
     queryset = Transaction.objects.all()
 
 
-class TransactionRejectView(views.APIView):
+class TransactionDiscardView(views.APIView):
 
     lookup_field = 'pk'
     serializer_class = TransactionReadSerializer

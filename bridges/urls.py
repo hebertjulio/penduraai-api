@@ -11,7 +11,7 @@ urlpatterns = [
         views.TransactionDetailView.as_view(),
         name='transaction_detail'),
     path(
-        'transactions/<int:pk>/reject',
-        views.TransactionRejectView.as_view(),
-        name='transaction_reject'),
+        'transactions/<int:pk>/discard',
+        views.TransactionDiscardView.as_view(),
+        name='transaction_discard'),
 ]

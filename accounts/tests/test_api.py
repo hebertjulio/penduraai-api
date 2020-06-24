@@ -5,7 +5,7 @@ from rest_framework.test import APITestCase
 
 from rest_framework_api_key.models import APIKey
 
-from .models import Profile
+from ..models import Profile
 
 
 class ApiTestCase(APITestCase):

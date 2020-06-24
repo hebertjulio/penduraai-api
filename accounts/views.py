@@ -90,7 +90,17 @@ class ProfileDetailView(generics.RetrieveUpdateDestroyAPIView):
         return qs
 
 
-class ProfileCreateView(views.APIView):
+class ProfileRequestView(generics.CreateAPIView):
+
+    serializer_class = ProfileRequestSerializer
+
+    def get_permissions(self):
+        permissions = super().get_permissions()
+        permissions += [IsManager()]
+        return permissions
+
+
+class ProfileTransactionView(views.APIView):
 
     permission_classes = [
         HasAPIKey
@@ -105,13 +115,3 @@ class ProfileCreateView(views.APIView):
         serializer.save()
         response = Response(serializer.data, status=HTTP_201_CREATED)
         return response
-
-
-class ProfileRequestView(generics.CreateAPIView):
-
-    serializer_class = ProfileRequestSerializer
-
-    def get_permissions(self):
-        permissions = super().get_permissions()
-        permissions += [IsManager()]
-        return permissions
