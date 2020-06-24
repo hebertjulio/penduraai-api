@@ -1,22 +1,10 @@
 from rest_framework.exceptions import APIException
+from rest_framework.status import HTTP_400_BAD_REQUEST
 
 
-class StatusNotAllowedException(APIException):
+class BadRequest(APIException):
 
-    status_code = 403
-    default_detail = 'Transaction status not allowed.'
-    default_code = 'bad_request'
+    status_code = HTTP_400_BAD_REQUEST
 
-
-class ScopeNotAllowedException(APIException):
-
-    status_code = 403
-    default_detail = 'Transaction scope not allowed.'
-    default_code = 'bad_request'
-
-
-class TransactionNotFoundException(APIException):
-
-    status_code = 404
-    default_detail = 'Transaction not found.'
-    default_code = 'not_found'
+    def __init__(self, detail):
+        super().__init__(detail=detail, code='bad_request')

@@ -1,8 +1,8 @@
-from django.db import transaction
+from django.db.transaction import atomic
 
 from rest_framework import serializers
 
-from rest_framework_simplejwt.tokens import RefreshToken
+from bridges.decorators import create_transaction
 
 from .models import User, Profile
 
@@ -11,7 +11,7 @@ class SignUpSerializer(serializers.ModelSerializer):
 
     pin = serializers.RegexField(regex=Profile.PIN_REGEX, write_only=True)
 
-    @transaction.atomic
+    @atomic
     def create(self, validated_data):
         pin = validated_data.pop('pin')
         user = User(**validated_data)
@@ -21,7 +21,7 @@ class SignUpSerializer(serializers.ModelSerializer):
         # create owner profile
         profile = Profile(**{
             'name': user.name, 'pin': pin, 'user': user,
-            'is_owner': True
+            'role': Profile.ROLE.owner
         })
         profile.save()
         return user
@@ -73,36 +73,51 @@ class UserSerializer(serializers.ModelSerializer):
 
 class ProfileSerializer(serializers.ModelSerializer):
 
+    def create(self, validated_data):
+        raise NotImplementedError
+
     class Meta:
         model = Profile
         fields = '__all__'
         read_only_fields = [
-            'is_owner'
+            'id', 'is_owner', 'user', 'created',
+            'modified'
+        ]
+
+
+class ProfileRequestSerializer(serializers.ModelSerializer):
+
+    transaction = serializers.IntegerField(read_only=True)
+
+    @create_transaction(scope='profile')
+    def create(self, validated_data):
+        return validated_data
+
+    def update(self, validated_data):
+        raise NotImplementedError
+
+    class Meta:
+        model = Profile
+        fields = [
+            'user', 'role', 'transaction'
         ]
         extra_kwargs = {
             'user': {
+                'default': serializers.CurrentUserDefault(),
                 'write_only': True
             }
         }
 
 
-class ProfileCreateSerializer(ProfileSerializer):
+class ProfileCreateSerializer(serializers.ModelSerializer):
 
-    access = serializers.CharField(read_only=True)
-    refresh = serializers.CharField(read_only=True)
+    def update(self, validated_data):
+        raise NotImplementedError
 
-    @classmethod
-    def get_token(cls, user):
-        refresh = RefreshToken.for_user(user)
-        return refresh
-
-    def create(self, validated_data):
-        user = validated_data['user']
-        profile = super().create(validated_data)
-        # to do login after profile create
-        refresh = self.get_token(user)
-        data = {
-            'refresh': str(refresh),
-            'access': str(refresh.access_token)
-        }
-        return {**profile.__dict__, **data}
+    class Meta:
+        model = Profile
+        fields = '__all__'
+        read_only_fields = [
+            'id', 'is_owner', 'is_active', 'created',
+            'modified'
+        ]

@@ -7,6 +7,7 @@ from django.contrib.auth.base_user import AbstractBaseUser
 from django.contrib.auth.models import PermissionsMixin
 
 from model_utils.models import TimeStampedModel
+from model_utils import Choices
 
 from .managers import UserManager
 
@@ -39,9 +40,9 @@ class User(AbstractBaseUser, PermissionsMixin, TimeStampedModel):
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['name']
 
-    @staticmethod
-    def get_fields():
-        return User._meta.get_fields()
+    @classmethod
+    def get_fields(cls):
+        return cls._meta.get_fields()
 
     def clean(self):
         super().clean()
@@ -56,9 +57,6 @@ class User(AbstractBaseUser, PermissionsMixin, TimeStampedModel):
     def email_user(self, subject, message, from_email=None, **kwargs):
         send_mail(subject, message, from_email, [self.email], **kwargs)
 
-    def __str__(self):
-        return self.name
-
     def __repr__(self):
         return self.name
 
@@ -68,6 +66,13 @@ class User(AbstractBaseUser, PermissionsMixin, TimeStampedModel):
 
 
 class Profile(TimeStampedModel):
+
+    ROLE = Choices(
+        ('owner', _('owner')),
+        ('manager', _('manager')),
+        ('attendant', _('attendant')),
+        ('none', _('none')),
+    )
 
     PIN_REGEX = r'\d{4}'
 
@@ -92,26 +97,22 @@ class Profile(TimeStampedModel):
         ),
     )
 
-    is_owner = models.BooleanField(
-        _('owner status'), default=False,
-        db_index=True
+    role = models.CharField(
+        _('role'), max_length=30, db_index=True,
+        choices=ROLE
     )
 
-    is_manager = models.BooleanField(
-        _('manager status'), default=False,
-        db_index=True
-    )
+    @property
+    def is_owner(self):
+        return self.role == self.ROLE.owner
 
-    is_attendant = models.BooleanField(
-        _('attendant status'), default=False,
-        db_index=True
-    )
+    @property
+    def is_manager(self):
+        return self.role == self.ROLE.owner
 
-    def is_admin(self):
-        return self.is_owner or self.is_manager
-
-    def __str__(self):
-        return self.name
+    @property
+    def is_attendant(self):
+        return self.role == self.ROLE.attendant
 
     def __repr__(self):
         return self.name

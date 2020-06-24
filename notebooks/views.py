@@ -6,14 +6,24 @@ from rest_framework.filters import SearchFilter
 from rest_framework.response import Response
 
 from accounts.permissions import IsManager, IsAttendant
-
 from bridges.decorators import use_transaction
 
 from .permissions import CanBuy
 from .models import Record, Sheet, Buyer
 from .serializers import (
-    RecordSerializer, SheetSerializer, BalanceSerializar, BuyerSerializer
-)
+    RecordReadSerializer, RecordCreateSerializer, RecordRequestSerializer,
+    SheetReadSerializer, SheetCreateSerializer, SheetRequestSerializer,
+    BalanceSerializar, BuyerSerializer)
+
+
+class RecordRequestView(generics.CreateAPIView):
+
+    serializer_class = RecordRequestSerializer
+
+    def get_permissions(self):
+        permissions = super().get_permissions()
+        permissions += [IsAttendant()]
+        return permissions
 
 
 class RecordCreateView(views.APIView):
@@ -23,12 +33,10 @@ class RecordCreateView(views.APIView):
         permissions += [CanBuy()]
         return permissions
 
-    @use_transaction(
-        scope='record', current_status='awaiting', new_status='accepted')
-    def post(self, request, version, token, transaction=None):  # skipcq
+    @use_transaction(scope='record')
+    def post(self, request, version, pk):
         context = {'request': request}
-        data = transaction.data
-        serializer = RecordSerializer(data=data, context=context)
+        serializer = RecordCreateSerializer(data=request.data, context=context)
         serializer.is_valid(raise_exception=True)
         serializer.save()
         response = Response(serializer.data, status=HTTP_201_CREATED)
@@ -37,10 +45,9 @@ class RecordCreateView(views.APIView):
 
 class RecordListView(generics.ListAPIView):
 
-    serializer_class = RecordSerializer
+    serializer_class = RecordReadSerializer
     filterset_fields = [
-        'sheet__store',
-        'sheet__customer',
+        'sheet__store', 'sheet__customer'
     ]
 
     def get_queryset(self):
@@ -61,7 +68,7 @@ class RecordListView(generics.ListAPIView):
 class RecordDetailView(generics.RetrieveDestroyAPIView):
 
     lookup_field = 'pk'
-    serializer_class = RecordSerializer
+    serializer_class = RecordReadSerializer
 
     def get_permissions(self):
         permissions = super().get_permissions()
@@ -76,13 +83,24 @@ class RecordDetailView(generics.RetrieveDestroyAPIView):
             where = where | Q(sheet__customer=user)
         qs = Record.objects.select_related(
             'sheet', 'sheet__customer', 'sheet__store',
-            'attendant', 'signature')
+            'attendant', 'signature'
+        )
         qs = qs.filter(where)
         return qs
 
     def perform_destroy(self, instance):
         instance.is_active = False
         instance.save()
+
+
+class SheetRequestView(generics.CreateAPIView):
+
+    serializer_class = SheetRequestSerializer
+
+    def get_permissions(self):
+        permissions = super().get_permissions()
+        permissions += [IsManager()]
+        return permissions
 
 
 class SheetCreateView(views.APIView):
@@ -92,32 +110,28 @@ class SheetCreateView(views.APIView):
         permissions += [IsManager()]
         return permissions
 
-    @use_transaction(
-        scope='sheet', current_status='awaiting', new_status='accepted')
-    def post(self, request, version, token, transaction=None):  # skipcq
+    @use_transaction(scope='sheet')
+    def post(self, request, version, pk):  # skipcq
         context = {'request': request}
-        data = transaction.data
-        serializer = SheetSerializer(data=data, context=context)
+        serializer = SheetCreateSerializer(data=request.data, context=context)
         serializer.is_valid(raise_exception=True)
         serializer.save()
         response = Response(serializer.data, status=HTTP_201_CREATED)
         return response
 
 
-class SheetDetailView(generics.RetrieveUpdateDestroyAPIView):
+class SheetDetailView(generics.RetrieveDestroyAPIView):
 
     lookup_field = 'pk'
-    serializer_class = SheetSerializer
+    serializer_class = SheetReadSerializer
 
     def get_permissions(self):
         permission_classes = super().permission_classes
         permission_classes = [
-            permission_classes[0] & (IsAttendant)
-        ]
-        if self.request.method in ['DELETE', 'PATCH', 'PUT']:
+            permission_classes[0] & (IsAttendant)]
+        if self.request.method in ['DELETE']:
             permission_classes = [
-                permission_classes[0] & IsManager
-            ]
+                permission_classes[0] & IsManager]
         self.permission_classes = permission_classes
         permissions = super().get_permissions()
         return permissions
@@ -172,7 +186,6 @@ class BuyerDetailView(generics.DestroyAPIView):
 class BalanceListByStoreView(generics.ListAPIView):
 
     serializer_class = BalanceSerializar
-
     filter_backends = [
         SearchFilter
     ]
@@ -190,7 +203,6 @@ class BalanceListByStoreView(generics.ListAPIView):
 class BalanceListByCustomerView(generics.ListAPIView):
 
     serializer_class = BalanceSerializar
-
     filter_backends = [
         SearchFilter
     ]
