@@ -15,7 +15,7 @@ def send_message(group, message):
     """Send message by websocket to group users"""
     channel_layer = get_channel_layer()
     async_to_sync(channel_layer.group_send)(
-        group, {
+        str(group), {
             'type': 'websocket.send',
             'text': message,
         },

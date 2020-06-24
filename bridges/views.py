@@ -1,3 +1,5 @@
+import json
+
 from rest_framework.status import HTTP_200_OK
 from rest_framework import generics, views
 from rest_framework.exceptions import NotFound
@@ -5,6 +7,8 @@ from rest_framework.response import Response
 
 from .serializers import TransactionReadSerializer
 from .models import Transaction
+from .services import send_message
+from .encoders import DecimalEncoder
 
 
 class TransactionDetailView(generics.RetrieveAPIView):
@@ -34,4 +38,6 @@ class TransactionDiscardView(views.APIView):
         obj.save()
         serializer = TransactionReadSerializer(obj)
         response = Response(serializer.data, status=HTTP_200_OK)
+        message = json.dumps(serializer.data, cls=DecimalEncoder)
+        send_message(obj.id, message)
         return response

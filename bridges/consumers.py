@@ -1,9 +1,13 @@
 import json
 
+from asgiref.sync import sync_to_async
+
 from channels.consumer import AsyncConsumer
 from channels.exceptions import StopConsumer
 
 from .models import Transaction
+from .serializers import TransactionReadSerializer
+from .encoders import DecimalEncoder
 
 
 class BaseConsumer(AsyncConsumer):
@@ -46,11 +50,12 @@ class TransactionConsumer(BaseConsumer):
     async def websocket_connect(self, event):
         try:
             pk = event['pk']
-            transaction = Transaction.objects.get(pk=pk)
+            obj = await sync_to_async(Transaction.objects.get)(pk=pk)
+            serializer = TransactionReadSerializer(obj)
             await self.accept()
-            await self.send(json.dumps(dict(transaction)))
+            await self.send(json.dumps(serializer.data, cls=DecimalEncoder))
             await self.channel_layer.group_add(
-                event['pk'], self.channel_name)
+                str(event['pk']), self.channel_name)
         except Transaction.DoesNotExist:
             await self.reject()
             await self.close()
@@ -65,4 +70,4 @@ class TransactionConsumer(BaseConsumer):
     async def websocket_disconnect(self, event):
         await self.close()
         await self.channel_layer.group_discard(
-            event['pk'], self.channel_name)
+            str(event['pk']), self.channel_name)
