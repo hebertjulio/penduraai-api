@@ -96,7 +96,7 @@ class ProfileCreateView(views.APIView):
         HasAPIKey
     ]
 
-    @use_transaction(scope='profile')
+    @use_transaction(scope='profile', lookup_field='pk')
     def post(self, request, version, pk):
         context = {'request': request}
         data = request.data

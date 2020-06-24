@@ -5,6 +5,8 @@ from rest_framework.test import APITestCase
 
 from rest_framework_api_key.models import APIKey
 
+from .models import Profile
+
 
 class ApiTestCase(APITestCase):
 
@@ -49,7 +51,7 @@ class ApiTestCase(APITestCase):
         self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + access)
         kwargs = {'version': version}
         url = reverse('accounts:profile_list', kwargs=kwargs)
-        querystring = {'is_owner': True}
+        querystring = {'role': Profile.ROLE.owner}
         resp = self.client.get(url, querystring, format='json')
         self.assertEqual(resp.status_code, HTTP_200_OK)
         self.assertEqual(len(resp.json()), 1)

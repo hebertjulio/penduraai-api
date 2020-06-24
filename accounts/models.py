@@ -57,6 +57,9 @@ class User(AbstractBaseUser, PermissionsMixin, TimeStampedModel):
     def email_user(self, subject, message, from_email=None, **kwargs):
         send_mail(subject, message, from_email, [self.email], **kwargs)
 
+    def __str__(self):
+        return self.name
+
     def __repr__(self):
         return self.name
 
@@ -113,6 +116,9 @@ class Profile(TimeStampedModel):
     @property
     def is_attendant(self):
         return self.role == self.ROLE.attendant
+
+    def __str__(self):
+        return self.name
 
     def __repr__(self):
         return self.name

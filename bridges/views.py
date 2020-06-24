@@ -1,18 +1,37 @@
-from rest_framework import generics
+from rest_framework.status import HTTP_200_OK
+from rest_framework import generics, views
+from rest_framework.exceptions import NotFound
+from rest_framework.response import Response
 
-from .serializers import TransactionSerializer
+from .serializers import TransactionReadSerializer
 from .models import Transaction
 
 
 class TransactionDetailView(generics.RetrieveAPIView):
 
     lookup_field = 'pk'
-    serializer_class = TransactionSerializer
+    serializer_class = TransactionReadSerializer
     queryset = Transaction.objects.all()
 
 
-class TransactionRejectView(generics.UpdateAPIView):
+class TransactionRejectView(views.APIView):
 
     lookup_field = 'pk'
-    serializer_class = TransactionSerializer
+    serializer_class = TransactionReadSerializer
     queryset = Transaction.objects.all()
+
+    @classmethod
+    def get_object(cls, pk):
+        try:
+            tran = Transaction.objects.get(pk=pk)
+            return tran
+        except Transaction.DoesNotExist:
+            raise NotFound
+
+    def put(self, request, version, pk):
+        obj = self.get_object(pk)
+        obj.status = Transaction.STATUS.discarded
+        obj.save()
+        serializer = TransactionReadSerializer(obj)
+        response = Response(serializer.data, status=HTTP_200_OK)
+        return response

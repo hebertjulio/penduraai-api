@@ -26,14 +26,14 @@ class RecordRequestView(generics.CreateAPIView):
         return permissions
 
 
-class RecordCreateView(views.APIView):
+class RecordTransactionView(views.APIView):
 
     def get_permissions(self):
         permissions = super().get_permissions()
         permissions += [CanBuy()]
         return permissions
 
-    @use_transaction(scope='record')
+    @use_transaction(scope='record', lookup_field='pk')
     def post(self, request, version, pk):
         context = {'request': request}
         serializer = RecordCreateSerializer(data=request.data, context=context)
@@ -103,14 +103,14 @@ class SheetRequestView(generics.CreateAPIView):
         return permissions
 
 
-class SheetCreateView(views.APIView):
+class SheetTransactionView(views.APIView):
 
     def get_permissions(self):
         permissions = super().get_permissions()
         permissions += [IsManager()]
         return permissions
 
-    @use_transaction(scope='sheet')
+    @use_transaction(scope='sheet', lookup_field='pk')
     def post(self, request, version, pk):  # skipcq
         context = {'request': request}
         serializer = SheetCreateSerializer(data=request.data, context=context)

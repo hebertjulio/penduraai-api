@@ -11,9 +11,9 @@ from model_utils import Choices
 class Transaction(TimeStampedModel):
 
     STATUS = Choices(
-        ('awaiting', _('awaiting')),
-        ('accepted', _('accepted')),
-        ('rejected', _('rejected')),
+        ('not_used', _('not used')),
+        ('used', _('used')),
+        ('discarded', _('discarded')),
     )
 
     id = models.BigAutoField(primary_key=True, editable=False)
@@ -21,13 +21,22 @@ class Transaction(TimeStampedModel):
     data = models.TextField(('data'), blank=True)
     expire_at = models.DateTimeField(_('expire at'))
 
-    status = models.CharField(
-        _('status'), max_length=30, db_index=True,
-        choices=STATUS, default=STATUS.awaiting
+    user = models.ForeignKey(
+        'accounts.User', on_delete=models.CASCADE,
+        related_name='usertransactions',
     )
 
-    @property
-    def datajson(self):
+    profile = models.ForeignKey(
+        'accounts.Profile', on_delete=models.CASCADE,
+        related_name='profiletransactions',
+    )
+
+    status = models.CharField(
+        _('status'), max_length=30, db_index=True,
+        choices=STATUS, default=STATUS.not_used
+    )
+
+    def json(self):
         if self.data.strip():
             return json.loads(self.data)
         return {}
@@ -39,7 +48,11 @@ class Transaction(TimeStampedModel):
         return ttl
 
     def is_expired(self):
-        return self.ttl < 1
+        return bool(self.ttl < 1)
+
+    @classmethod
+    def get_fields(cls):
+        return cls._meta.get_fields()
 
     def __repr__(self):
         return 'Transaction %s' % self.id

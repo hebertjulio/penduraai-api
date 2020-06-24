@@ -1,10 +1,11 @@
 from rest_framework import serializers
+from rest_framework.exceptions import NotFound
 
 from accounts.relations import UserRelatedField, ProfileRelatedField
 from accounts.fields import CurrentProfileDefault
 from accounts.validators import ProfileBelongUserValidator
 
-from bridges.decorators import create_transaction
+from bridges.services import new_transaction
 
 from .relations import SheetRelatedField
 from .models import Record, Sheet, Buyer
@@ -23,8 +24,12 @@ class RecordRequestSerializer(serializers.ModelSerializer):
         default=serializers.CurrentUserDefault()
     )
 
-    @create_transaction(scope='record')
     def create(self, validated_data):
+        request = self.context['request']
+        user = request.user
+        profile = user.profile
+        tran = new_transaction(user, profile, 'record', validated_data)
+        validated_data.update({'transaction': tran.id})
         return validated_data
 
     def update(self, validated_data):
@@ -70,7 +75,7 @@ class RecordCreateSerializer(serializers.ModelSerializer):
             sheet = store.storesheets.get(customer=user)
             return sheet
         except Sheet.DoesNotExist:
-            raise  # @TODO: Create Exception
+            raise NotFound
 
     def create(self, validated_data):
         store = validated_data.pop('store')
@@ -111,8 +116,12 @@ class SheetRequestSerializer(serializers.ModelSerializer):
 
     transaction = serializers.IntegerField(read_only=True)
 
-    @create_transaction(scope='sheet')
     def create(self, validated_data):
+        request = self.context['request']
+        user = request.user
+        profile = user.profile
+        tran = new_transaction(user, profile, 'sheet', validated_data)
+        validated_data.update({'transaction': tran.id})
         return validated_data
 
     def update(self, validated_data):
