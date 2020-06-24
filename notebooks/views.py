@@ -1,11 +1,10 @@
 from django.db.models import Q
 
-from rest_framework.status import HTTP_201_CREATED
-from rest_framework import generics, views
+from rest_framework import generics
 from rest_framework.filters import SearchFilter
-from rest_framework.response import Response
 
 from accounts.permissions import IsManager, IsAttendant
+
 from bridges.decorators import use_transaction
 
 from .permissions import CanBuy
@@ -13,7 +12,8 @@ from .models import Record, Sheet, Buyer
 from .serializers import (
     RecordReadSerializer, RecordCreateSerializer, RecordRequestSerializer,
     SheetReadSerializer, SheetCreateSerializer, SheetRequestSerializer,
-    BalanceSerializar, BuyerSerializer)
+    BalanceSerializar, BuyerSerializer
+)
 
 
 class RecordRequestView(generics.CreateAPIView):
@@ -26,22 +26,18 @@ class RecordRequestView(generics.CreateAPIView):
         return permissions
 
 
-class RecordTransactionView(views.APIView):
+class RecordTransactionView(generics.CreateAPIView):
+
+    serializer_class = RecordCreateSerializer
 
     def get_permissions(self):
         permissions = super().get_permissions()
         permissions += [CanBuy()]
         return permissions
 
-    @classmethod
-    @use_transaction(scope='record', lookup_field='pk')
-    def post(cls, request, version, pk):
-        context = {'request': request}
-        serializer = RecordCreateSerializer(data=request.data, context=context)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        response = Response(serializer.data, status=HTTP_201_CREATED)
-        return response
+    @use_transaction(scope='record')
+    def create(self, request, *args, **kwargs):  # skipcq
+        return super().create(request, *args, *kwargs)
 
 
 class RecordListView(generics.ListAPIView):
@@ -104,22 +100,18 @@ class SheetRequestView(generics.CreateAPIView):
         return permissions
 
 
-class SheetTransactionView(views.APIView):
+class SheetTransactionView(generics.CreateAPIView):
+
+    serializer_class = SheetCreateSerializer
 
     def get_permissions(self):
         permissions = super().get_permissions()
         permissions += [IsManager()]
         return permissions
 
-    @classmethod
-    @use_transaction(scope='sheet', lookup_field='pk')
-    def post(self, request, version, pk):
-        context = {'request': request}
-        serializer = SheetCreateSerializer(data=request.data, context=context)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        response = Response(serializer.data, status=HTTP_201_CREATED)
-        return response
+    @use_transaction(scope='sheet')
+    def create(self, request, *args, **kwargs):  # skipcq
+        return super().create(request, *args, *kwargs)
 
 
 class SheetDetailView(generics.RetrieveDestroyAPIView):
