@@ -36,16 +36,16 @@ class Transaction(TimeStampedModel):
         choices=STATUS, default=STATUS.not_used
     )
 
-    def json(self):
-        if self.data.strip():
-            return json.loads(self.data)
-        return {}
-
     @property
     def ttl(self):
         diff = self.expire_at - timezone.now()
         ttl = round(diff.total_seconds())
         return ttl
+
+    def get_data(self):
+        if self.data.strip():
+            return json.loads(self.data)
+        return {}
 
     def is_expired(self):
         return bool(self.ttl < 1)
