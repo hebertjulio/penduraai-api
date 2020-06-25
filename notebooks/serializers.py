@@ -126,6 +126,7 @@ class SheetRequestSerializer(serializers.ModelSerializer):
         request = self.context['request']
         user = request.user
         profile = user.profile
+        validated_data['store'] = user
         obj = new_transaction('sheet', user, profile, validated_data)
         return {'transaction': obj.id}
 
@@ -135,14 +136,8 @@ class SheetRequestSerializer(serializers.ModelSerializer):
     class Meta:
         model = Sheet
         fields = [
-            'store', 'transaction'
+            'transaction'
         ]
-        extra_kwargs = {
-            'store': {
-                'default': serializers.CurrentUserDefault(),
-                'write_only': True
-            }
-        }
 
 
 class SheetCreateSerializer(serializers.ModelSerializer):
@@ -154,13 +149,20 @@ class SheetCreateSerializer(serializers.ModelSerializer):
         ]
     )
 
-    customer = UserRelatedField(
-        default=serializers.CurrentUserDefault())
+    def create(self, validated_data):
+        request = self.context['request']
+        validated_data['customer'] = request.user
+        obj = Sheet(**validated_data)
+        obj.save()
+        return obj
+
+    def update(self, instance, validated_data):
+        raise NotImplementedError
 
     class Meta:
         model = Sheet
         fields = [
-            'store', 'customer'
+            'store'
         ]
 
 
