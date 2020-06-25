@@ -5,6 +5,7 @@ from rest_framework import serializers
 from bridges.services import new_transaction
 
 from .models import User, Profile
+from .validators import ProfileOwnerRoleValidator
 
 
 class SignUpSerializer(serializers.ModelSerializer):
@@ -71,20 +72,6 @@ class UserSerializer(serializers.ModelSerializer):
         }
 
 
-class ProfileSerializer(serializers.ModelSerializer):
-
-    def create(self, validated_data):
-        raise NotImplementedError
-
-    class Meta:
-        model = Profile
-        fields = '__all__'
-        read_only_fields = [
-            'id', 'role', 'user', 'created',
-            'modified'
-        ]
-
-
 class ProfileRequestSerializer(serializers.ModelSerializer):
 
     transaction = serializers.IntegerField(read_only=True)
@@ -93,6 +80,7 @@ class ProfileRequestSerializer(serializers.ModelSerializer):
         request = self.context['request']
         user = request.user
         profile = user.profile
+        validated_data['user'] = user
         obj = new_transaction('profile', user, profile, validated_data)
         return {'transaction': obj.id}
 
@@ -102,28 +90,47 @@ class ProfileRequestSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
         fields = [
-            'user', 'role', 'transaction'
+            'role', 'transaction'
         ]
         extra_kwargs = {
-            'user': {
-                'default': serializers.CurrentUserDefault(),
-                'write_only': True
-            },
             'role': {
-                'write_only': True
+                'write_only': True,
+                'validators': [
+                    ProfileOwnerRoleValidator()
+                ]
             }
         }
 
 
 class ProfileCreateSerializer(serializers.ModelSerializer):
 
-    def update(self, instance, validated_data):
-        raise NotImplementedError
+    class Meta:
+        model = Profile
+        fields = '__all__'
+        read_only_fields = [
+            'id', 'created', 'modified'
+        ]
+        extra_kwargs = {
+            'role': {
+                'validators': [
+                    ProfileOwnerRoleValidator()
+                ]
+            }
+        }
+
+
+class ProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Profile
         fields = '__all__'
         read_only_fields = [
-            'id', 'role', 'is_active', 'created',
-            'modified'
+            'id', 'user', 'created', 'modified'
         ]
+        extra_kwargs = {
+            'role': {
+                'validators': [
+                    ProfileOwnerRoleValidator()
+                ]
+            }
+        }

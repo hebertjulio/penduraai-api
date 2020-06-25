@@ -89,6 +89,10 @@ class ProfileDetailView(generics.RetrieveUpdateDestroyAPIView):
         qs = user.userprofiles.filter(is_active=True)
         return qs
 
+    def perform_destroy(self, instance):
+        instance.is_active = False
+        instance.save()
+
 
 class ProfileRequestView(generics.CreateAPIView):
 
