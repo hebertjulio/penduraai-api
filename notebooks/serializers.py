@@ -61,12 +61,7 @@ class RecordRequestSerializer(serializers.ModelSerializer):
 class RecordCreateSerializer(serializers.ModelSerializer):
 
     sheet = SheetRelatedField(read_only=True)
-    attendant = ProfileRelatedField(read_only=True)
-
-    signature = ProfileRelatedField(
-        default=CurrentProfileDefault(),
-        read_only=True
-    )
+    attendant = ProfileRelatedField()
 
     store = UserRelatedField(
         validators=[
@@ -87,7 +82,8 @@ class RecordCreateSerializer(serializers.ModelSerializer):
         store = validated_data.pop('store')
         request = self.context['request']
         sheet = self.get_sheet(store, request.user)
-        validated_data.update({'sheet': sheet})
+        validated_data.update({
+            'sheet': sheet, 'signature': request.user.profile})
         obj = super().create(validated_data)
         return obj
 
@@ -98,7 +94,7 @@ class RecordCreateSerializer(serializers.ModelSerializer):
         model = Record
         fields = '__all__'
         read_only_fields = [
-            'is_active'
+            'is_active', 'signature'
         ]
         validators = [
             StoreEmployeeValidator()
