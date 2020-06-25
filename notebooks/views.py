@@ -37,6 +37,7 @@ class RecordTransactionView(generics.CreateAPIView):
 
     @use_transaction(scope='record')
     def create(self, request, *args, **kwargs):  # skipcq
+        request.data.update(self.transaction.get_data())
         return super().create(request, *args, *kwargs)
 
 
@@ -111,6 +112,7 @@ class SheetTransactionView(generics.CreateAPIView):
 
     @use_transaction(scope='sheet')
     def create(self, request, *args, **kwargs):  # skipcq
+        request.data.update(self.transaction.get_data())
         return super().create(request, *args, *kwargs)
 
 

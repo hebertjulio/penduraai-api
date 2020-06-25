@@ -12,7 +12,7 @@ from .encoders import DecimalEncoder
 
 
 def use_transaction(func=None, scope=None):
-
+    """Decorator to load transaction e mark it as used"""
     if scope is None:
         ValueError('Scope can\'t be empty.')
 
@@ -43,10 +43,12 @@ def use_transaction(func=None, scope=None):
             detail = _('Transaction live time expired.')
             raise BadRequest(detail)
 
-        request.data.update(obj.json())
+        self.transaction = obj
         ret = func(self, request, **kwargs)
+
         obj.status = Transaction.STATUS.used
         obj.save()
+
         serializer = TransactionReadSerializer(obj)
         message = json.dumps(serializer.data, cls=DecimalEncoder)
         send_message(obj.id, message)

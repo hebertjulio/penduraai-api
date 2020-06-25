@@ -113,5 +113,6 @@ class ProfileTransactionView(generics.CreateAPIView):
     ]
 
     @use_transaction(scope='profile')
-    def create(self, request, *args, **kwargs):
+    def create(self, request, *args, **kwargs):  # skipcq
+        request.data.update(self.transaction.get_data())
         return super().create(request, *args, *kwargs)
