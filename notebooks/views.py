@@ -11,47 +11,43 @@ from bridges.decorators import use_transaction
 from .permissions import CanBuy
 from .models import Record, Sheet, Buyer
 from .serializers import (
-    RecordReadSerializer, RecordCreateSerializer, RecordRequestSerializer,
-    SheetReadSerializer, SheetCreateSerializer, SheetRequestSerializer,
-    BalanceSerializar, BuyerSerializer
+    RecordRequestSerializer, RecordListSerializer, RecordDetailSerializer,
+    SheetRequestSerializer, SheetListSerializer, SheetDetailSerializer,
+    BuyerListSerializer, BuyerDetailSerializer, BalanceListSerializar
 )
 
 
 class RecordRequestView(generics.CreateAPIView):
 
     serializer_class = RecordRequestSerializer
+
     permission_classes = [
         IsAuthenticated, IsAttendant
     ]
 
 
-class RecordTransactionView(generics.CreateAPIView):
+class RecordListView(generics.ListCreateAPIView):
 
-    serializer_class = RecordCreateSerializer
-    permission_classes = [
-        IsAuthenticated, CanBuy
-    ]
+    serializer_class = RecordListSerializer
 
-    @use_transaction(scope='record')
-    def create(self, request, *args, **kwargs):  # skipcq
-        request.data.update(self.transaction.get_data())
-        obj = super().create(request, *args, *kwargs)
-        return obj
-
-
-class RecordListView(generics.ListAPIView):
-
-    serializer_class = RecordReadSerializer
-    permission_classes = [
-        IsAuthenticated, IsGuest
-    ]
     filterset_fields = [
         'sheet__store', 'sheet__customer'
     ]
 
+    def get_permissions(self):
+        permissions = super().get_permissions()
+        if self.request.method == 'GET':
+            return permissions + [IsGuest()]
+        return permissions + [CanBuy()]
+
+    @use_transaction(scope='record')
+    def create(self, request, *args, **kwargs):  # skipcq
+        obj = super().create(request, *args, *kwargs)
+        return obj
+
     def get_queryset(self):
         user = self.request.user
-        profile = user.profile
+        profile = self.request.profile
         if profile.is_owner:
             where = Q(sheet__store=user) | Q(sheet__customer=user)
         elif profile.is_attendant or profile.is_manager:
@@ -67,7 +63,7 @@ class RecordListView(generics.ListAPIView):
 class RecordDetailView(generics.RetrieveDestroyAPIView):
 
     lookup_field = 'pk'
-    serializer_class = RecordReadSerializer
+    serializer_class = RecordDetailSerializer
 
     def get_permissions(self):
         permissions = super().get_permissions()
@@ -101,9 +97,9 @@ class SheetRequestView(generics.CreateAPIView):
     ]
 
 
-class SheetTransactionView(generics.CreateAPIView):
+class SheetListView(generics.CreateAPIView):
 
-    serializer_class = SheetCreateSerializer
+    serializer_class = SheetListSerializer
 
     permission_classes = [
         IsAuthenticated, IsManager
@@ -111,7 +107,6 @@ class SheetTransactionView(generics.CreateAPIView):
 
     @use_transaction(scope='sheet')
     def create(self, request, *args, **kwargs):  # skipcq
-        request.data.update(self.transaction.get_data())
         obj = super().create(request, *args, *kwargs)
         return obj
 
@@ -119,7 +114,7 @@ class SheetTransactionView(generics.CreateAPIView):
 class SheetDetailView(generics.RetrieveDestroyAPIView):
 
     lookup_field = 'pk'
-    serializer_class = SheetReadSerializer
+    serializer_class = SheetDetailSerializer
 
     permission_classes = [
         IsAuthenticated, IsAttendant
@@ -148,7 +143,8 @@ class SheetDetailView(generics.RetrieveDestroyAPIView):
 
 class BuyerListView(generics.ListCreateAPIView):
 
-    serializer_class = BuyerSerializer
+    serializer_class = BuyerListSerializer
+
     permission_classes = [
         IsAuthenticated, IsManager
     ]
@@ -163,7 +159,8 @@ class BuyerListView(generics.ListCreateAPIView):
 
 class BuyerDetailView(generics.DestroyAPIView):
 
-    serializer_class = BuyerSerializer
+    serializer_class = BuyerDetailSerializer
+
     permission_classes = [
         IsAuthenticated, IsManager
     ]
@@ -176,39 +173,45 @@ class BuyerDetailView(generics.DestroyAPIView):
 
 class BalanceListByStoreView(generics.ListAPIView):
 
-    serializer_class = BalanceSerializar
+    serializer_class = BalanceListSerializar
+
     permission_classes = [
         IsAuthenticated, IsGuest
     ]
+
     filter_backends = [
         SearchFilter
     ]
+
     search_fields = [
         'user_name'
     ]
 
     def get_queryset(self):
         user = self.request.user
-        profile = user.profile
+        profile = self.request.profile
         qs = Sheet.objects.balance_list_by_store(user, profile)
         return qs
 
 
 class BalanceListByCustomerView(generics.ListAPIView):
 
-    serializer_class = BalanceSerializar
+    serializer_class = BalanceListSerializar
+
     permission_classes = [
         IsAuthenticated, IsGuest
     ]
+
     filter_backends = [
         SearchFilter
     ]
+
     search_fields = [
         'user_name'
     ]
 
     def get_queryset(self):
         user = self.request.user
-        profile = user.profile
+        profile = self.request.profile
         qs = Sheet.objects.balance_list_by_customer(user, profile)
         return qs

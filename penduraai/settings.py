@@ -59,6 +59,8 @@ MIDDLEWARE = [
     # https://warehouse.python.org/project/whitenoise/
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'silk.middleware.SilkyMiddleware',
+    'accounts.middleware.LoadProfileMiddleware',
+    'bridges.middleware.LoadTransactionMiddleware',
 ]
 
 ROOT_URLCONF = 'penduraai.urls'
@@ -145,7 +147,7 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticated',
     ],
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'accounts.authentication.JWTAuthentication',
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
     ],
     'DEFAULT_PARSER_CLASSES': [
         'rest_framework.parsers.JSONParser',

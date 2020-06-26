@@ -5,7 +5,7 @@ from accounts.relations import UserRelatedField, ProfileRelatedField
 from accounts.fields import CurrentProfileDefault
 from accounts.validators import ProfileBelongUserValidator
 
-from bridges.services import new_transaction
+from bridges.decorators import new_transaction
 
 from .relations import SheetRelatedField
 from .models import Record, Sheet, Buyer
@@ -20,17 +20,19 @@ class RecordRequestSerializer(serializers.ModelSerializer):
 
     transaction = serializers.IntegerField(read_only=True)
 
+    attendant = serializers.HiddenField(
+        default=CurrentProfileDefault(),
+        write_only=True
+    )
+
     store = UserRelatedField(
         default=serializers.CurrentUserDefault(),
         write_only=True
     )
 
+    @new_transaction(scope='record')
     def create(self, validated_data):
-        request = self.context['request']
-        user = request.user
-        profile = user.profile
-        obj = new_transaction('record', user, profile, validated_data)
-        return {'transaction': obj.id}
+        return validated_data
 
     def update(self, instance, validated_data):
         raise NotImplementedError
@@ -42,10 +44,6 @@ class RecordRequestSerializer(serializers.ModelSerializer):
             'operation', 'note', 'transaction'
         ]
         extra_kwargs = {
-            'attendant': {
-                'default': CurrentProfileDefault(),
-                'write_only': True
-            },
             'note': {
                 'write_only': True
             },
@@ -58,7 +56,7 @@ class RecordRequestSerializer(serializers.ModelSerializer):
         }
 
 
-class RecordCreateSerializer(serializers.ModelSerializer):
+class RecordListSerializer(serializers.ModelSerializer):
 
     sheet = SheetRelatedField(read_only=True)
     attendant = ProfileRelatedField()
@@ -83,7 +81,8 @@ class RecordCreateSerializer(serializers.ModelSerializer):
         request = self.context['request']
         sheet = self.get_sheet(store, request.user)
         validated_data.update({
-            'sheet': sheet, 'signature': request.user.profile})
+            'sheet': sheet, 'signature': request.profile
+        })
         obj = super().create(validated_data)
         return obj
 
@@ -101,7 +100,13 @@ class RecordCreateSerializer(serializers.ModelSerializer):
         ]
 
 
-class RecordReadSerializer(serializers.ModelSerializer):
+class RecordDetailSerializer(serializers.ModelSerializer):
+
+    def create(self, validated_data):
+        raise NotImplementedError
+
+    def update(self, instance, validated_data):
+        raise NotImplementedError
 
     class Meta:
         model = Record
@@ -109,22 +114,19 @@ class RecordReadSerializer(serializers.ModelSerializer):
         read_only_fields = [
             f for f in Record.get_fields()
         ]
-        validators = [
-            StoreEmployeeValidator()
-        ]
 
 
 class SheetRequestSerializer(serializers.ModelSerializer):
 
     transaction = serializers.IntegerField(read_only=True)
 
+    store = serializers.HiddenField(
+        default=serializers.CurrentUserDefault()
+    )
+
+    @new_transaction(scope='sheet')
     def create(self, validated_data):
-        request = self.context['request']
-        user = request.user
-        profile = user.profile
-        validated_data['store'] = user
-        obj = new_transaction('sheet', user, profile, validated_data)
-        return {'transaction': obj.id}
+        return validated_data
 
     def update(self, instance, validated_data):
         raise NotImplementedError
@@ -132,11 +134,11 @@ class SheetRequestSerializer(serializers.ModelSerializer):
     class Meta:
         model = Sheet
         fields = [
-            'transaction'
+            'transaction', 'store'
         ]
 
 
-class SheetCreateSerializer(serializers.ModelSerializer):
+class SheetListSerializer(serializers.ModelSerializer):
 
     store = UserRelatedField(
         validators=[
@@ -144,35 +146,39 @@ class SheetCreateSerializer(serializers.ModelSerializer):
             AlreadyAStoreCustomerValidator()
         ]
     )
-
-    def create(self, validated_data):
-        request = self.context['request']
-        validated_data['customer'] = request.user
-        obj = Sheet(**validated_data)
-        obj.save()
-        return obj
+    customer = serializers.HiddenField(
+        default=serializers.CurrentUserDefault()
+    )
 
     def update(self, instance, validated_data):
         raise NotImplementedError
 
     class Meta:
         model = Sheet
-        fields = [
-            'store'
+        exclude = [
+            'buyers'
         ]
 
 
-class SheetReadSerializer(serializers.ModelSerializer):
+class SheetDetailSerializer(serializers.ModelSerializer):
+
+    buyers = ProfileRelatedField(many=True, read_only=True)
+
+    def create(self, validated_data):
+        raise NotImplementedError
+
+    def update(self, instance, validated_data):
+        raise NotImplementedError
 
     class Meta:
         model = Sheet
         fields = '__all__'
         read_only_fields = [
-            f for f in Record.get_fields()
+            f for f in Sheet.get_fields()
         ]
 
 
-class BuyerSerializer(serializers.ModelSerializer):
+class BuyerListSerializer(serializers.ModelSerializer):
 
     sheet = SheetRelatedField(
         validators=[SheetBelongCustomerValidator()])
@@ -180,12 +186,31 @@ class BuyerSerializer(serializers.ModelSerializer):
     profile = ProfileRelatedField(
         validators=[ProfileBelongUserValidator()])
 
+    def update(self, instance, validated_data):
+        raise NotImplementedError
+
     class Meta:
         model = Buyer
         fields = '__all__'
 
 
-class BalanceSerializar(serializers.BaseSerializer):
+class BuyerDetailSerializer(serializers.ModelSerializer):
+
+    def create(self, validated_data):
+        raise NotImplementedError
+
+    def update(self, instance, validated_data):
+        raise NotImplementedError
+
+    class Meta:
+        model = Buyer
+        fields = '__all__'
+        read_only_fields = [
+            f for f in Buyer.get_fields()
+        ]
+
+
+class BalanceListSerializar(serializers.BaseSerializer):
 
     def create(self, validated_data):
         raise NotImplementedError

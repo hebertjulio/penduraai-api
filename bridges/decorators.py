@@ -1,18 +1,20 @@
 import json
+import datetime
 
 from functools import wraps, partial
 
 from django.utils.translation import gettext_lazy as _
+from django.utils import timezone
+from django.db.models import Model
 
-from .exceptions import BadRequest
-from .models import Transaction
 from .serializers import TransactionReadSerializer
 from .services import send_message
+from .models import Transaction
 from .encoders import DecimalEncoder
+from .exceptions import BadRequest
 
 
 def use_transaction(func=None, scope=None):
-    """Decorator to load transaction e mark it as used"""
     if scope is None:
         ValueError('Scope can\'t be empty.')
 
@@ -21,29 +23,25 @@ def use_transaction(func=None, scope=None):
 
     @wraps(func)
     def wrapper(self, request, *args, **kwargs):
-        pk = kwargs[self.lookup_field]
+        obj = request.transaction
 
-        try:
-            obj = Transaction.objects.get(pk=pk)
-        except Transaction.DoesNotExist:
-            detail = _('Transaction \'%s\' not found.' % pk)
+        if obj is None:
+            detail = _('Transaction not found in request.')
             raise BadRequest(detail)
 
         if obj.scope != scope:
-            detail = _(
-                'Transaction scope \'%s\' is invalid.' % obj.scope)
+            detail = _('Transaction scope \'%s\' is invalid.' % obj.scope)
             raise BadRequest(detail)
 
         if obj.status != Transaction.STATUS.not_used:
-            detail = _(
-                'Transaction already was %s.' % obj.status)
+            detail = _('Transaction already was %s.' % obj.status)
             raise BadRequest(detail)
 
         if obj.is_expired():
             detail = _('Transaction live time expired.')
             raise BadRequest(detail)
 
-        self.transaction = obj
+        request.data.update(obj.get_data())
         ret = func(self, request, **kwargs)
 
         obj.status = Transaction.STATUS.used
@@ -54,4 +52,33 @@ def use_transaction(func=None, scope=None):
         send_message(obj.id, message)
 
         return ret
+    return wrapper
+
+
+def new_transaction(func=None, scope=None, expire=30):
+    if scope is None:
+        ValueError('Scope can\'t be empty.')
+
+    if func is None:
+        return partial(new_transaction, scope=scope, expire=expire)
+
+    expire_at = timezone.now() + datetime.timedelta(minutes=expire)
+
+    @wraps(func)
+    def wrapper(self, validated_data):
+        data = json.dumps({
+            k: v.id if isinstance(v, Model) else v
+            for k, v in validated_data.items()}, cls=DecimalEncoder
+        )
+
+        request = self.context['request']
+        obj = Transaction(**{
+            'scope': scope, 'data': data, 'expire_at': expire_at,
+            'user': request.user, 'profile': request.profile
+        })
+
+        obj.save()
+        validated_data = {'transaction': obj.id}
+
+        return func(self, validated_data)
     return wrapper

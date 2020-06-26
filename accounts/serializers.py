@@ -2,7 +2,7 @@ from django.db.transaction import atomic
 
 from rest_framework import serializers
 
-from bridges.services import new_transaction
+from bridges.decorators import new_transaction
 
 from .models import User, Profile
 from .validators import ProfileOwnerRoleValidator
@@ -75,14 +75,11 @@ class UserSerializer(serializers.ModelSerializer):
 class ProfileRequestSerializer(serializers.ModelSerializer):
 
     transaction = serializers.IntegerField(read_only=True)
+    user = serializers.HiddenField(default=serializers.CurrentUserDefault())
 
+    @new_transaction(scope='profile')
     def create(self, validated_data):
-        request = self.context['request']
-        user = request.user
-        profile = user.profile
-        validated_data['user'] = user
-        obj = new_transaction('profile', user, profile, validated_data)
-        return {'transaction': obj.id}
+        return validated_data
 
     def update(self, instance, validated_data):
         raise NotImplementedError
@@ -90,7 +87,7 @@ class ProfileRequestSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
         fields = [
-            'role', 'transaction'
+            'role', 'transaction', 'user',
         ]
         extra_kwargs = {
             'role': {
@@ -102,7 +99,7 @@ class ProfileRequestSerializer(serializers.ModelSerializer):
         }
 
 
-class ProfileCreateSerializer(serializers.ModelSerializer):
+class ProfileListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Profile
@@ -119,7 +116,7 @@ class ProfileCreateSerializer(serializers.ModelSerializer):
         }
 
 
-class ProfileSerializer(serializers.ModelSerializer):
+class ProfileDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Profile

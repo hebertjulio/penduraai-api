@@ -10,8 +10,8 @@ from bridges.decorators import use_transaction
 
 from .permissions import IsOwner, IsManager
 from .serializers import (
-    UserSerializer, SignUpSerializer, ProfileSerializer,
-    ProfileRequestSerializer, ProfileCreateSerializer
+    UserSerializer, SignUpSerializer, ProfileRequestSerializer,
+    ProfileListSerializer, ProfileDetailSerializer
 )
 
 
@@ -60,23 +60,34 @@ class TokenRefreshView(simplejwt_views.TokenRefreshView):
     ]
 
 
-class ProfileListView(generics.ListAPIView):
+class ProfileListView(generics.ListCreateAPIView):
 
-    serializer_class = ProfileSerializer
+    serializer_class = ProfileListSerializer
     filterset_fields = [
         'role'
     ]
+
+    def get_permissions(self):
+        permissions = super().get_permissions()
+        if self.request.method == 'POST':
+            permissions = [HasAPIKey()]
+        return permissions
 
     def get_queryset(self):
         user = self.request.user
         qs = user.userprofiles.filter(is_active=True)
         return qs
 
+    @use_transaction(scope='profile')
+    def create(self, request, *args, **kwargs):  # skipcq
+        obj = super().create(request, *args, *kwargs)
+        return obj
+
 
 class ProfileDetailView(generics.RetrieveUpdateDestroyAPIView):
 
     lookup_field = 'pk'
-    serializer_class = ProfileSerializer
+    serializer_class = ProfileDetailSerializer
     permission_classes = [
         IsAuthenticated, IsManager
     ]
@@ -97,18 +108,3 @@ class ProfileRequestView(generics.CreateAPIView):
     permission_classes = [
         IsAuthenticated, IsManager
     ]
-
-
-class ProfileTransactionView(generics.CreateAPIView):
-
-    lookup_field = 'pk'
-    serializer_class = ProfileCreateSerializer
-    permission_classes = [
-        HasAPIKey
-    ]
-
-    @use_transaction(scope='profile')
-    def create(self, request, *args, **kwargs):  # skipcq
-        request.data.update(self.transaction.get_data())
-        obj = super().create(request, *args, *kwargs)
-        return obj

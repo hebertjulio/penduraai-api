@@ -130,6 +130,10 @@ class Buyer(TimeStampedModel):
         related_name='profilebuyers',
     )
 
+    @classmethod
+    def get_fields(cls):
+        return cls._meta.get_fields()
+
     def __str__(self):
         return 'ID. %s' % self.id
 
