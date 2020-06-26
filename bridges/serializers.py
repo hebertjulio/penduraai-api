@@ -3,9 +3,9 @@ from rest_framework import serializers
 from .models import Transaction
 
 
-class TransactionReadSerializer(serializers.ModelSerializer):
+class TransactionDetailSerializer(serializers.ModelSerializer):
 
-    data = serializers.JSONField(read_only=True, source='json')
+    data = serializers.JSONField(read_only=True, source='get_data')
 
     class Meta:
         model = Transaction

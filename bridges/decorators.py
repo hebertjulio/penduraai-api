@@ -7,7 +7,7 @@ from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
 from django.db.models import Model
 
-from .serializers import TransactionReadSerializer
+from .serializers import TransactionDetailSerializer
 from .services import send_message
 from .models import Transaction
 from .encoders import DecimalEncoder
@@ -47,7 +47,7 @@ def use_transaction(func=None, scope=None):
         obj.status = Transaction.STATUS.used
         obj.save()
 
-        serializer = TransactionReadSerializer(obj)
+        serializer = TransactionDetailSerializer(obj)
         message = json.dumps(serializer.data, cls=DecimalEncoder)
         send_message(obj.id, message)
 

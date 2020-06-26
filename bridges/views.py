@@ -5,7 +5,7 @@ from rest_framework import generics, views
 from rest_framework.exceptions import NotFound
 from rest_framework.response import Response
 
-from .serializers import TransactionReadSerializer
+from .serializers import TransactionDetailSerializer
 from .models import Transaction
 from .services import send_message
 from .encoders import DecimalEncoder
@@ -14,14 +14,14 @@ from .encoders import DecimalEncoder
 class TransactionDetailView(generics.RetrieveAPIView):
 
     lookup_field = 'pk'
-    serializer_class = TransactionReadSerializer
+    serializer_class = TransactionDetailSerializer
     queryset = Transaction.objects.all()
 
 
 class TransactionDiscardView(views.APIView):
 
     lookup_field = 'pk'
-    serializer_class = TransactionReadSerializer
+    serializer_class = TransactionDetailSerializer
     queryset = Transaction.objects.all()
 
     @classmethod
@@ -36,7 +36,7 @@ class TransactionDiscardView(views.APIView):
         obj = self.get_object(pk)
         obj.status = Transaction.STATUS.discarded
         obj.save()
-        serializer = TransactionReadSerializer(obj)
+        serializer = TransactionDetailSerializer(obj)
         response = Response(serializer.data, status=HTTP_200_OK)
         message = json.dumps(serializer.data, cls=DecimalEncoder)
         send_message(obj.id, message)

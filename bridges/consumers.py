@@ -6,7 +6,7 @@ from channels.consumer import AsyncConsumer
 from channels.exceptions import StopConsumer
 
 from .models import Transaction
-from .serializers import TransactionReadSerializer
+from .serializers import TransactionDetailSerializer
 from .encoders import DecimalEncoder
 
 
@@ -51,7 +51,7 @@ class TransactionConsumer(BaseConsumer):
         try:
             pk = event['pk']
             obj = await sync_to_async(Transaction.objects.get)(pk=pk)
-            serializer = TransactionReadSerializer(obj)
+            serializer = TransactionDetailSerializer(obj)
             await self.accept()
             await self.send(json.dumps(serializer.data, cls=DecimalEncoder))
             await self.channel_layer.group_add(
