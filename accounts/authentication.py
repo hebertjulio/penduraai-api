@@ -12,15 +12,17 @@ class JWTAuthentication(authentication.JWTAuthentication):
         if not authenticate:
             return None
         user, validated_token = authenticate
+        profile = None
         pk = self.get_PK(request.headers)
-        profile = self.get_profile(user, pk)
+        if pk is not None:
+            profile = self.get_profile(user, pk)
         user.profile = profile
         return user, validated_token
 
     @classmethod
     def get_PK(cls, headers):
         if 'Profile' not in headers:
-            raise NotAcceptable
+            return None
         values = headers['Profile'].split()
         if len(values) != 2:
             raise NotAcceptable
@@ -31,7 +33,7 @@ class JWTAuthentication(authentication.JWTAuthentication):
             value = int(value)
             return value
         except ValueError:
-            raise NotAcceptable
+            return None
 
     @classmethod
     def get_profile(cls, user, pk):

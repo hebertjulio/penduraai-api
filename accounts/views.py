@@ -1,3 +1,4 @@
+from rest_framework.permissions import IsAuthenticated
 from rest_framework import generics, views
 from rest_framework.status import HTTP_201_CREATED
 from rest_framework.response import Response
@@ -32,11 +33,9 @@ class SignUpView(views.APIView):
 class CurrentUserDetailView(generics.RetrieveUpdateDestroyAPIView):
 
     serializer_class = UserSerializer
-
-    def get_permissions(self):
-        permissions = super().get_permissions()
-        permissions += [IsOwner()]
-        return permissions
+    permission_classes = [
+        IsAuthenticated, IsOwner
+    ]
 
     def get_object(self):
         user = self.request.user
@@ -78,11 +77,9 @@ class ProfileDetailView(generics.RetrieveUpdateDestroyAPIView):
 
     lookup_field = 'pk'
     serializer_class = ProfileSerializer
-
-    def get_permissions(self):
-        permissions = super().get_permissions()
-        permissions += [IsManager()]
-        return permissions
+    permission_classes = [
+        IsAuthenticated, IsManager
+    ]
 
     def get_queryset(self):
         user = self.request.user
@@ -97,11 +94,9 @@ class ProfileDetailView(generics.RetrieveUpdateDestroyAPIView):
 class ProfileRequestView(generics.CreateAPIView):
 
     serializer_class = ProfileRequestSerializer
-
-    def get_permissions(self):
-        permissions = super().get_permissions()
-        permissions += [IsManager()]
-        return permissions
+    permission_classes = [
+        IsAuthenticated, IsManager
+    ]
 
 
 class ProfileTransactionView(generics.CreateAPIView):
@@ -115,4 +110,5 @@ class ProfileTransactionView(generics.CreateAPIView):
     @use_transaction(scope='profile')
     def create(self, request, *args, **kwargs):  # skipcq
         request.data.update(self.transaction.get_data())
-        return super().create(request, *args, *kwargs)
+        obj = super().create(request, *args, *kwargs)
+        return obj

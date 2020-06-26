@@ -31,3 +31,14 @@ class IsAttendant(IsManager):
             return bool(
                 profile and profile.role == Profile.ROLE.attendant)
         return has_permission
+
+
+class IsGuest(IsManager):
+
+    def has_permission(self, request, view):
+        has_permission = super().has_permission(request, view)
+        if not has_permission:
+            profile = request.user.profile
+            return bool(
+                profile and profile.role == Profile.ROLE.guest)
+        return has_permission

@@ -74,7 +74,7 @@ class Profile(TimeStampedModel):
         ('owner', _('owner')),
         ('manager', _('manager')),
         ('attendant', _('attendant')),
-        ('none', _('none')),
+        ('guest', _('guest')),
     )
 
     PIN_REGEX = r'\d{4}'
@@ -111,7 +111,7 @@ class Profile(TimeStampedModel):
 
     @property
     def is_manager(self):
-        return self.role == self.ROLE.owner
+        return self.role == self.ROLE.manager
 
     @property
     def is_attendant(self):

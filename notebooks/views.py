@@ -1,9 +1,10 @@
 from django.db.models import Q
 
 from rest_framework import generics
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.filters import SearchFilter
 
-from accounts.permissions import IsManager, IsAttendant
+from accounts.permissions import IsManager, IsAttendant, IsGuest
 
 from bridges.decorators import use_transaction
 
@@ -19,31 +20,31 @@ from .serializers import (
 class RecordRequestView(generics.CreateAPIView):
 
     serializer_class = RecordRequestSerializer
-
-    def get_permissions(self):
-        permissions = super().get_permissions()
-        permissions += [IsAttendant()]
-        return permissions
+    permission_classes = [
+        IsAuthenticated, IsAttendant
+    ]
 
 
 class RecordTransactionView(generics.CreateAPIView):
 
     serializer_class = RecordCreateSerializer
-
-    def get_permissions(self):
-        permissions = super().get_permissions()
-        permissions += [CanBuy()]
-        return permissions
+    permission_classes = [
+        IsAuthenticated, CanBuy
+    ]
 
     @use_transaction(scope='record')
     def create(self, request, *args, **kwargs):  # skipcq
         request.data.update(self.transaction.get_data())
-        return super().create(request, *args, *kwargs)
+        obj = super().create(request, *args, *kwargs)
+        return obj
 
 
 class RecordListView(generics.ListAPIView):
 
     serializer_class = RecordReadSerializer
+    permission_classes = [
+        IsAuthenticated, IsGuest
+    ]
     filterset_fields = [
         'sheet__store', 'sheet__customer'
     ]
@@ -70,9 +71,9 @@ class RecordDetailView(generics.RetrieveDestroyAPIView):
 
     def get_permissions(self):
         permissions = super().get_permissions()
-        if self.request.method == 'DELETE':
-            permissions += [IsManager()]
-        return permissions
+        if self.request.method == 'GET':
+            return permissions + [IsGuest()]
+        return permissions + [IsManager()]
 
     def get_queryset(self):
         user = self.request.user
@@ -95,25 +96,24 @@ class SheetRequestView(generics.CreateAPIView):
 
     serializer_class = SheetRequestSerializer
 
-    def get_permissions(self):
-        permissions = super().get_permissions()
-        permissions += [IsManager()]
-        return permissions
+    permission_classes = [
+        IsAuthenticated, IsManager
+    ]
 
 
 class SheetTransactionView(generics.CreateAPIView):
 
     serializer_class = SheetCreateSerializer
 
-    def get_permissions(self):
-        permissions = super().get_permissions()
-        permissions += [IsManager()]
-        return permissions
+    permission_classes = [
+        IsAuthenticated, IsManager
+    ]
 
     @use_transaction(scope='sheet')
     def create(self, request, *args, **kwargs):  # skipcq
         request.data.update(self.transaction.get_data())
-        return super().create(request, *args, *kwargs)
+        obj = super().create(request, *args, *kwargs)
+        return obj
 
 
 class SheetDetailView(generics.RetrieveDestroyAPIView):
@@ -121,15 +121,14 @@ class SheetDetailView(generics.RetrieveDestroyAPIView):
     lookup_field = 'pk'
     serializer_class = SheetReadSerializer
 
+    permission_classes = [
+        IsAuthenticated, IsAttendant
+    ]
+
     def get_permissions(self):
-        permission_classes = super().permission_classes
-        permission_classes = [
-            permission_classes[0] & (IsAttendant)]
-        if self.request.method in ['DELETE']:
-            permission_classes = [
-                permission_classes[0] & IsManager]
-        self.permission_classes = permission_classes
         permissions = super().get_permissions()
+        if self.request.method == 'DELETE':
+            permissions = +[IsManager()]
         return permissions
 
     def get_queryset(self):
@@ -150,11 +149,9 @@ class SheetDetailView(generics.RetrieveDestroyAPIView):
 class BuyerListView(generics.ListCreateAPIView):
 
     serializer_class = BuyerSerializer
-
-    def get_permissions(self):
-        permissions = super().get_permissions()
-        permissions += [IsManager()]
-        return permissions
+    permission_classes = [
+        IsAuthenticated, IsManager
+    ]
 
     def get_queryset(self):
         user = self.request.user
@@ -167,11 +164,9 @@ class BuyerListView(generics.ListCreateAPIView):
 class BuyerDetailView(generics.DestroyAPIView):
 
     serializer_class = BuyerSerializer
-
-    def get_permissions(self):
-        permissions = super().get_permissions()
-        permissions += [IsManager()]
-        return permissions
+    permission_classes = [
+        IsAuthenticated, IsManager
+    ]
 
     def get_queryset(self):
         user = self.request.user
@@ -182,6 +177,9 @@ class BuyerDetailView(generics.DestroyAPIView):
 class BalanceListByStoreView(generics.ListAPIView):
 
     serializer_class = BalanceSerializar
+    permission_classes = [
+        IsAuthenticated, IsGuest
+    ]
     filter_backends = [
         SearchFilter
     ]
@@ -199,6 +197,9 @@ class BalanceListByStoreView(generics.ListAPIView):
 class BalanceListByCustomerView(generics.ListAPIView):
 
     serializer_class = BalanceSerializar
+    permission_classes = [
+        IsAuthenticated, IsGuest
+    ]
     filter_backends = [
         SearchFilter
     ]
