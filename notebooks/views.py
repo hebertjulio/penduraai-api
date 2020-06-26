@@ -128,7 +128,7 @@ class SheetDetailView(generics.RetrieveDestroyAPIView):
     def get_permissions(self):
         permissions = super().get_permissions()
         if self.request.method == 'DELETE':
-            permissions = +[IsManager()]
+            permissions += [IsManager()]
         return permissions
 
     def get_queryset(self):
