@@ -10,8 +10,8 @@ from bridges.decorators import use_transaction
 
 from .permissions import IsOwner, IsManager
 from .serializers import (
-    UserSerializer, SignUpSerializer, ProfileRequestSerializer,
-    ProfileListSerializer, ProfileDetailSerializer
+    SignUpSerializer, UserListSerializer, UserDetailSerializer,
+    ProfileRequestSerializer, ProfileListSerializer, ProfileDetailSerializer
 )
 
 
@@ -25,14 +25,14 @@ class SignUpView(views.APIView):
         serializer = SignUpSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         obj = serializer.save()
-        serializer = UserSerializer(obj)
+        serializer = UserListSerializer(obj)
         response = Response(serializer.data, status=HTTP_201_CREATED)
         return response
 
 
 class CurrentUserDetailView(generics.RetrieveUpdateDestroyAPIView):
 
-    serializer_class = UserSerializer
+    serializer_class = UserDetailSerializer
     permission_classes = [
         IsAuthenticated, IsOwner
     ]

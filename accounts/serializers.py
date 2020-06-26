@@ -28,7 +28,7 @@ class SignUpSerializer(serializers.ModelSerializer):
         return user
 
     def update(self, instance, validated_data):
-        pass
+        raise NotImplementedError
 
     class Meta:
         model = User
@@ -42,7 +42,25 @@ class SignUpSerializer(serializers.ModelSerializer):
         ]
 
 
-class UserSerializer(serializers.ModelSerializer):
+class UserListSerializer(serializers.ModelSerializer):
+
+    def create(self, validated_data):
+        raise NotImplementedError
+
+    def update(self, instance, validated_data):
+        raise NotImplementedError
+
+    class Meta:
+        model = User
+        exclude = [
+            'password', 'groups', 'user_permissions'
+        ]
+        read_only_fields = [
+            f for f in User.get_fields()
+        ]
+
+
+class UserDetailSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         raise NotImplementedError
