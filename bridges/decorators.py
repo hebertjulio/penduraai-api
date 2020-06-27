@@ -3,7 +3,6 @@ import datetime
 
 from functools import wraps, partial
 
-from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
 from django.db.models import Model
 
@@ -11,7 +10,10 @@ from .serializers import TransactionDetailSerializer
 from .services import send_message
 from .models import Transaction
 from .encoders import DecimalEncoder
-from .exceptions import BadRequest
+from .exceptions import (
+    TransactionNotFound, TransactionScopeInvalid, TransactionStatusInvalid,
+    TransactionExpired
+)
 
 
 def use_transaction(func=None, scope=None):
@@ -26,20 +28,16 @@ def use_transaction(func=None, scope=None):
         obj = request.transaction
 
         if obj is None:
-            detail = _('Transaction not found in request.')
-            raise BadRequest(detail)
+            raise TransactionNotFound
 
         if obj.scope != scope:
-            detail = _('Transaction scope \'%s\' is invalid.' % obj.scope)
-            raise BadRequest(detail)
+            raise TransactionScopeInvalid
 
         if obj.status != Transaction.STATUS.not_used:
-            detail = _('Transaction already was %s.' % obj.status)
-            raise BadRequest(detail)
+            raise TransactionStatusInvalid
 
         if obj.is_expired():
-            detail = _('Transaction live time expired.')
-            raise BadRequest(detail)
+            raise TransactionExpired
 
         request.data.update(obj.get_data())
         ret = func(self, request, **kwargs)
