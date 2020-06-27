@@ -1,5 +1,4 @@
 from rest_framework.permissions import BasePermission
-from rest_framework.exceptions import NotAcceptable
 
 from .models import Profile
 
@@ -8,9 +7,7 @@ class IsOwner(BasePermission):
 
     def has_permission(self, request, view):
         profile = request.profile
-        if profile is None:
-            raise NotAcceptable
-        return bool(profile.role == Profile.ROLE.owner)
+        return bool(profile and profile.role == Profile.ROLE.owner)
 
 
 class IsManager(IsOwner):
@@ -20,7 +17,7 @@ class IsManager(IsOwner):
         if has_permission:
             return True
         profile = request.profile
-        return bool(profile.role == Profile.ROLE.manager)
+        return bool(profile and profile.role == Profile.ROLE.manager)
 
 
 class IsAttendant(IsManager):
@@ -30,7 +27,7 @@ class IsAttendant(IsManager):
         if has_permission:
             return True
         profile = request.profile
-        return bool(profile.role == Profile.ROLE.attendant)
+        return bool(profile and profile.role == Profile.ROLE.attendant)
 
 
 class IsGuest(IsAttendant):
@@ -40,4 +37,4 @@ class IsGuest(IsAttendant):
         if has_permission:
             return True
         profile = request.profile
-        return bool(profile.role == Profile.ROLE.guest)
+        return bool(profile and profile.role == Profile.ROLE.guest)

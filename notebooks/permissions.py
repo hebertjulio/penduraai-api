@@ -1,5 +1,3 @@
-from rest_framework.exceptions import NotAcceptable
-
 from accounts.permissions import IsOwner
 
 from .models import Record
@@ -15,8 +13,8 @@ class CanBuy(IsOwner):
         transaction = request.transaction
         profile = request.profile
 
-        if transaction is None:
-            raise NotAcceptable
+        if not transaction or not profile:
+            return False
 
         data = transaction.get_data()
 
