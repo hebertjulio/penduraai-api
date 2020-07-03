@@ -13,14 +13,12 @@ from .encoders import DecimalEncoder
 
 class TransactionDetailView(generics.RetrieveAPIView):
 
-    lookup_field = 'pk'
     serializer_class = TransactionDetailSerializer
     queryset = Transaction.objects.all()
 
 
 class TransactionDiscardView(views.APIView):
 
-    lookup_field = 'pk'
     serializer_class = TransactionDetailSerializer
     queryset = Transaction.objects.all()
 

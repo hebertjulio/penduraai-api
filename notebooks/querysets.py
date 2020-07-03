@@ -19,13 +19,13 @@ class SheetQuerySet(QuerySet):
         default=0, output_field=DecimalField())
     )
 
-    def balance_list_by_store(self, user, profile):
+    def balance_list_by_merchant(self, user, profile):
         where = {'customer': user}
         if not profile.is_owner:
-            where.update({'sheetbuyers__profile': profile})
-        qs = self.select_related('store', 'record')
+            where.update({'buyers': profile})
+        qs = self.select_related('merchant', 'record')
         qs = qs.annotate(
-            user_id=F('store__id'), user_name=F('store__name'),
+            user_id=F('merchant__id'), user_name=F('merchant__name'),
             credit_sum=self.credit_sum, debt_sum=self.debt_sum,
             balance=self.balance_calc, sheet_id=F('id'))
         qs = qs.values('user_id', 'user_name', 'balance', 'sheet_id')
@@ -34,9 +34,9 @@ class SheetQuerySet(QuerySet):
         return qs
 
     def balance_list_by_customer(self, user, profile):
-        where = {'store': user}
+        where = {'merchant': user}
         if not profile.is_owner and not profile.is_manager:
-            where.update({'sheetbuyers__profile': profile})
+            where.update({'buyers': profile})
         qs = self.select_related('customer', 'record')
         qs = qs.annotate(
             user_id=F('customer__id'), user_name=F('customer__name'),

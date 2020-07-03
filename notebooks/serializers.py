@@ -8,10 +8,10 @@ from accounts.validators import ProfileBelongUserValidator
 from bridges.decorators import new_transaction
 
 from .relations import SheetRelatedField
-from .models import Record, Sheet, Buyer
+from .models import Record, Sheet
 from .validators import (
-    CustomerOfYourselfValidator, AlreadyAStoreCustomerValidator,
-    StoreEmployeeValidator, IsStoreCustomerValidator,
+    CustomerOfYourselfValidator, AlreadyAMerchantCustomerValidator,
+    MerchantEmployeeValidator, IsMerchantCustomerValidator,
     SheetBelongCustomerValidator
 )
 
@@ -25,7 +25,7 @@ class RecordRequestSerializer(serializers.ModelSerializer):
         write_only=True
     )
 
-    store = UserRelatedField(
+    merchant = UserRelatedField(
         default=serializers.CurrentUserDefault(),
         write_only=True
     )
@@ -40,7 +40,7 @@ class RecordRequestSerializer(serializers.ModelSerializer):
     class Meta:
         model = Record
         fields = [
-            'store', 'attendant', 'value',
+            'merchant', 'attendant', 'value',
             'operation', 'note', 'transaction'
         ]
         extra_kwargs = {
@@ -61,27 +61,27 @@ class RecordListSerializer(serializers.ModelSerializer):
     sheet = SheetRelatedField(read_only=True)
     attendant = ProfileRelatedField()
 
-    store = UserRelatedField(
+    merchant = UserRelatedField(
         validators=[
-            IsStoreCustomerValidator()
+            IsMerchantCustomerValidator()
         ],
         write_only=True
     )
 
     @classmethod
-    def get_sheet(cls, store, user):
+    def get_sheet(cls, merchant, user):
         try:
-            sheet = store.storesheets.get(customer=user)
+            sheet = merchant.merchantsheets.get(customer=user)
             return sheet
         except Sheet.DoesNotExist:
             raise NotFound
 
     def create(self, validated_data):
-        store = validated_data.pop('store')
+        merchant = validated_data.pop('merchant')
         request = self.context['request']
-        sheet = self.get_sheet(store, request.user)
+        sheet = self.get_sheet(merchant, request.user)
         validated_data.update({
-            'sheet': sheet, 'signature': request.profile
+            'sheet': sheet, 'profile': request.profile
         })
         obj = super().create(validated_data)
         return obj
@@ -93,10 +93,10 @@ class RecordListSerializer(serializers.ModelSerializer):
         model = Record
         fields = '__all__'
         read_only_fields = [
-            'is_active', 'signature'
+            'is_active', 'profile'
         ]
         validators = [
-            StoreEmployeeValidator()
+            MerchantEmployeeValidator()
         ]
 
 
@@ -120,7 +120,7 @@ class SheetRequestSerializer(serializers.ModelSerializer):
 
     transaction = serializers.IntegerField(read_only=True)
 
-    store = serializers.HiddenField(
+    merchant = serializers.HiddenField(
         default=serializers.CurrentUserDefault()
     )
 
@@ -134,30 +134,30 @@ class SheetRequestSerializer(serializers.ModelSerializer):
     class Meta:
         model = Sheet
         fields = [
-            'transaction', 'store'
+            'transaction', 'merchant'
         ]
 
 
 class SheetListSerializer(serializers.ModelSerializer):
 
-    store = UserRelatedField(
+    merchant = UserRelatedField(
         validators=[
             CustomerOfYourselfValidator(),
-            AlreadyAStoreCustomerValidator()
+            AlreadyAMerchantCustomerValidator()
         ]
     )
+
     customer = serializers.HiddenField(
         default=serializers.CurrentUserDefault()
     )
+
+    buyers = ProfileRelatedField(many=True, read_only=True)
 
     def update(self, instance, validated_data):
         raise NotImplementedError
 
     class Meta:
         model = Sheet
-        exclude = [
-            'buyers'
-        ]
 
 
 class SheetDetailSerializer(serializers.ModelSerializer):
@@ -178,36 +178,27 @@ class SheetDetailSerializer(serializers.ModelSerializer):
         ]
 
 
-class BuyerListSerializer(serializers.ModelSerializer):
+class SheetBuyerAddSerializer(serializers.Serializer):
 
     sheet = SheetRelatedField(
-        validators=[SheetBelongCustomerValidator()])
+        validators=[
+            SheetBelongCustomerValidator()
+        ]
+    )
 
     profile = ProfileRelatedField(
-        validators=[ProfileBelongUserValidator()])
-
-    def update(self, instance, validated_data):
-        raise NotImplementedError
-
-    class Meta:
-        model = Buyer
-        fields = '__all__'
-
-
-class BuyerDetailSerializer(serializers.ModelSerializer):
+        validators=[
+            ProfileBelongUserValidator()
+        ]
+    )
 
     def create(self, validated_data):
-        raise NotImplementedError
+        sheet = validated_data['sheet']
+        sheet.buyers.add(validated_data['profile'])
+        return validated_data
 
     def update(self, instance, validated_data):
         raise NotImplementedError
-
-    class Meta:
-        model = Buyer
-        fields = '__all__'
-        read_only_fields = [
-            f for f in Buyer.get_fields()
-        ]
 
 
 class BalanceListSerializar(serializers.BaseSerializer):

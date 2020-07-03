@@ -11,7 +11,7 @@ from .services import send_message
 from .models import Transaction
 from .encoders import DecimalEncoder
 from .exceptions import (
-    TransactionNotFound, TransactionScopeInvalid, TransactionStatusInvalid,
+    TransactionScopeInvalid, TransactionStatusInvalid,
     TransactionExpired
 )
 
@@ -28,7 +28,7 @@ def use_transaction(func=None, scope=None):
         obj = request.transaction
 
         if obj is None:
-            raise TransactionNotFound
+            return func(self, request, **kwargs)
 
         if obj.scope != scope:
             raise TransactionScopeInvalid

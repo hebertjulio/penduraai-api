@@ -60,6 +60,14 @@ class TokenRefreshView(simplejwt_views.TokenRefreshView):
     ]
 
 
+class ProfileRequestView(generics.CreateAPIView):
+
+    serializer_class = ProfileRequestSerializer
+    permission_classes = [
+        IsAuthenticated, IsManager
+    ]
+
+
 class ProfileListView(generics.ListCreateAPIView):
 
     serializer_class = ProfileListSerializer
@@ -86,11 +94,13 @@ class ProfileListView(generics.ListCreateAPIView):
 
 class ProfileDetailView(generics.RetrieveUpdateDestroyAPIView):
 
-    lookup_field = 'pk'
     serializer_class = ProfileDetailSerializer
-    permission_classes = [
-        IsAuthenticated, IsManager
-    ]
+
+    def get_permissions(self):
+        permissions = super().get_permissions()
+        if self.request.method == 'DELETE':
+            permissions = [IsManager()]
+        return permissions
 
     def get_queryset(self):
         user = self.request.user
@@ -100,11 +110,3 @@ class ProfileDetailView(generics.RetrieveUpdateDestroyAPIView):
     def perform_destroy(self, instance):
         instance.is_active = False
         instance.save()
-
-
-class ProfileRequestView(generics.CreateAPIView):
-
-    serializer_class = ProfileRequestSerializer
-    permission_classes = [
-        IsAuthenticated, IsManager
-    ]

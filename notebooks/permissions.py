@@ -23,10 +23,10 @@ class CanBuy(IsOwner):
             if operation == Record.OPERATION.credit:
                 return True
 
-        if 'store' in data:
-            store = data['store']
-            qs = profile.profilebuyers.select_related('sheet')
-            qs = qs.filter(sheet__store=store)
+        if 'merchant' in data:
+            merchant = data['merchant']
+            qs = profile.sheetbuyers.select_related('sheet')
+            qs = qs.filter(merchant=merchant)
             return bool(qs.exists())
 
         return False

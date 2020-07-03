@@ -27,9 +27,9 @@ class SheetRelatedField(serializers.RelatedField):
     def to_representation(self, value):
         data = {
             'id': value.id,
-            'store': {
-                'id': value.store.id,
-                'name': value.store.name,
+            'merchant': {
+                'id': value.merchant.id,
+                'name': value.merchant.name,
             },
             'customer': {
                 'id': value.customer.id,

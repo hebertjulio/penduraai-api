@@ -40,9 +40,9 @@ class Record(TimeStampedModel):
         related_name='attendantrecords',
     )
 
-    signature = models.ForeignKey(
+    profile = models.ForeignKey(
         'accounts.Profile', on_delete=models.CASCADE,
-        related_name='signaturerecords',
+        related_name='profilerecords',
     )
 
     is_active = models.BooleanField(
@@ -73,9 +73,9 @@ class Sheet(TimeStampedModel):
 
     id = models.BigAutoField(primary_key=True, editable=False)
 
-    store = models.ForeignKey(
+    merchant = models.ForeignKey(
         'accounts.User', on_delete=models.CASCADE,
-        related_name='storesheets',
+        related_name='merchantsheets',
     )
 
     customer = models.ForeignKey(
@@ -84,7 +84,7 @@ class Sheet(TimeStampedModel):
     )
 
     buyers = models.ManyToManyField(
-        'accounts.Profile', through='Buyer', related_name='buyersheets'
+        'accounts.Profile', related_name='sheetbuyers'
     )
 
     is_active = models.BooleanField(
@@ -112,37 +112,5 @@ class Sheet(TimeStampedModel):
         verbose_name = _('sheet')
         verbose_name_plural = _('sheets')
         unique_together = [
-            ['store', 'customer']
-        ]
-
-
-class Buyer(TimeStampedModel):
-
-    id = models.BigAutoField(primary_key=True, editable=False)
-
-    sheet = models.ForeignKey(
-        'Sheet', on_delete=models.CASCADE,
-        related_name='sheetbuyers',
-    )
-
-    profile = models.ForeignKey(
-        'accounts.Profile', on_delete=models.CASCADE,
-        related_name='profilebuyers',
-    )
-
-    @classmethod
-    def get_fields(cls):
-        return cls._meta.get_fields()
-
-    def __str__(self):
-        return 'ID. %s' % self.id
-
-    def __repr__(self):
-        return 'ID. %s' % self.id
-
-    class Meta:
-        verbose_name = _('buyer')
-        verbose_name_plural = _('buyers')
-        unique_together = [
-            ['sheet', 'profile']
+            ['merchant', 'customer']
         ]

@@ -22,10 +22,10 @@ class LoadTransactionMiddleware:
     def get_PK(cls, headers):
         if 'Transaction' not in headers:
             return None
-        name, value = headers['Transaction'].split()
-        if name.upper() != 'PK':
-            return None
         try:
+            name, value = headers['Transaction'].split()
+            if name.upper() != 'PK':
+                return None
             value = int(value)
             return value
         except ValueError:

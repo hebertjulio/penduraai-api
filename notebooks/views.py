@@ -1,19 +1,22 @@
 from django.db.models import Q
 
-from rest_framework import generics
+from rest_framework import generics, views
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.filters import SearchFilter
+from rest_framework.exceptions import NotFound
+from rest_framework.response import Response
+from rest_framework.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT
 
 from accounts.permissions import IsManager, IsAttendant, IsGuest
 
 from bridges.decorators import use_transaction
 
 from .permissions import CanBuy
-from .models import Record, Sheet, Buyer
+from .models import Record, Sheet
 from .serializers import (
     RecordRequestSerializer, RecordListSerializer, RecordDetailSerializer,
     SheetRequestSerializer, SheetListSerializer, SheetDetailSerializer,
-    BuyerListSerializer, BuyerDetailSerializer, BalanceListSerializar
+    SheetBuyerAddSerializer, BalanceListSerializar
 )
 
 
@@ -31,7 +34,7 @@ class RecordListView(generics.ListCreateAPIView):
     serializer_class = RecordListSerializer
 
     filterset_fields = [
-        'sheet__store', 'sheet__customer'
+        'sheet__merchant', 'sheet__customer'
     ]
 
     def get_permissions(self):
@@ -49,12 +52,12 @@ class RecordListView(generics.ListCreateAPIView):
         user = self.request.user
         profile = self.request.profile
         if profile.is_owner:
-            where = Q(sheet__store=user) | Q(sheet__customer=user)
+            where = Q(sheet__merchant=user) | Q(sheet__customer=user)
         elif profile.is_attendant or profile.is_manager:
-            where = Q(sheet__store=user)
+            where = Q(sheet__merchant=user)
         else:
-            where = Q(sheet__customer=user) & Q(signature=profile)
-        qs = Record.objects.select_related('sheet', 'attendant', 'signature')
+            where = Q(sheet__customer=user) & Q(profile=profile)
+        qs = Record.objects.select_related('sheet', 'attendant', 'profile')
         qs = qs.filter(where)
         qs = qs.order_by('-created')
         return qs
@@ -62,7 +65,6 @@ class RecordListView(generics.ListCreateAPIView):
 
 class RecordDetailView(generics.RetrieveDestroyAPIView):
 
-    lookup_field = 'pk'
     serializer_class = RecordDetailSerializer
 
     def get_permissions(self):
@@ -73,12 +75,12 @@ class RecordDetailView(generics.RetrieveDestroyAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        where = Q(sheet__store=user)
+        where = Q(sheet__merchant=user)
         if self.request.method == 'GET':
             where = where | Q(sheet__customer=user)
         qs = Record.objects.select_related(
-            'sheet', 'sheet__customer', 'sheet__store',
-            'attendant', 'signature'
+            'sheet', 'sheet__customer', 'sheet__merchant',
+            'attendant', 'profile'
         )
         qs = qs.filter(where)
         return qs
@@ -113,7 +115,6 @@ class SheetListView(generics.CreateAPIView):
 
 class SheetDetailView(generics.RetrieveDestroyAPIView):
 
-    lookup_field = 'pk'
     serializer_class = SheetDetailSerializer
 
     permission_classes = [
@@ -128,10 +129,10 @@ class SheetDetailView(generics.RetrieveDestroyAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        where = Q(store=user)
+        where = Q(merchant=user)
         if self.request.method == 'GET':
             where = where | Q(customer=user)
-        qs = Sheet.objects.select_related('customer', 'store')
+        qs = Sheet.objects.select_related('customer', 'merchant')
         qs = qs.filter(where)
         qs = qs.order_by('customer__name')
         return qs
@@ -141,37 +142,37 @@ class SheetDetailView(generics.RetrieveDestroyAPIView):
         instance.save()
 
 
-class BuyerListView(generics.ListCreateAPIView):
-
-    serializer_class = BuyerListSerializer
+class SheetBuyerManageView(views.APIView):
 
     permission_classes = [
         IsAuthenticated, IsManager
     ]
 
-    def get_queryset(self):
+    def get_sheet(self, pk):
         user = self.request.user
-        qs = Buyer.objects.select_related('sheet', 'profile')
-        qs = qs.filter(profile__user=user)
-        qs = qs.order_by('profile__name')
-        return qs
+        try:
+            obj = Sheet.objects.get(pk=pk, customer=user)
+            return obj
+        except Sheet.DoesNotExist:
+            raise NotFound
+
+    def post(self, request, version, pk, profile_id):  # skicq
+        data = {'sheet': pk, 'profile': profile_id}
+        context = {'request': request}
+        serializer = SheetBuyerAddSerializer(data=data, context=context)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        response = Response(serializer.data, status=HTTP_201_CREATED)
+        return response
+
+    def delete(self, request, version, pk, profile_id):
+        sheet = self.get_sheet(pk)
+        sheet.buyers.remove(profile_id)
+        response = Response([], status=HTTP_204_NO_CONTENT)
+        return response
 
 
-class BuyerDetailView(generics.DestroyAPIView):
-
-    serializer_class = BuyerDetailSerializer
-
-    permission_classes = [
-        IsAuthenticated, IsManager
-    ]
-
-    def get_queryset(self):
-        user = self.request.user
-        qs = Buyer.objects.filter(profile__user=user)
-        return qs
-
-
-class BalanceListByStoreView(generics.ListAPIView):
+class BalanceListByMerchantView(generics.ListAPIView):
 
     serializer_class = BalanceListSerializar
 
@@ -190,7 +191,7 @@ class BalanceListByStoreView(generics.ListAPIView):
     def get_queryset(self):
         user = self.request.user
         profile = self.request.profile
-        qs = Sheet.objects.balance_list_by_store(user, profile)
+        qs = Sheet.objects.balance_list_by_merchant(user, profile)
         return qs
 
 

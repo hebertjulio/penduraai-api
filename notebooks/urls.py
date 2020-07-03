@@ -31,17 +31,13 @@ urlpatterns = [
         views.SheetDetailView.as_view(),
         name='sheet_detail'),
     path(
-        'buyers',
-        views.BuyerListView.as_view(),
-        name='buyer_list'),
+        'sheets/<int:pk>/buyer/<int:profile_id>',
+        views.SheetBuyerManageView.as_view(),
+        name='sheet_buyer_manage'),
     path(
-        'buyers/<int:pk>',
-        views.BuyerDetailView.as_view(),
-        name='buyer_detail'),
-    path(
-        'balances-by-store',
-        views.BalanceListByStoreView.as_view(),
-        name='balance_list_by_store'),
+        'balances-by-merchant',
+        views.BalanceListByMerchantView.as_view(),
+        name='balance_list_by_merchant'),
     path(
         'balances-by-customer',
         views.BalanceListByCustomerView.as_view(),
