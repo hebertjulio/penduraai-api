@@ -33,9 +33,11 @@ class SignUpView(views.APIView):
 class CurrentUserDetailView(generics.RetrieveUpdateDestroyAPIView):
 
     serializer_class = UserDetailSerializer
-    permission_classes = [
-        IsAuthenticated, IsOwner
-    ]
+
+    def get_permissions(self):
+        permissions = super().get_permissions()
+        permissions += [IsOwner()]
+        return permissions
 
     def get_object(self):
         user = self.request.user
@@ -63,14 +65,17 @@ class TokenRefreshView(simplejwt_views.TokenRefreshView):
 class ProfileRequestView(generics.CreateAPIView):
 
     serializer_class = ProfileRequestSerializer
-    permission_classes = [
-        IsAuthenticated, IsManager
-    ]
+
+    def get_permissions(self):
+        permissions = super().get_permissions()
+        permissions += [IsManager()]
+        return permissions
 
 
 class ProfileListView(generics.ListCreateAPIView):
 
     serializer_class = ProfileListSerializer
+
     filterset_fields = [
         'role'
     ]
@@ -79,6 +84,8 @@ class ProfileListView(generics.ListCreateAPIView):
         permissions = super().get_permissions()
         if self.request.method == 'POST':
             permissions = [HasAPIKey()]
+        if self.request.method == 'GET':
+            permissions = [IsAuthenticated()]
         return permissions
 
     def get_queryset(self):
@@ -98,8 +105,11 @@ class ProfileDetailView(generics.RetrieveUpdateDestroyAPIView):
 
     def get_permissions(self):
         permissions = super().get_permissions()
-        if self.request.method == 'DELETE':
-            permissions = [IsManager()]
+        pk = self.kwargs[self.lookup_field]
+        profile = self.request.profile
+        if profile and profile.id == pk:
+            return permissions
+        permissions += [IsManager()]
         return permissions
 
     def get_queryset(self):

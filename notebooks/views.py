@@ -1,7 +1,6 @@
 from django.db.models import Q
 
 from rest_framework import generics, views
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.filters import SearchFilter
 from rest_framework.exceptions import NotFound
 from rest_framework.response import Response
@@ -24,9 +23,10 @@ class RecordRequestView(generics.CreateAPIView):
 
     serializer_class = RecordRequestSerializer
 
-    permission_classes = [
-        IsAuthenticated, IsAttendant
-    ]
+    def get_permissions(self):
+        permissions = super().get_permissions()
+        permissions += [IsAttendant()]
+        return permissions
 
 
 class RecordListView(generics.ListCreateAPIView):
@@ -40,8 +40,10 @@ class RecordListView(generics.ListCreateAPIView):
     def get_permissions(self):
         permissions = super().get_permissions()
         if self.request.method == 'GET':
-            return permissions + [IsGuest()]
-        return permissions + [CanBuy()]
+            permissions += [IsGuest()]
+            return permissions
+        permissions += [CanBuy()]
+        return permissions
 
     @use_transaction(scope='record')
     def create(self, request, *args, **kwargs):  # skipcq
@@ -70,8 +72,10 @@ class RecordDetailView(generics.RetrieveDestroyAPIView):
     def get_permissions(self):
         permissions = super().get_permissions()
         if self.request.method == 'GET':
-            return permissions + [IsGuest()]
-        return permissions + [IsManager()]
+            permissions += [IsGuest()]
+            return permissions
+        permissions += [IsManager()]
+        return permissions
 
     def get_queryset(self):
         user = self.request.user
@@ -94,18 +98,20 @@ class SheetRequestView(generics.CreateAPIView):
 
     serializer_class = SheetRequestSerializer
 
-    permission_classes = [
-        IsAuthenticated, IsManager
-    ]
+    def get_permissions(self):
+        permissions = super().get_permissions()
+        permissions += [IsManager()]
+        return permissions
 
 
 class SheetListView(generics.CreateAPIView):
 
     serializer_class = SheetListSerializer
 
-    permission_classes = [
-        IsAuthenticated, IsManager
-    ]
+    def get_permissions(self):
+        permissions = super().get_permissions()
+        permissions += [IsManager()]
+        return permissions
 
     @use_transaction(scope='sheet')
     def create(self, request, *args, **kwargs):  # skipcq
@@ -117,14 +123,12 @@ class SheetDetailView(generics.RetrieveDestroyAPIView):
 
     serializer_class = SheetDetailSerializer
 
-    permission_classes = [
-        IsAuthenticated, IsAttendant
-    ]
-
     def get_permissions(self):
         permissions = super().get_permissions()
         if self.request.method == 'DELETE':
             permissions += [IsManager()]
+            return permissions
+        permissions += [IsAttendant()]
         return permissions
 
     def get_queryset(self):
@@ -144,10 +148,6 @@ class SheetDetailView(generics.RetrieveDestroyAPIView):
 
 class SheetBuyerManageView(views.APIView):
 
-    permission_classes = [
-        IsAuthenticated, IsManager
-    ]
-
     def get_sheet(self, pk):
         user = self.request.user
         try:
@@ -155,6 +155,11 @@ class SheetBuyerManageView(views.APIView):
             return obj
         except Sheet.DoesNotExist:
             raise NotFound
+
+    def get_permissions(self):
+        permissions = super().get_permissions()
+        permissions += [IsManager()]
+        return permissions
 
     def post(self, request, version, pk, profile_id):  # skipcq
         data = {'sheet': pk, 'profile': profile_id}
@@ -176,10 +181,6 @@ class BalanceListByMerchantView(generics.ListAPIView):
 
     serializer_class = BalanceListSerializar
 
-    permission_classes = [
-        IsAuthenticated, IsGuest
-    ]
-
     filter_backends = [
         SearchFilter
     ]
@@ -187,6 +188,11 @@ class BalanceListByMerchantView(generics.ListAPIView):
     search_fields = [
         'user_name'
     ]
+
+    def get_permissions(self):
+        permissions = super().get_permissions()
+        permissions += [IsGuest()]
+        return permissions
 
     def get_queryset(self):
         user = self.request.user
@@ -199,10 +205,6 @@ class BalanceListByCustomerView(generics.ListAPIView):
 
     serializer_class = BalanceListSerializar
 
-    permission_classes = [
-        IsAuthenticated, IsGuest
-    ]
-
     filter_backends = [
         SearchFilter
     ]
@@ -210,6 +212,11 @@ class BalanceListByCustomerView(generics.ListAPIView):
     search_fields = [
         'user_name'
     ]
+
+    def get_permissions(self):
+        permissions = super().get_permissions()
+        permissions += [IsGuest()]
+        return permissions
 
     def get_queryset(self):
         user = self.request.user

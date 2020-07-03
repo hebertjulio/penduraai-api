@@ -3,6 +3,13 @@ from rest_framework.permissions import BasePermission
 from .models import Profile
 
 
+class HasProfile(BasePermission):
+
+    def has_permission(self, request, view):
+        profile = request.profile
+        return bool(profile is not None)
+
+
 class IsOwner(BasePermission):
 
     def has_permission(self, request, view):

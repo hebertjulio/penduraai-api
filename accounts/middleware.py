@@ -46,9 +46,7 @@ class LoadProfileMiddleware:
         if 'Profile' not in headers:
             return None
         try:
-            name, value = headers['Profile'].split()
-            if name.upper() != 'PK':
-                return None
+            value = headers['Profile']
             value = int(value)
             return value
         except ValueError:

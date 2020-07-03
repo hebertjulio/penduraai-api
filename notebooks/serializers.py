@@ -158,6 +158,7 @@ class SheetListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Sheet
+        fields = '__all__'
 
 
 class SheetDetailSerializer(serializers.ModelSerializer):

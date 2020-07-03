@@ -23,9 +23,7 @@ class LoadTransactionMiddleware:
         if 'Transaction' not in headers:
             return None
         try:
-            name, value = headers['Transaction'].split()
-            if name.upper() != 'PK':
-                return None
+            value = headers['Transaction']
             value = int(value)
             return value
         except ValueError:
