@@ -6,11 +6,10 @@ from rest_framework.exceptions import NotFound
 from rest_framework.response import Response
 from rest_framework.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT
 
-from accounts.permissions import IsManager, IsAttendant, IsGuest
+from accounts.permissions import IsManager, IsAttendant
 
 from bridges.decorators import use_transaction
 
-from .permissions import CanBuy
 from .models import Record, Sheet
 from .serializers import (
     RecordRequestSerializer, RecordListSerializer, RecordDetailSerializer,
@@ -36,14 +35,6 @@ class RecordListView(generics.ListCreateAPIView):
     filterset_fields = [
         'sheet__merchant', 'sheet__customer'
     ]
-
-    def get_permissions(self):
-        permissions = super().get_permissions()
-        if self.request.method == 'GET':
-            permissions += [IsGuest()]
-            return permissions
-        permissions += [CanBuy()]
-        return permissions
 
     @use_transaction(scope='record')
     def create(self, request, *args, **kwargs):  # skipcq
@@ -71,10 +62,8 @@ class RecordDetailView(generics.RetrieveDestroyAPIView):
 
     def get_permissions(self):
         permissions = super().get_permissions()
-        if self.request.method == 'GET':
-            permissions += [IsGuest()]
-            return permissions
-        permissions += [IsManager()]
+        if self.request.method != 'GET':
+            permissions += [IsManager()]
         return permissions
 
     def get_queryset(self):
@@ -189,11 +178,6 @@ class BalanceListByMerchantView(generics.ListAPIView):
         'user_name'
     ]
 
-    def get_permissions(self):
-        permissions = super().get_permissions()
-        permissions += [IsGuest()]
-        return permissions
-
     def get_queryset(self):
         user = self.request.user
         profile = self.request.profile
@@ -212,11 +196,6 @@ class BalanceListByCustomerView(generics.ListAPIView):
     search_fields = [
         'user_name'
     ]
-
-    def get_permissions(self):
-        permissions = super().get_permissions()
-        permissions += [IsGuest()]
-        return permissions
 
     def get_queryset(self):
         user = self.request.user

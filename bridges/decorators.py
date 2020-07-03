@@ -6,6 +6,8 @@ from functools import wraps, partial
 from django.utils import timezone
 from django.db.models import Model
 
+from rest_framework.exceptions import PermissionDenied
+
 from .serializers import TransactionDetailSerializer
 from .services import send_message
 from .models import Transaction
@@ -28,7 +30,7 @@ def use_transaction(func=None, scope=None):
         obj = request.transaction
 
         if obj is None:
-            return func(self, request, **kwargs)
+            raise PermissionDenied
 
         if obj.scope != scope:
             raise TransactionScopeInvalid

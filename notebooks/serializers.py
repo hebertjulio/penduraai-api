@@ -12,7 +12,7 @@ from .models import Record, Sheet
 from .validators import (
     CustomerOfYourselfValidator, AlreadyAMerchantCustomerValidator,
     MerchantEmployeeValidator, IsMerchantCustomerValidator,
-    SheetBelongCustomerValidator
+    SheetBelongCustomerValidator, ProfileCanBuyValidator
 )
 
 
@@ -96,7 +96,8 @@ class RecordListSerializer(serializers.ModelSerializer):
             'is_active', 'profile'
         ]
         validators = [
-            MerchantEmployeeValidator()
+            MerchantEmployeeValidator(),
+            ProfileCanBuyValidator()
         ]
 
 

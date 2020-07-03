@@ -44,8 +44,8 @@ class MerchantEmployeeValidator:
 
     def __call__(self, value):
         if 'merchant' in value and 'attendant' in value:
-            user = value['merchant']
-            qs = user.userprofiles.filter(
+            merchant = value['merchant']
+            qs = merchant.userprofiles.filter(
                 id=value['attendant'].id, is_active=True)
             if not qs.exists():
                 message = _('Attendant isn\'t merchant employee.')
@@ -62,4 +62,18 @@ class SheetBelongCustomerValidator:
         qs = user.customersheets.filter(id=value.id)
         if not qs.exists():
             message = _('This sheet does not belong to you.')
+            raise serializers.ValidationError(message)
+
+
+class ProfileCanBuyValidator:
+
+    requires_context = True
+
+    def __call__(self, value, serializer_field):
+        request = serializer_field.context['request']
+        merchant = value['merchant']
+        qs = merchant.merchantsheets.filter(
+            customer=request.user, buyers=request.profile)
+        if not qs.exists():
+            message = _('You can\'t buy from this merchant.')
             raise serializers.ValidationError(message)
