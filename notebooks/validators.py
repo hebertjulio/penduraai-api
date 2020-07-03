@@ -3,7 +3,7 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
 
-class IsMerchantCustomerValidator:
+class CustomerOfMerchantValidator:
 
     requires_context = True
 
@@ -11,7 +11,7 @@ class IsMerchantCustomerValidator:
         request = serializer_field.context['request']
         qs = request.user.customersheets.filter(merchant=value, is_active=True)
         if not qs.exists():
-            message = _('You aren\'t customer of this merchant.')
+            message = _('You aren\'t customer of merchant.')
             raise serializers.ValidationError(message)
 
 
@@ -23,11 +23,11 @@ class CustomerOfYourselfValidator:
         request = serializer_field.context['request']
         user = request.user
         if value.id == user.id:
-            message = _('You can\'t customer of your merchant.')
+            message = _('You can\'t customer of yourself.')
             raise serializers.ValidationError(message)
 
 
-class AlreadyAMerchantCustomerValidator:
+class AlreadyCustomerOfMerchantValidator:
 
     requires_context = True
 
@@ -36,19 +36,19 @@ class AlreadyAMerchantCustomerValidator:
         user = request.user
         qs = user.customersheets.filter(merchant=value)
         if qs.exists():
-            message = _('You are already a customer of this merchant.')
+            message = _('You are already customer of merchant.')
             raise serializers.ValidationError(message)
 
 
-class MerchantEmployeeValidator:
+class EmployeeOfMerchantValidator:
 
     def __call__(self, value):
         if 'merchant' in value and 'attendant' in value:
+            attendant = value['attendant']
             merchant = value['merchant']
-            qs = merchant.userprofiles.filter(
-                id=value['attendant'].id, is_active=True)
+            qs = merchant.userprofiles.filter(id=attendant.id, is_active=True)
             if not qs.exists():
-                message = _('Attendant isn\'t merchant employee.')
+                message = _('You aren\'t employee of merchant.')
                 raise serializers.ValidationError(message)
 
 
@@ -75,5 +75,5 @@ class ProfileCanBuyValidator:
         qs = merchant.merchantsheets.filter(
             customer=request.user, buyers=request.profile)
         if not qs.exists():
-            message = _('You can\'t buy from this merchant.')
+            message = _('You cannot buy from this merchant.')
             raise serializers.ValidationError(message)

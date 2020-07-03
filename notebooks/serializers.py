@@ -10,8 +10,8 @@ from bridges.decorators import new_transaction
 from .relations import SheetRelatedField
 from .models import Record, Sheet
 from .validators import (
-    CustomerOfYourselfValidator, AlreadyAMerchantCustomerValidator,
-    MerchantEmployeeValidator, IsMerchantCustomerValidator,
+    CustomerOfYourselfValidator, AlreadyCustomerOfMerchantValidator,
+    EmployeeOfMerchantValidator, CustomerOfMerchantValidator,
     SheetBelongCustomerValidator, ProfileCanBuyValidator
 )
 
@@ -63,7 +63,7 @@ class RecordListSerializer(serializers.ModelSerializer):
 
     merchant = UserRelatedField(
         validators=[
-            IsMerchantCustomerValidator()
+            CustomerOfMerchantValidator()
         ],
         write_only=True
     )
@@ -96,7 +96,7 @@ class RecordListSerializer(serializers.ModelSerializer):
             'is_active', 'profile'
         ]
         validators = [
-            MerchantEmployeeValidator(),
+            EmployeeOfMerchantValidator(),
             ProfileCanBuyValidator()
         ]
 
@@ -144,7 +144,7 @@ class SheetListSerializer(serializers.ModelSerializer):
     merchant = UserRelatedField(
         validators=[
             CustomerOfYourselfValidator(),
-            AlreadyAMerchantCustomerValidator()
+            AlreadyCustomerOfMerchantValidator()
         ]
     )
 
