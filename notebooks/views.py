@@ -156,7 +156,7 @@ class SheetBuyerManageView(views.APIView):
         except Sheet.DoesNotExist:
             raise NotFound
 
-    def post(self, request, version, pk, profile_id):  # skicq
+    def post(self, request, version, pk, profile_id):  # skipcq
         data = {'sheet': pk, 'profile': profile_id}
         context = {'request': request}
         serializer = SheetBuyerAddSerializer(data=data, context=context)
@@ -165,7 +165,7 @@ class SheetBuyerManageView(views.APIView):
         response = Response(serializer.data, status=HTTP_201_CREATED)
         return response
 
-    def delete(self, request, version, pk, profile_id):
+    def delete(self, request, version, pk, profile_id):  # skipcq
         sheet = self.get_sheet(pk)
         sheet.buyers.remove(profile_id)
         response = Response([], status=HTTP_204_NO_CONTENT)
