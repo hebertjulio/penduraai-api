@@ -43,7 +43,7 @@ class ApiTestCase(APITestCase):
 
     def get_profile_list(self, version, access):
         self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + access)
-        headers = {'HTTP_PROFILE': 'PK %s' % 1}
+        headers = {'HTTP_PROFILE': 1}
         kwargs = {'version': version}
         url = reverse('accounts:profile_list', kwargs=kwargs)
         resp = self.client.get(url, {}, format='json', **headers)
@@ -51,7 +51,7 @@ class ApiTestCase(APITestCase):
 
     def get_profile(self, version, access):
         self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + access)
-        headers = {'HTTP_PROFILE': 'PK %s' % 1}
+        headers = {'HTTP_PROFILE': 1}
         kwargs = {'version': version, 'pk': 1}
         url = reverse('accounts:profile_detail', kwargs=kwargs)
         resp = self.client.get(url, format='json', **headers)
@@ -59,7 +59,7 @@ class ApiTestCase(APITestCase):
 
     def get_current_user(self, version, access):
         self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + access)
-        headers = {'HTTP_PROFILE': 'PK %s' % 1}
+        headers = {'HTTP_PROFILE': 1}
         kwargs = {'version': version}
         url = reverse('accounts:current_user_detail', kwargs=kwargs)
         resp = self.client.get(url, format='json', **headers)
