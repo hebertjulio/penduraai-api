@@ -1,5 +1,6 @@
 [development]
 
+SECRET_KEY = "mysecretkey"
 DEBUG = true
 
 DATABASES__default__ENGINE = "django.db.backends.sqlite3"
