@@ -7,7 +7,7 @@ from rest_framework.response import Response
 from rest_framework.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT
 
 from accounts.permissions import (
-    IsAuthenticatedAndIsManager, IsAuthenticatedAndIsAttendant)
+    IsAuthenticatedAndProfileIsManager, IsAuthenticatedAndProfileIsAttendant)
 
 from bridges.decorators import use_transaction
 
@@ -23,7 +23,7 @@ class RecordRequestView(generics.CreateAPIView):
     serializer_class = RecordRequestSerializer
 
     permission_classes = [
-        IsAuthenticatedAndIsAttendant
+        IsAuthenticatedAndProfileIsAttendant
     ]
 
 
@@ -63,7 +63,7 @@ class RecordDetailView(generics.RetrieveDestroyAPIView):
         permissions = super().get_permissions()
         if self.request.method == 'GET':
             return permissions
-        return [IsAuthenticatedAndIsManager()]
+        return [IsAuthenticatedAndProfileIsManager()]
 
     def get_queryset(self):
         user = self.request.user
@@ -87,7 +87,7 @@ class SheetRequestView(generics.CreateAPIView):
     serializer_class = SheetRequestSerializer
 
     permission_classes = [
-        IsAuthenticatedAndIsManager
+        IsAuthenticatedAndProfileIsManager
     ]
 
 
@@ -96,7 +96,7 @@ class SheetListView(generics.CreateAPIView):
     serializer_class = SheetListSerializer
 
     permission_classes = [
-        IsAuthenticatedAndIsManager
+        IsAuthenticatedAndProfileIsManager
     ]
 
     @use_transaction(scope='sheet')
@@ -112,7 +112,7 @@ class SheetDetailView(generics.RetrieveDestroyAPIView):
     def get_permissions(self):
         permissions = super().get_permissions()
         if self.request.method == 'DELETE':
-            return [IsAuthenticatedAndIsManager()]
+            return [IsAuthenticatedAndProfileIsManager()]
         return permissions
 
     def get_queryset(self):
@@ -133,7 +133,7 @@ class SheetDetailView(generics.RetrieveDestroyAPIView):
 class SheetBuyerManageView(views.APIView):
 
     permission_classes = [
-        IsAuthenticatedAndIsManager
+        IsAuthenticatedAndProfileIsManager
     ]
 
     def get_sheet(self, pk):
