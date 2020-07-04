@@ -152,7 +152,7 @@ class SheetListSerializer(serializers.ModelSerializer):
         default=serializers.CurrentUserDefault()
     )
 
-    buyers = ProfileRelatedField(many=True, read_only=True)
+    profiles = ProfileRelatedField(many=True, read_only=True)
 
     def update(self, instance, validated_data):
         raise NotImplementedError
@@ -164,7 +164,7 @@ class SheetListSerializer(serializers.ModelSerializer):
 
 class SheetDetailSerializer(serializers.ModelSerializer):
 
-    buyers = ProfileRelatedField(many=True, read_only=True)
+    profiles = ProfileRelatedField(many=True, read_only=True)
 
     def create(self, validated_data):
         raise NotImplementedError
@@ -180,7 +180,7 @@ class SheetDetailSerializer(serializers.ModelSerializer):
         ]
 
 
-class SheetBuyerAddSerializer(serializers.Serializer):
+class SheetProfileAddSerializer(serializers.Serializer):
 
     sheet = SheetRelatedField(
         validators=[
@@ -196,7 +196,7 @@ class SheetBuyerAddSerializer(serializers.Serializer):
 
     def create(self, validated_data):
         sheet = validated_data['sheet']
-        sheet.buyers.add(validated_data['profile'])
+        sheet.profiles.add(validated_data['profile'])
         return validated_data
 
     def update(self, instance, validated_data):

@@ -15,7 +15,7 @@ from .models import Record, Sheet
 from .serializers import (
     RecordRequestSerializer, RecordListSerializer, RecordDetailSerializer,
     SheetRequestSerializer, SheetListSerializer, SheetDetailSerializer,
-    SheetBuyerAddSerializer, BalanceListSerializar)
+    SheetProfileAddSerializer, BalanceListSerializar)
 
 
 class RecordRequestView(generics.CreateAPIView):
@@ -130,7 +130,7 @@ class SheetDetailView(generics.RetrieveDestroyAPIView):
         instance.save()
 
 
-class SheetBuyerManageView(views.APIView):
+class SheetProfileManageView(views.APIView):
 
     permission_classes = [
         IsAuthenticatedAndProfileIsManager
@@ -147,7 +147,7 @@ class SheetBuyerManageView(views.APIView):
     def post(self, request, version, pk, profile_id):  # skipcq
         data = {'sheet': pk, 'profile': profile_id}
         context = {'request': request}
-        serializer = SheetBuyerAddSerializer(data=data, context=context)
+        serializer = SheetProfileAddSerializer(data=data, context=context)
         serializer.is_valid(raise_exception=True)
         serializer.save()
         response = Response(serializer.data, status=HTTP_201_CREATED)
@@ -155,7 +155,7 @@ class SheetBuyerManageView(views.APIView):
 
     def delete(self, request, version, pk, profile_id):  # skipcq
         sheet = self.get_sheet(pk)
-        sheet.buyers.remove(profile_id)
+        sheet.profiles.remove(profile_id)
         response = Response([], status=HTTP_204_NO_CONTENT)
         return response
 

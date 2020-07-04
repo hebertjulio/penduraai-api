@@ -22,7 +22,7 @@ class SheetQuerySet(QuerySet):
     def balance_list_by_merchant(self, user, profile):
         where = {'customer': user}
         if not profile.is_owner:
-            where.update({'buyers': profile})
+            where.update({'profiles': profile})
         qs = self.select_related('merchant', 'record')
         qs = qs.annotate(
             user_id=F('merchant__id'), user_name=F('merchant__name'),
@@ -36,7 +36,7 @@ class SheetQuerySet(QuerySet):
     def balance_list_by_customer(self, user, profile):
         where = {'merchant': user}
         if not profile.is_owner and not profile.is_manager:
-            where.update({'buyers': profile})
+            where.update({'profiles': profile})
         qs = self.select_related('customer', 'record')
         qs = qs.annotate(
             user_id=F('customer__id'), user_name=F('customer__name'),

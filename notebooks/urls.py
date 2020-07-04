@@ -31,9 +31,9 @@ urlpatterns = [
         views.SheetDetailView.as_view(),
         name='sheet_detail'),
     path(
-        'sheets/<int:pk>/buyer/<int:profile_id>',
-        views.SheetBuyerManageView.as_view(),
-        name='sheet_buyer_manage'),
+        'sheets/<int:pk>/profile/<int:profile_id>',
+        views.SheetProfileManageView.as_view(),
+        name='sheet_profile_manage'),
     path(
         'balances-by-merchant',
         views.BalanceListByMerchantView.as_view(),
