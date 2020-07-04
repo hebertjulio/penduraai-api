@@ -6,7 +6,8 @@ from rest_framework.exceptions import NotFound
 from rest_framework.response import Response
 from rest_framework.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT
 
-from accounts.permissions import IsManager, IsAttendant
+from accounts.permissions import (
+    IsAuthenticatedAndIsManager, IsAuthenticatedAndIsAttendant)
 
 from bridges.decorators import use_transaction
 
@@ -14,18 +15,16 @@ from .models import Record, Sheet
 from .serializers import (
     RecordRequestSerializer, RecordListSerializer, RecordDetailSerializer,
     SheetRequestSerializer, SheetListSerializer, SheetDetailSerializer,
-    SheetBuyerAddSerializer, BalanceListSerializar
-)
+    SheetBuyerAddSerializer, BalanceListSerializar)
 
 
 class RecordRequestView(generics.CreateAPIView):
 
     serializer_class = RecordRequestSerializer
 
-    def get_permissions(self):
-        permissions = super().get_permissions()
-        permissions += [IsAttendant()]
-        return permissions
+    permission_classes = [
+        IsAuthenticatedAndIsAttendant
+    ]
 
 
 class RecordListView(generics.ListCreateAPIView):
@@ -62,9 +61,9 @@ class RecordDetailView(generics.RetrieveDestroyAPIView):
 
     def get_permissions(self):
         permissions = super().get_permissions()
-        if self.request.method != 'GET':
-            permissions += [IsManager()]
-        return permissions
+        if self.request.method == 'GET':
+            return permissions
+        return [IsAuthenticatedAndIsManager()]
 
     def get_queryset(self):
         user = self.request.user
@@ -87,20 +86,18 @@ class SheetRequestView(generics.CreateAPIView):
 
     serializer_class = SheetRequestSerializer
 
-    def get_permissions(self):
-        permissions = super().get_permissions()
-        permissions += [IsManager()]
-        return permissions
+    permission_classes = [
+        IsAuthenticatedAndIsManager
+    ]
 
 
 class SheetListView(generics.CreateAPIView):
 
     serializer_class = SheetListSerializer
 
-    def get_permissions(self):
-        permissions = super().get_permissions()
-        permissions += [IsManager()]
-        return permissions
+    permission_classes = [
+        IsAuthenticatedAndIsManager
+    ]
 
     @use_transaction(scope='sheet')
     def create(self, request, *args, **kwargs):  # skipcq
@@ -115,9 +112,7 @@ class SheetDetailView(generics.RetrieveDestroyAPIView):
     def get_permissions(self):
         permissions = super().get_permissions()
         if self.request.method == 'DELETE':
-            permissions += [IsManager()]
-            return permissions
-        permissions += [IsAttendant()]
+            return [IsAuthenticatedAndIsManager()]
         return permissions
 
     def get_queryset(self):
@@ -137,18 +132,17 @@ class SheetDetailView(generics.RetrieveDestroyAPIView):
 
 class SheetBuyerManageView(views.APIView):
 
+    permission_classes = [
+        IsAuthenticatedAndIsManager
+    ]
+
     def get_sheet(self, pk):
-        user = self.request.user
         try:
+            user = self.request.user
             obj = Sheet.objects.get(pk=pk, customer=user)
             return obj
         except Sheet.DoesNotExist:
             raise NotFound
-
-    def get_permissions(self):
-        permissions = super().get_permissions()
-        permissions += [IsManager()]
-        return permissions
 
     def post(self, request, version, pk, profile_id):  # skipcq
         data = {'sheet': pk, 'profile': profile_id}

@@ -8,11 +8,11 @@ from rest_framework_api_key.permissions import HasAPIKey
 
 from bridges.decorators import use_transaction
 
-from .permissions import IsOwner, IsManager
+from .permissions import (
+    IsAuthenticatedAndProfileIsOwner, IsAuthenticatedAndProfileIsManager)
 from .serializers import (
     SignUpSerializer, UserListSerializer, UserDetailSerializer,
-    ProfileRequestSerializer, ProfileListSerializer, ProfileDetailSerializer
-)
+    ProfileRequestSerializer, ProfileListSerializer, ProfileDetailSerializer)
 
 
 class SignUpView(views.APIView):
@@ -34,10 +34,9 @@ class CurrentUserDetailView(generics.RetrieveUpdateDestroyAPIView):
 
     serializer_class = UserDetailSerializer
 
-    def get_permissions(self):
-        permissions = super().get_permissions()
-        permissions += [IsOwner()]
-        return permissions
+    permission_classes = [
+        IsAuthenticatedAndProfileIsOwner
+    ]
 
     def get_object(self):
         user = self.request.user
@@ -66,10 +65,9 @@ class ProfileRequestView(generics.CreateAPIView):
 
     serializer_class = ProfileRequestSerializer
 
-    def get_permissions(self):
-        permissions = super().get_permissions()
-        permissions += [IsManager()]
-        return permissions
+    permission_classes = [
+        IsAuthenticatedAndProfileIsManager
+    ]
 
 
 class ProfileListView(generics.ListCreateAPIView):
@@ -81,12 +79,9 @@ class ProfileListView(generics.ListCreateAPIView):
     ]
 
     def get_permissions(self):
-        permissions = super().get_permissions()
         if self.request.method == 'POST':
-            permissions = [HasAPIKey()]
-        if self.request.method == 'GET':
-            permissions = [IsAuthenticated()]
-        return permissions
+            return [HasAPIKey()]
+        return [IsAuthenticated()]
 
     def get_queryset(self):
         user = self.request.user
@@ -109,8 +104,7 @@ class ProfileDetailView(generics.RetrieveUpdateDestroyAPIView):
         profile = self.request.profile
         if profile and profile.id == pk:
             return permissions
-        permissions += [IsManager()]
-        return permissions
+        return [IsAuthenticatedAndProfileIsManager()]
 
     def get_queryset(self):
         user = self.request.user
