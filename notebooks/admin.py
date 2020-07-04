@@ -40,6 +40,9 @@ class SheetAdmin(admin.ModelAdmin):
     list_filter = (
         'is_active',
     )
+    filter_horizontal = (
+        'buyers',
+    )
     ordering = (
         'merchant__id', 'customer__name',
     )

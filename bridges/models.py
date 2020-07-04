@@ -55,10 +55,10 @@ class Transaction(TimeStampedModel):
         return cls._meta.get_fields()
 
     def __str__(self):
-        return 'ID. %s' % self.id
+        return 'Transaction %s' % self.id
 
     def __repr__(self):
-        return 'ID. %s' % self.id
+        return 'Transaction %s' % self.id
 
     class Meta:
         verbose_name = _('transaction')

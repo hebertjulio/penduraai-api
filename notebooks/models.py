@@ -59,10 +59,10 @@ class Record(TimeStampedModel):
         return cls._meta.get_fields()
 
     def __str__(self):
-        return 'ID. %s' % self.id
+        return 'Record %s' % self.id
 
     def __repr__(self):
-        return 'ID. %s' % self.id
+        return 'Record %s' % self.id
 
     class Meta:
         verbose_name = _('record')
@@ -101,10 +101,10 @@ class Sheet(TimeStampedModel):
         return cls._meta.get_fields()
 
     def __str__(self):
-        return 'ID. %s' % self.id
+        return 'Sheet %s' % self.id
 
     def __repr__(self):
-        return 'ID. %s' % self.id
+        return 'Sheet %s' % self.id
 
     objects = SheetQuerySet.as_manager()
 

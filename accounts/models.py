@@ -58,10 +58,10 @@ class User(AbstractBaseUser, PermissionsMixin, TimeStampedModel):
         send_mail(subject, message, from_email, [self.email], **kwargs)
 
     def __str__(self):
-        return self.name
+        return '%s (%s)' % (self.name, self.id)
 
     def __repr__(self):
-        return self.name
+        return '%s (%s)' % (self.name, self.id)
 
     class Meta:
         verbose_name = 'user'
@@ -118,10 +118,10 @@ class Profile(TimeStampedModel):
         return self.role == self.ROLE.attendant
 
     def __str__(self):
-        return self.name
+        return '%s (%s)' % (self.name, self.id)
 
     def __repr__(self):
-        return self.name
+        return '%s (%s)' % (self.name, self.id)
 
     class Meta:
         verbose_name = _('profile')
