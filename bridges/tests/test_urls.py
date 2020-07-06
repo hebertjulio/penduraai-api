@@ -1,20 +1,19 @@
-from django.test import TestCase
 from django.urls import reverse, resolve
 
 from .. import views
 
 
-class UrlsTestCase(TestCase):
+class TestURL:
 
     def test_resolve_transaction_detail_url(self):
         kwargs = {'version': 'v1', 'pk': 1}
         r = self.resolve_by_name('bridges:transaction_detail', **kwargs)
-        self.assertEqual(r.func.cls, views.TransactionDetailView)
+        assert r.func.cls == views.TransactionDetailView  # nosec
 
     def test_resolve_transaction_reject_url(self):
         kwargs = {'version': 'v1', 'pk': 1}
         r = self.resolve_by_name('bridges:transaction_discard', **kwargs)
-        self.assertEqual(r.func.cls, views.TransactionDiscardView)
+        assert r.func.cls == views.TransactionDiscardView  # nosec
 
     @classmethod
     def resolve_by_name(cls, name, **kwargs):
