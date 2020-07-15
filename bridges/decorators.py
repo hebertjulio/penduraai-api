@@ -6,7 +6,7 @@ from functools import wraps, partial
 from django.utils import timezone
 from django.db.models import Model
 
-from rest_framework.exceptions import PermissionDenied
+from rest_framework.exceptions import NotFound
 
 from .serializers import TransactionDetailSerializer
 from .services import send_message
@@ -27,10 +27,12 @@ def use_transaction(func=None, scope=None):
 
     @wraps(func)
     def wrapper(self, request, *args, **kwargs):
-        obj = request.transaction
+        pk = self.kwargs.get(self.lookup_field)
 
-        if obj is None:
-            raise PermissionDenied
+        try:
+            obj = Transaction.objects.get(pk=pk)
+        except Transaction.DoesNotExist:
+            raise NotFound
 
         if obj.scope != scope:
             raise TransactionScopeInvalid
@@ -41,7 +43,7 @@ def use_transaction(func=None, scope=None):
         if obj.is_expired():
             raise TransactionExpired
 
-        request.data.update(obj.get_data())
+        request.transaction = obj
         ret = func(self, request, **kwargs)
 
         obj.status = Transaction.STATUS.used

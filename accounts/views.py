@@ -70,28 +70,36 @@ class ProfileRequestView(generics.CreateAPIView):
     ]
 
 
-class ProfileListView(generics.ListCreateAPIView):
+class ProfileCreateView(generics.CreateAPIView):
 
     serializer_class = ProfileListSerializer
 
-    filterset_fields = [
-        'role'
+    permission_classes = [
+        HasAPIKey
     ]
-
-    def get_permissions(self):
-        if self.request.method == 'POST':
-            return [HasAPIKey()]
-        return [IsAuthenticated()]
-
-    def get_queryset(self):
-        user = self.request.user
-        qs = user.userprofiles.filter(is_active=True)
-        return qs
 
     @use_transaction(scope='profile')
     def create(self, request, *args, **kwargs):  # skipcq
         obj = super().create(request, *args, *kwargs)
         return obj
+
+
+class ProfileListView(generics.ListAPIView):
+
+    serializer_class = ProfileListSerializer
+
+    permission_classes = [
+        IsAuthenticated
+    ]
+
+    filterset_fields = [
+        'role'
+    ]
+
+    def get_queryset(self):
+        user = self.request.user
+        qs = user.userprofiles.filter(is_active=True)
+        return qs
 
 
 class ProfileDetailView(generics.RetrieveUpdateDestroyAPIView):

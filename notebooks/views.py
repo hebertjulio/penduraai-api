@@ -27,18 +27,23 @@ class RecordRequestView(generics.CreateAPIView):
     ]
 
 
-class RecordListView(generics.ListCreateAPIView):
+class RecordCreateView(generics.CreateAPIView):
+
+    serializer_class = RecordListSerializer
+
+    @use_transaction(scope='record')
+    def create(self, request, *args, **kwargs):  # skipcq
+        obj = super().create(request, *args, *kwargs)
+        return obj
+
+
+class RecordListView(generics.ListAPIView):
 
     serializer_class = RecordListSerializer
 
     filterset_fields = [
         'sheet__merchant', 'sheet__customer'
     ]
-
-    @use_transaction(scope='record')
-    def create(self, request, *args, **kwargs):  # skipcq
-        obj = super().create(request, *args, *kwargs)
-        return obj
 
     def get_queryset(self):
         user = self.request.user

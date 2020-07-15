@@ -11,6 +11,10 @@ urlpatterns = [
         views.RecordRequestView.as_view(),
         name='record_request'),
     path(
+        'records/transaction/<int:pk>',
+        views.RecordCreateView.as_view(),
+        name='record_create'),
+    path(
         'records',
         views.RecordListView.as_view(),
         name='record_list'),

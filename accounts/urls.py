@@ -27,6 +27,10 @@ urlpatterns = [
         views.ProfileRequestView.as_view(),
         name='profile_request'),
     path(
+        'profiles/transaction/<int:pk>',
+        views.ProfileCreateView.as_view(),
+        name='profile_create'),
+    path(
         'token-obtain-pair',
         views.TokenObtainPairView.as_view(),
         name='token_obtain_pair'),
