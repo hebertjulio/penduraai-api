@@ -14,21 +14,22 @@ from .permissions import (
     IsAuthenticatedAndProfileIsOwner, IsAuthenticatedAndProfileIsManager
 )
 from .serializers import (
-    SignUpSerializer, UserListSerializer, UserDetailSerializer,
-    ProfileRequestSerializer, ProfileListSerializer, ProfileDetailSerializer
+    UserCreateSerializer, UserListSerializer, UserDetailSerializer,
+    ProfileRequestSerializer, ProfileCreateSerializer, ProfileListSerializer,
+    ProfileDetailSerializer
 )
 
 from .models import Profile
 
 
-class SignUpView(views.APIView):
+class UserListView(views.APIView):
 
     permission_classes = [
         HasAPIKey
     ]
 
     def post(self, request, version):  # skipcq
-        serializer = SignUpSerializer(data=request.data)
+        serializer = UserCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         obj = serializer.save()
         serializer = UserListSerializer(obj)
@@ -76,7 +77,7 @@ class ProfileRequestView(generics.CreateAPIView):
 
 class ProfileCreateView(generics.CreateAPIView):
 
-    serializer_class = ProfileListSerializer
+    serializer_class = ProfileCreateSerializer
     permission_classes = [
         HasAPIKey
     ]

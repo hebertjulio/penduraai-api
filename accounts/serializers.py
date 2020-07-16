@@ -8,7 +8,7 @@ from .models import User, Profile
 from .validators import ProfileOwnerRoleValidator
 
 
-class SignUpSerializer(serializers.ModelSerializer):
+class UserCreateSerializer(serializers.ModelSerializer):
 
     pin = serializers.RegexField(regex=Profile.PIN_REGEX, write_only=True)
 
@@ -117,7 +117,10 @@ class ProfileRequestSerializer(serializers.ModelSerializer):
         }
 
 
-class ProfileListSerializer(serializers.ModelSerializer):
+class ProfileCreateSerializer(serializers.ModelSerializer):
+
+    def update(self, instance, validated_data):
+        raise NotImplementedError
 
     class Meta:
         model = Profile
@@ -134,7 +137,23 @@ class ProfileListSerializer(serializers.ModelSerializer):
         }
 
 
+class ProfileListSerializer(serializers.ModelSerializer):
+
+    def create(self, validated_data):
+        raise NotImplementedError
+
+    def update(self, instance, validated_data):
+        raise NotImplementedError
+
+    class Meta:
+        model = Profile
+        fields = '__all__'
+
+
 class ProfileDetailSerializer(serializers.ModelSerializer):
+
+    def create(self, validated_data):
+        raise NotImplementedError
 
     class Meta:
         model = Profile

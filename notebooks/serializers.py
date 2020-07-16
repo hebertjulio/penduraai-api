@@ -56,7 +56,7 @@ class RecordRequestSerializer(serializers.ModelSerializer):
         }
 
 
-class RecordListSerializer(serializers.ModelSerializer):
+class RecordCreateSerializer(serializers.ModelSerializer):
 
     sheet = SheetRelatedField(read_only=True)
     attendant = ProfileRelatedField()
@@ -101,6 +101,22 @@ class RecordListSerializer(serializers.ModelSerializer):
         ]
 
 
+class RecordListSerializer(serializers.ModelSerializer):
+
+    sheet = SheetRelatedField()
+    attendant = ProfileRelatedField()
+
+    def create(self, validated_data):
+        raise NotImplementedError
+
+    def update(self, instance, validated_data):
+        raise NotImplementedError
+
+    class Meta:
+        model = Record
+        fields = '__all__'
+
+
 class RecordDetailSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
@@ -139,7 +155,7 @@ class SheetRequestSerializer(serializers.ModelSerializer):
         ]
 
 
-class SheetListSerializer(serializers.ModelSerializer):
+class SheetCreateSerializer(serializers.ModelSerializer):
 
     merchant = UserRelatedField(
         validators=[
@@ -152,7 +168,23 @@ class SheetListSerializer(serializers.ModelSerializer):
         default=serializers.CurrentUserDefault()
     )
 
-    profiles = ProfileRelatedField(many=True, read_only=True)
+    def update(self, instance, validated_data):
+        raise NotImplementedError
+
+    class Meta:
+        model = Sheet
+        fields = '__all__'
+
+
+class SheetListSerializer(serializers.ModelSerializer):
+
+    merchant = UserRelatedField()
+    customer = UserRelatedField()
+    profiles = ProfileRelatedField(many=True)
+    balance = serializers.DecimalField(max_digits=10, decimal_places=2)
+
+    def create(self, validated_data):
+        raise NotImplementedError
 
     def update(self, instance, validated_data):
         raise NotImplementedError
@@ -200,24 +232,4 @@ class SheetProfileAddSerializer(serializers.Serializer):
         return validated_data
 
     def update(self, instance, validated_data):
-        raise NotImplementedError
-
-
-class BalanceListSerializar(serializers.BaseSerializer):
-
-    def create(self, validated_data):
-        raise NotImplementedError
-
-    def update(self, instance, validated_data):
-        raise NotImplementedError
-
-    def to_representation(self, instance):
-        return {
-            'sheet_id': instance['sheet_id'],
-            'user_id': instance['user_id'],
-            'user_name': instance['user_name'],
-            'balance': instance['balance']
-        }
-
-    def to_internal_value(self, data):
         raise NotImplementedError

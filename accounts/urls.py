@@ -7,9 +7,9 @@ app_name = 'accounts'
 
 urlpatterns = [
     path(
-        'signup',
-        views.SignUpView.as_view(),
-        name='signup'),
+        'users',
+        views.UserListView.as_view(),
+        name='user_list'),
     path(
         'current-user',
         views.CurrentUserDetailView.as_view(),

@@ -5,10 +5,10 @@ from .. import views
 
 class TestURL:
 
-    def test_resolve_signup_url(self):
+    def test_resolve_user_list_url(self):
         kwargs = {'version': 'v1'}
-        r = self.resolve_by_name('accounts:signup', **kwargs)
-        assert r.func.cls == views.SignUpView  # nosec
+        r = self.resolve_by_name('accounts:user_list', **kwargs)
+        assert r.func.cls == views.UserListView  # nosec
 
     def test_resolve_current_user_detail_url(self):
         kwargs = {'version': 'v1'}
@@ -35,8 +35,13 @@ class TestURL:
         r = self.resolve_by_name('accounts:profile_request', **kwargs)
         assert r.func.cls == views.ProfileRequestView  # nosec
 
+    def test_resolve_profile_create_url(self):
+        kwargs = {'version': 'v1', 'transaction_id': 1}
+        r = self.resolve_by_name('accounts:profile_create', **kwargs)
+        assert r.func.cls == views.ProfileCreateView  # nosec
+
     def test_resolve_profile_detail_url(self):
-        kwargs = {'version': 'v1', 'pk': 84}
+        kwargs = {'version': 'v1', 'profile_id': 1}
         r = self.resolve_by_name('accounts:profile_detail', **kwargs)
         assert r.func.cls == views.ProfileDetailView  # nosec
 

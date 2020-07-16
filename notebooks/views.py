@@ -15,9 +15,9 @@ from bridges.decorators import use_transaction
 from .models import Record, Sheet
 
 from .serializers import (
-    RecordRequestSerializer, RecordListSerializer, RecordDetailSerializer,
-    SheetRequestSerializer, SheetListSerializer, SheetDetailSerializer,
-    SheetProfileAddSerializer, BalanceListSerializar
+    RecordRequestSerializer, RecordCreateSerializer, RecordListSerializer,
+    RecordDetailSerializer, SheetRequestSerializer, SheetCreateSerializer,
+    SheetListSerializer, SheetDetailSerializer, SheetProfileAddSerializer
 )
 
 
@@ -31,7 +31,7 @@ class RecordRequestView(generics.CreateAPIView):
 
 class RecordCreateView(generics.CreateAPIView):
 
-    serializer_class = RecordListSerializer
+    serializer_class = RecordCreateSerializer
 
     @use_transaction(scope='record', lookup_url_kwarg='transaction_id')
     def create(self, request, *args, **kwargs):
@@ -100,7 +100,7 @@ class SheetRequestView(generics.CreateAPIView):
 
 class SheetCreateView(generics.CreateAPIView):
 
-    serializer_class = SheetListSerializer
+    serializer_class = SheetCreateSerializer
     permission_classes = [
         IsAuthenticatedAndProfileIsManager
     ]
@@ -170,35 +170,26 @@ class SheetProfileManageView(views.APIView):
         return response
 
 
-class BalanceListByMerchantView(generics.ListAPIView):
+class SheetListView(generics.ListAPIView):
 
-    serializer_class = BalanceListSerializar
+    serializer_class = SheetListSerializer
     filter_backends = [
         SearchFilter
     ]
     search_fields = [
-        'user_name'
+        'merchant__name',
+        'customer__name',
     ]
 
     def get_queryset(self):
-        user = self.request.user
+        qs = Sheet.objects.balances()
+        by = self.kwargs['by']
+        if by == 'merchant':
+            qs = qs.filter(customer=self.request.user)
+        else:
+            qs = qs.filter(merchant=self.request.user)
         profile = self.request.profile
-        qs = Sheet.objects.balance_list_by_merchant(user, profile)
-        return qs
-
-
-class BalanceListByCustomerView(generics.ListAPIView):
-
-    serializer_class = BalanceListSerializar
-    filter_backends = [
-        SearchFilter
-    ]
-    search_fields = [
-        'user_name'
-    ]
-
-    def get_queryset(self):
-        user = self.request.user
-        profile = self.request.profile
-        qs = Sheet.objects.balance_list_by_customer(user, profile)
+        if not profile.is_owner:
+            qs = qs.filter(profiles=profile)
+        qs = qs.order_by(by + '__name')
         return qs
