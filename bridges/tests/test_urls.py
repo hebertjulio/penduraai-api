@@ -6,12 +6,12 @@ from .. import views
 class TestURL:
 
     def test_resolve_transaction_detail_url(self):
-        kwargs = {'version': 'v1', 'pk': 1}
+        kwargs = {'version': 'v1', 'transaction_id': 1}
         r = self.resolve_by_name('bridges:transaction_detail', **kwargs)
         assert r.func.cls == views.TransactionDetailView  # nosec
 
     def test_resolve_transaction_reject_url(self):
-        kwargs = {'version': 'v1', 'pk': 1}
+        kwargs = {'version': 'v1', 'transaction_id': 1}
         r = self.resolve_by_name('bridges:transaction_discard', **kwargs)
         assert r.func.cls == views.TransactionDiscardView  # nosec
 

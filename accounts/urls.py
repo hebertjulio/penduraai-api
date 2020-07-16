@@ -7,25 +7,29 @@ app_name = 'accounts'
 
 urlpatterns = [
     path(
-        'signup',
-        views.SignUpView.as_view(),
-        name='signup'),
+        'users',
+        views.UserListView.as_view(),
+        name='user_list'),
     path(
         'current-user',
         views.CurrentUserDetailView.as_view(),
         name='current_user_detail'),
     path(
+        'profiles/request',
+        views.ProfileRequestView.as_view(),
+        name='profile_request'),
+    path(
+        'profiles/transaction/<int:transaction_id>',
+        views.ProfileCreateView.as_view(),
+        name='profile_create'),
+    path(
         'profiles',
         views.ProfileListView.as_view(),
         name='profile_list'),
     path(
-        'profiles/<int:pk>',
+        'profiles/<int:profile_id>',
         views.ProfileDetailView.as_view(),
         name='profile_detail'),
-    path(
-        'profiles/request',
-        views.ProfileRequestView.as_view(),
-        name='profile_request'),
     path(
         'token-obtain-pair',
         views.TokenObtainPairView.as_view(),

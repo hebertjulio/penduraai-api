@@ -60,7 +60,6 @@ MIDDLEWARE = [
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'silk.middleware.SilkyMiddleware',
     'accounts.middleware.LoadProfileMiddleware',
-    'bridges.middleware.LoadTransactionMiddleware',
 ]
 
 ROOT_URLCONF = 'penduraai.urls'

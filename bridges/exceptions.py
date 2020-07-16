@@ -4,6 +4,12 @@ from rest_framework.exceptions import APIException
 from rest_framework.status import HTTP_400_BAD_REQUEST
 
 
+class LookupUrlKwargNoExist(APIException):
+
+    status_code = HTTP_400_BAD_REQUEST
+    default_detail = _('Lookup URL kwargs no exist.')
+
+
 class TransactionScopeInvalid(APIException):
 
     status_code = HTTP_400_BAD_REQUEST

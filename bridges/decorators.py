@@ -6,7 +6,7 @@ from functools import wraps, partial
 from django.utils import timezone
 from django.db.models import Model
 
-from rest_framework.exceptions import PermissionDenied
+from rest_framework.exceptions import NotFound
 
 from .serializers import TransactionDetailSerializer
 from .services import send_message
@@ -14,23 +14,32 @@ from .models import Transaction
 from .encoders import DecimalEncoder
 from .exceptions import (
     TransactionScopeInvalid, TransactionStatusInvalid,
-    TransactionExpired
+    TransactionExpired, LookupUrlKwargNoExist
 )
 
 
-def use_transaction(func=None, scope=None):
+def use_transaction(func=None, scope=None, lookup_url_kwarg=None):
     if scope is None:
         ValueError('Scope can\'t be empty.')
 
+    if lookup_url_kwarg is None:
+        ValueError('Lookup field can\'t be empty.')
+
     if func is None:
-        return partial(use_transaction, scope=scope)
+        return partial(
+            use_transaction, scope=scope, lookup_url_kwarg=lookup_url_kwarg)
 
     @wraps(func)
     def wrapper(self, request, *args, **kwargs):
-        obj = request.transaction
+        transaction_id = self.kwargs.get(lookup_url_kwarg)
 
-        if obj is None:
-            raise PermissionDenied
+        if transaction_id is None:
+            raise LookupUrlKwargNoExist
+
+        try:
+            obj = Transaction.objects.get(id=transaction_id)
+        except Transaction.DoesNotExist:
+            raise NotFound
 
         if obj.scope != scope:
             raise TransactionScopeInvalid
@@ -41,7 +50,7 @@ def use_transaction(func=None, scope=None):
         if obj.is_expired():
             raise TransactionExpired
 
-        request.data.update(obj.get_data())
+        self.transaction = obj
         ret = func(self, request, **kwargs)
 
         obj.status = Transaction.STATUS.used
