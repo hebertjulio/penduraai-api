@@ -40,10 +40,10 @@ class TestURL:
         r = self.resolve_by_name('notebooks:sheet_detail', **kwargs)
         assert r.func.cls == views.SheetDetailView  # nosec
 
-    def test_resolve_sheet_profile_manage_url(self):
+    def test_resolve_sheet_buyer_url(self):
         kwargs = {'version': 'v1', 'sheet_id': 1, 'profile_id': 1}
-        r = self.resolve_by_name('notebooks:sheet_profile_manage', **kwargs)
-        assert r.func.cls == views.SheetProfileManageView  # nosec
+        r = self.resolve_by_name('notebooks:sheet_buyer', **kwargs)
+        assert r.func.cls == views.SheetBuyerView  # nosec
 
     def test_resolve_sheet_list_url(self):
         kwargs = {'version': 'v1', 'by': 'merchant'}
