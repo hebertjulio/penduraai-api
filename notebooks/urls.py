@@ -11,7 +11,7 @@ urlpatterns = [
         views.RecordRequestView.as_view(),
         name='record_request'),
     path(
-        'records/transaction/<int:pk>',
+        'records/transaction/<int:transaction_id>',
         views.RecordCreateView.as_view(),
         name='record_create'),
     path(
@@ -19,7 +19,7 @@ urlpatterns = [
         views.RecordListView.as_view(),
         name='record_list'),
     path(
-        'records/<int:pk>',
+        'records/<int:record_id>',
         views.RecordDetailView.as_view(),
         name='record_detail'),
     path(
@@ -27,15 +27,15 @@ urlpatterns = [
         views.SheetRequestView.as_view(),
         name='sheet_request'),
     path(
-        'sheets',
-        views.SheetListView.as_view(),
-        name='sheet_list'),
+        'sheets/transaction/<int:transaction_id>',
+        views.SheetCreateView.as_view(),
+        name='sheet_create'),
     path(
-        'sheets/<int:pk>',
+        'sheets/<int:sheet_id>',
         views.SheetDetailView.as_view(),
         name='sheet_detail'),
     path(
-        'sheets/<int:pk>/profile/<int:profile_id>',
+        'sheets/<int:sheet_id>/profile/<int:profile_id>',
         views.SheetProfileManageView.as_view(),
         name='sheet_profile_manage'),
     path(

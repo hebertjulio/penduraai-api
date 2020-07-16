@@ -14,23 +14,30 @@ from .models import Transaction
 from .encoders import DecimalEncoder
 from .exceptions import (
     TransactionScopeInvalid, TransactionStatusInvalid,
-    TransactionExpired
+    TransactionExpired, LookupUrlKwargNoExist
 )
 
 
-def use_transaction(func=None, scope=None):
+def use_transaction(func=None, scope=None, lookup_url_kwarg=None):
     if scope is None:
         ValueError('Scope can\'t be empty.')
 
+    if lookup_url_kwarg is None:
+        ValueError('Lookup field can\'t be empty.')
+
     if func is None:
-        return partial(use_transaction, scope=scope)
+        return partial(
+            use_transaction, scope=scope, lookup_url_kwarg=lookup_url_kwarg)
 
     @wraps(func)
     def wrapper(self, request, *args, **kwargs):
-        pk = self.kwargs.get(self.lookup_field)
+        transaction_id = self.kwargs.get(lookup_url_kwarg)
+
+        if transaction_id is None:
+            raise LookupUrlKwargNoExist
 
         try:
-            obj = Transaction.objects.get(pk=pk)
+            obj = Transaction.objects.get(id=transaction_id)
         except Transaction.DoesNotExist:
             raise NotFound
 
@@ -43,7 +50,7 @@ def use_transaction(func=None, scope=None):
         if obj.is_expired():
             raise TransactionExpired
 
-        request.transaction = obj
+        self.transaction = obj
         ret = func(self, request, **kwargs)
 
         obj.status = Transaction.STATUS.used

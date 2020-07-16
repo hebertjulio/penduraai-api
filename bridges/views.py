@@ -15,25 +15,24 @@ class TransactionDetailView(generics.RetrieveAPIView):
 
     serializer_class = TransactionDetailSerializer
     queryset = Transaction.objects.all()
+    lookup_url_kwarg = 'transaction_id'
 
 
 class TransactionDiscardView(views.APIView):
 
     serializer_class = TransactionDetailSerializer
-    queryset = Transaction.objects.all()
 
-    @classmethod
-    def get_object(cls, pk):
+    def put(self, request, version, transaction_id):
         try:
-            tran = Transaction.objects.get(pk=pk)
-            return tran
+            obj = Transaction.objects.get(
+                id=transaction_id, status=Transaction.STATUS.not_used)
         except Transaction.DoesNotExist:
             raise NotFound
 
-    def put(self, request, version, pk):  # skipcq
-        obj = self.get_object(pk)
+        obj = self.get_object(transaction_id)
         obj.status = Transaction.STATUS.discarded
         obj.save()
+
         serializer = TransactionDetailSerializer(obj)
         response = Response(serializer.data, status=HTTP_200_OK)
         message = json.dumps(serializer.data, cls=DecimalEncoder)

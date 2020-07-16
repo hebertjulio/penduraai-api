@@ -15,21 +15,21 @@ urlpatterns = [
         views.CurrentUserDetailView.as_view(),
         name='current_user_detail'),
     path(
-        'profiles',
-        views.ProfileListView.as_view(),
-        name='profile_list'),
-    path(
-        'profiles/<int:pk>',
-        views.ProfileDetailView.as_view(),
-        name='profile_detail'),
-    path(
         'profiles/request',
         views.ProfileRequestView.as_view(),
         name='profile_request'),
     path(
-        'profiles/transaction/<int:pk>',
+        'profiles/transaction/<int:transaction_id>',
         views.ProfileCreateView.as_view(),
         name='profile_create'),
+    path(
+        'profiles',
+        views.ProfileListView.as_view(),
+        name='profile_list'),
+    path(
+        'profiles/<int:profile_id>',
+        views.ProfileDetailView.as_view(),
+        name='profile_detail'),
     path(
         'token-obtain-pair',
         views.TokenObtainPairView.as_view(),

@@ -7,11 +7,11 @@ app_name = 'bridges'
 
 urlpatterns = [
     path(
-        'transactions/<int:pk>',
+        'transactions/<int:transaction_id>',
         views.TransactionDetailView.as_view(),
         name='transaction_detail'),
     path(
-        'transactions/<int:pk>/discard',
+        'transactions/<int:transaction_id>/discard',
         views.TransactionDiscardView.as_view(),
         name='transaction_discard'),
 ]
