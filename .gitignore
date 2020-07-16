@@ -1,6 +1,7 @@
 .vscode/
 !.vscode/launch.json
 .mypy_cache/
+.pytest_cache/
 
 /media/*
 /static/*
