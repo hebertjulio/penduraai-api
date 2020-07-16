@@ -180,7 +180,7 @@ class SheetListSerializer(serializers.ModelSerializer):
 
     merchant = UserRelatedField()
     customer = UserRelatedField()
-    profiles = ProfileRelatedField(many=True)
+    buyers = ProfileRelatedField(many=True)
     balance = serializers.DecimalField(max_digits=10, decimal_places=2)
 
     def create(self, validated_data):
@@ -196,7 +196,7 @@ class SheetListSerializer(serializers.ModelSerializer):
 
 class SheetDetailSerializer(serializers.ModelSerializer):
 
-    profiles = ProfileRelatedField(many=True, read_only=True)
+    buyers = ProfileRelatedField(many=True, read_only=True)
 
     def create(self, validated_data):
         raise NotImplementedError
@@ -228,7 +228,7 @@ class SheetProfileAddSerializer(serializers.Serializer):
 
     def create(self, validated_data):
         sheet = validated_data['sheet']
-        sheet.profiles.add(validated_data['profile'])
+        sheet.buyers.add(validated_data['profile'])
         return validated_data
 
     def update(self, instance, validated_data):

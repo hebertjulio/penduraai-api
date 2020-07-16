@@ -140,7 +140,7 @@ class SheetDetailView(generics.RetrieveDestroyAPIView):
         instance.save()
 
 
-class SheetProfileManageView(views.APIView):
+class SheetBuyerView(views.APIView):
 
     permission_classes = [
         IsAuthenticatedAndProfileIsManager
@@ -165,7 +165,7 @@ class SheetProfileManageView(views.APIView):
 
     def delete(self, request, version, sheet_id, profile_id):  # skipcq
         sheet = self.get_sheet(sheet_id)
-        sheet.profiles.remove(profile_id)
+        sheet.buyers.remove(profile_id)
         response = Response([], status=HTTP_204_NO_CONTENT)
         return response
 
@@ -190,6 +190,6 @@ class SheetListView(generics.ListAPIView):
             qs = qs.filter(merchant=self.request.user)
         profile = self.request.profile
         if not profile.is_owner:
-            qs = qs.filter(profiles=profile)
+            qs = qs.filter(buyers=profile)
         qs = qs.order_by(by + '__name')
         return qs

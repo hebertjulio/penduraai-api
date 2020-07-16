@@ -41,7 +41,7 @@ class SheetAdmin(admin.ModelAdmin):
         'is_active',
     )
     filter_horizontal = (
-        'profiles',
+        'buyers',
     )
     ordering = (
         'merchant__id', 'customer__name',

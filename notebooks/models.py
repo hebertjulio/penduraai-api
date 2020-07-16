@@ -83,8 +83,8 @@ class Sheet(TimeStampedModel):
         related_name='customersheets',
     )
 
-    profiles = models.ManyToManyField(
-        'accounts.Profile', blank=True, related_name='sheetprofiles'
+    buyers = models.ManyToManyField(
+        'accounts.Profile', blank=True, related_name='sheetbuyers'
     )
 
     is_active = models.BooleanField(
