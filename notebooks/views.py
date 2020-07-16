@@ -55,8 +55,8 @@ class RecordListView(generics.ListAPIView):
         elif profile.is_attendant or profile.is_manager:
             where = Q(sheet__merchant=user)
         else:
-            where = Q(sheet__customer=user) & Q(profile=profile)
-        qs = Record.objects.select_related('sheet', 'attendant', 'profile')
+            where = Q(sheet__customer=user) & Q(signatory=profile)
+        qs = Record.objects.select_related('sheet', 'attendant', 'signatory')
         qs = qs.filter(where)
         qs = qs.order_by('-created')
         return qs

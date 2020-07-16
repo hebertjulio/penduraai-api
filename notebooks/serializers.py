@@ -81,7 +81,7 @@ class RecordCreateSerializer(serializers.ModelSerializer):
         request = self.context['request']
         sheet = self.get_sheet(merchant, request.user)
         validated_data.update({
-            'sheet': sheet, 'profile': request.profile
+            'sheet': sheet, 'signatory': request.profile
         })
         obj = super().create(validated_data)
         return obj
@@ -93,7 +93,7 @@ class RecordCreateSerializer(serializers.ModelSerializer):
         model = Record
         fields = '__all__'
         read_only_fields = [
-            'is_active', 'profile'
+            'is_active', 'signatory'
         ]
         validators = [
             EmployeeOfMerchantValidator(),

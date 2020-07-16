@@ -40,9 +40,9 @@ class Record(TimeStampedModel):
         related_name='attendantrecords',
     )
 
-    profile = models.ForeignKey(
+    signatory = models.ForeignKey(
         'accounts.Profile', on_delete=models.CASCADE,
-        related_name='profilerecords',
+        related_name='signatoryrecords',
     )
 
     is_active = models.BooleanField(
