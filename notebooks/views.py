@@ -154,7 +154,7 @@ class SheetProfileManageView(views.APIView):
         except Sheet.DoesNotExist:
             raise NotFound
 
-    def post(self, request, version, sheet_id, profile_id):
+    def post(self, request, version, sheet_id, profile_id):  # skipcq
         data = {'sheet': sheet_id, 'profile': profile_id}
         context = {'request': request}
         serializer = SheetProfileAddSerializer(data=data, context=context)
@@ -163,7 +163,7 @@ class SheetProfileManageView(views.APIView):
         response = Response(serializer.data, status=HTTP_201_CREATED)
         return response
 
-    def delete(self, request, version, sheet_id, profile_id):
+    def delete(self, request, version, sheet_id, profile_id):  # skipcq
         sheet = self.get_sheet(sheet_id)
         sheet.profiles.remove(profile_id)
         response = Response([], status=HTTP_204_NO_CONTENT)

@@ -22,7 +22,7 @@ class TransactionDiscardView(views.APIView):
 
     serializer_class = TransactionDetailSerializer
 
-    def put(self, request, version, transaction_id):
+    def put(self, request, version, transaction_id):  # skipcq
         try:
             obj = Transaction.objects.get(
                 id=transaction_id, status=Transaction.STATUS.not_used)
