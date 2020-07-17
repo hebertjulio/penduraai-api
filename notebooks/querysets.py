@@ -19,7 +19,7 @@ class SheetQuerySet(QuerySet):
         default=0, output_field=DecimalField())
     )
 
-    def balances(self):
+    def balance_qs(self):
         qs = self.select_related('merchant', 'customer')
         qs = qs.annotate(
             credit_sum=self.credit_sum, debt_sum=self.debt_sum,

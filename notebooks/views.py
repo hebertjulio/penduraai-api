@@ -1,7 +1,6 @@
 from django.db.models import Q
 
 from rest_framework import generics, views
-from rest_framework.filters import SearchFilter
 from rest_framework.exceptions import NotFound
 from rest_framework.response import Response
 from rest_framework.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT
@@ -173,23 +172,20 @@ class SheetBuyerView(views.APIView):
 class SheetListView(generics.ListAPIView):
 
     serializer_class = SheetListSerializer
-    filter_backends = [
-        SearchFilter
-    ]
-    search_fields = [
-        'merchant__name',
-        'customer__name',
-    ]
 
     def get_queryset(self):
-        qs = Sheet.objects.balances()
+        qs = Sheet.objects.balance_qs()
+        profile = self.request.profile
         by = self.kwargs['by']
         if by == 'merchant':
-            qs = qs.filter(customer=self.request.user)
-        else:
+            where = {'customer': self.request.user}
+            if not profile.is_owner:
+                where.update({'buyers': profile})
+            qs = qs.filter(**where)
+            qs = qs.order_by('merchant__name')
+        elif not profile.is_guest:
             qs = qs.filter(merchant=self.request.user)
-        profile = self.request.profile
-        if not profile.is_owner:
-            qs = qs.filter(buyers=profile)
-        qs = qs.order_by(by + '__name')
+            qs = qs.order_by('customer__name')
+        else:
+            qs = Sheet.objects.none()
         return qs

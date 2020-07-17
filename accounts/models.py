@@ -117,6 +117,10 @@ class Profile(TimeStampedModel):
     def is_attendant(self):
         return self.role == self.ROLE.attendant
 
+    @property
+    def is_guest(self):
+        return self.role == self.ROLE.guest
+
     def __str__(self):
         return '%s (%s)' % (self.name, self.id)
 
