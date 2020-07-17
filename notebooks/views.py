@@ -43,7 +43,7 @@ class RecordListView(generics.ListAPIView):
 
     serializer_class = RecordListSerializer
     filterset_fields = [
-        'sheet__merchant', 'sheet__customer'
+        'sheet_id'
     ]
 
     def get_queryset(self):
