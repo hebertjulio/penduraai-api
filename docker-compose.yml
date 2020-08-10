@@ -15,19 +15,32 @@ services:
       retries: 5
     network_mode: host
 
-  api:
-    container_name: penduraai_api
+  tasks:
+    container_name: penduraai_tasks
     image: python:3.8.2
-    stdin_open: true
-    tty: true
-    ports:
-      - "8000:8000"
     working_dir: /usr/app
     volumes:
       - .:/usr/app:z
     depends_on:
       - redis
-    command: bash -c "
+    command: sh -c "
+      pip install -U pip;
+      pip install -r requirements.txt;
+      celery -A penduraai worker -l info"
+    network_mode: host
+
+  api:
+    container_name: penduraai_api
+    image: python:3.8.2
+    stdin_open: true
+    tty: true
+    working_dir: /usr/app
+    volumes:
+      - .:/usr/app:z
+    depends_on:
+      - redis
+    command: sh -c "
+      pip install -U pip;
       pip install -r requirements.txt;
       python manage.py migrate;
       python manage.py runserver 0.0.0.0:8000"
