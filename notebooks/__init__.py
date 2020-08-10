@@ -1,1 +1,1 @@
-default_app_config = 'accounts.apps.NotebookssConfig'
+default_app_config = 'notebooks.apps.NotebooksConfig'
