@@ -2,13 +2,15 @@ from django.db.transaction import atomic
 
 from rest_framework import serializers
 
-from bridges.decorators import new_transaction
+from bridges.validators import (
+    TransactionScopeValidator, TrasactionUsedValidator,
+    TransactionExpiredValidator)
 
 from .models import User, Profile
 from .validators import ProfileOwnerRoleValidator
 
 
-class UserCreateSerializer(serializers.ModelSerializer):
+class UserWriteSerializer(serializers.ModelSerializer):
 
     pin = serializers.RegexField(regex=Profile.PIN_REGEX, write_only=True)
 
@@ -28,7 +30,12 @@ class UserCreateSerializer(serializers.ModelSerializer):
         return user
 
     def update(self, instance, validated_data):
-        raise NotImplementedError
+        user = instance
+        password = validated_data.pop('password', None)
+        if password:
+            user.set_password(password)
+        user = super().update(user, validated_data)
+        return user
 
     class Meta:
         model = User
@@ -37,12 +44,11 @@ class UserCreateSerializer(serializers.ModelSerializer):
             'is_staff'
         ]
         read_only_fields = [
-            'id', 'is_active', 'last_login', 'created',
-            'modified'
+            'is_active', 'last_login'
         ]
 
 
-class UserListSerializer(serializers.ModelSerializer):
+class UserReadSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         raise NotImplementedError
@@ -60,84 +66,59 @@ class UserListSerializer(serializers.ModelSerializer):
         ]
 
 
-class UserDetailSerializer(serializers.ModelSerializer):
+# class UserDetailSerializer(serializers.ModelSerializer):
 
-    def create(self, validated_data):
-        raise NotImplementedError
+#     def create(self, validated_data):
+#         raise NotImplementedError
 
-    def update(self, instance, validated_data):
-        user = instance
-        password = validated_data.pop('password', None)
-        if password:
-            user.set_password(password)
-        user = super().update(user, validated_data)
-        return user
+#     def update(self, instance, validated_data):
+#         user = instance
+#         password = validated_data.pop('password', None)
+#         if password:
+#             user.set_password(password)
+#         user = super().update(user, validated_data)
+#         return user
 
-    class Meta:
-        model = User
-        exclude = [
-            'user_permissions', 'groups', 'is_superuser',
-            'is_staff'
-        ]
-        read_only_fields = [
-            'id', 'is_active', 'last_login', 'created',
-            'modified'
-        ]
-        extra_kwargs = {
-            'password': {
-                'write_only': True
-            }
-        }
-
-
-class ProfileRequestSerializer(serializers.ModelSerializer):
-
-    transaction = serializers.IntegerField(read_only=True)
-    user = serializers.HiddenField(default=serializers.CurrentUserDefault())
-
-    @new_transaction(scope='profile')
-    def create(self, validated_data):
-        return validated_data
-
-    def update(self, instance, validated_data):
-        raise NotImplementedError
-
-    class Meta:
-        model = Profile
-        fields = [
-            'role', 'transaction', 'user',
-        ]
-        extra_kwargs = {
-            'role': {
-                'write_only': True,
-                'validators': [
-                    ProfileOwnerRoleValidator()
-                ]
-            }
-        }
+#     class Meta:
+#         model = User
+#         exclude = [
+#             'user_permissions', 'groups', 'is_superuser',
+#             'is_staff'
+#         ]
+#         read_only_fields = [
+#             'id', 'is_active', 'last_login', 'created',
+#             'modified'
+#         ]
+#         extra_kwargs = {
+#             'password': {
+#                 'write_only': True
+#             }
+#         }
 
 
-class ProfileCreateSerializer(serializers.ModelSerializer):
-
-    def update(self, instance, validated_data):
-        raise NotImplementedError
+class ProfileWriteSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Profile
         fields = '__all__'
-        read_only_fields = [
-            'id', 'created', 'modified'
-        ]
         extra_kwargs = {
             'role': {
                 'validators': [
                     ProfileOwnerRoleValidator()
                 ]
+            },
+            'transaction': {
+                'required': True,
+                'validators': [
+                    TransactionScopeValidator('profile'),
+                    TrasactionUsedValidator(),
+                    TransactionExpiredValidator()
+                ]
             }
         }
 
 
-class ProfileListSerializer(serializers.ModelSerializer):
+class ProfileReadSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         raise NotImplementedError
@@ -148,23 +129,6 @@ class ProfileListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
         fields = '__all__'
-
-
-class ProfileDetailSerializer(serializers.ModelSerializer):
-
-    def create(self, validated_data):
-        raise NotImplementedError
-
-    class Meta:
-        model = Profile
-        fields = '__all__'
         read_only_fields = [
-            'id', 'user', 'created', 'modified'
+            f for f in User.get_fields()
         ]
-        extra_kwargs = {
-            'role': {
-                'validators': [
-                    ProfileOwnerRoleValidator()
-                ]
-            }
-        }

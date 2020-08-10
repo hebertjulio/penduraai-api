@@ -6,7 +6,7 @@ from channels.consumer import AsyncConsumer
 from channels.exceptions import StopConsumer
 
 from .models import Transaction
-from .serializers import TransactionDetailSerializer
+from .serializers import TransactionReadSerializer
 from .encoders import DecimalEncoder
 
 
@@ -51,11 +51,12 @@ class TransactionConsumer(BaseConsumer):
         try:
             pk = event['pk']
             obj = await sync_to_async(Transaction.objects.get)(pk=pk)
-            serializer = TransactionDetailSerializer(obj)
+            serializer = TransactionReadSerializer(obj)
+            message = json.dumps(serializer.data, cls=DecimalEncoder)
+            group = str(event['pk'])
             await self.accept()
-            await self.send(json.dumps(serializer.data, cls=DecimalEncoder))
-            await self.channel_layer.group_add(
-                str(event['pk']), self.channel_name)
+            await self.send(message)
+            await self.channel_layer.group_add(group, self.channel_name)
         except Transaction.DoesNotExist:
             await self.reject()
             await self.close()
@@ -68,6 +69,6 @@ class TransactionConsumer(BaseConsumer):
         pass
 
     async def websocket_disconnect(self, event):
+        group = str(event['pk'])
         await self.close()
-        await self.channel_layer.group_discard(
-            str(event['pk']), self.channel_name)
+        await self.channel_layer.group_discard(group, self.channel_name)
