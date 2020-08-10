@@ -1,6 +1,8 @@
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
+from bridges.services import send_messages
+
 from .models import User, Profile
 
 
@@ -15,3 +17,9 @@ def owner_profile(sender, instance, created, **kwargs):
             if obj.name != instance.name:
                 obj.name = instance.name
                 obj.save()
+
+
+@receiver(post_save, sender=Profile)
+def profile_created(sender, instance, created, **kwargs):
+    if created and not instance.is_owner:
+        send_messages(instance.transaction)
