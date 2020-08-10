@@ -10,16 +10,16 @@ from model_utils import Choices
 
 class Transaction(TimeStampedModel):
 
-    STATUS = Choices(
-        ('not_used', _('not used')),
-        ('used', _('used')),
-        ('discarded', _('discarded')),
+    SCOPE = Choices(
+        ('record', _('record')),
+        ('sheet', _('sheet')),
+        ('profile', _('profile')),
     )
 
     id = models.BigAutoField(primary_key=True, editable=False)
-    scope = models.CharField(_('scope'), max_length=30)
     data = models.TextField(('data'), blank=True)
     expire_at = models.DateTimeField(_('expire at'))
+    discarded = models.BooleanField(_('discarded'), default=False)
 
     user = models.ForeignKey(
         'accounts.User', on_delete=models.CASCADE,
@@ -31,9 +31,9 @@ class Transaction(TimeStampedModel):
         related_name='profiletransactions',
     )
 
-    status = models.CharField(
-        _('status'), max_length=30, db_index=True,
-        choices=STATUS, default=STATUS.not_used
+    scope = models.CharField(
+        _('scope'), max_length=30, db_index=True,
+        choices=SCOPE
     )
 
     @property
@@ -47,8 +47,14 @@ class Transaction(TimeStampedModel):
             return json.loads(self.data)
         return {}
 
-    def is_expired(self):
+    @property
+    def expired(self):
         return bool(self.ttl < 1)
+
+    @property
+    def used(self):
+        related_name = 'transaction' + self.scope
+        return hasattr(self, related_name)
 
     @classmethod
     def get_fields(cls):

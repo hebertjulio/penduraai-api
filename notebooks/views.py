@@ -5,43 +5,23 @@ from rest_framework.exceptions import NotFound
 from rest_framework.response import Response
 from rest_framework.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT
 
-from accounts.permissions import (
-    IsAuthenticatedAndProfileIsManager, IsAuthenticatedAndProfileIsAttendant
-)
+from drf_rw_serializers import generics as rw_generics
 
-from bridges.decorators import use_transaction
+from accounts.permissions import IsAuthenticatedAndProfileIsManager
 
 from .models import Record, Sheet
+from .filters import SheetFilterSet
 
 from .serializers import (
-    RecordRequestSerializer, RecordCreateSerializer, RecordListSerializer,
-    RecordDetailSerializer, SheetRequestSerializer, SheetCreateSerializer,
-    SheetListSerializer, SheetDetailSerializer, SheetProfileAddSerializer
-)
+    RecordReadSerializer, RecordWriteSerializer, SheetReadSerializer,
+    SheetWriteSerializer, SheetProfileAddSerializer)
 
 
-class RecordRequestView(generics.CreateAPIView):
+class RecordListView(rw_generics.ListCreateAPIView):
 
-    serializer_class = RecordRequestSerializer
-    permission_classes = [
-        IsAuthenticatedAndProfileIsAttendant
-    ]
+    read_serializer_class = RecordReadSerializer
+    write_serializer_class = RecordWriteSerializer
 
-
-class RecordCreateView(generics.CreateAPIView):
-
-    serializer_class = RecordCreateSerializer
-
-    @use_transaction(scope='record', lookup_url_kwarg='transaction_id')
-    def create(self, request, *args, **kwargs):
-        request.data.update(self.transaction.get_data())
-        obj = super().create(request, *args, *kwargs)
-        return obj
-
-
-class RecordListView(generics.ListAPIView):
-
-    serializer_class = RecordListSerializer
     filterset_fields = [
         'sheet_id'
     ]
@@ -63,7 +43,7 @@ class RecordListView(generics.ListAPIView):
 
 class RecordDetailView(generics.RetrieveDestroyAPIView):
 
-    serializer_class = RecordDetailSerializer
+    serializer_class = RecordReadSerializer
     lookup_url_kwarg = 'record_id'
 
     def get_permissions(self):
@@ -89,31 +69,27 @@ class RecordDetailView(generics.RetrieveDestroyAPIView):
         instance.save()
 
 
-class SheetRequestView(generics.CreateAPIView):
+class SheetListView(rw_generics.ListCreateAPIView):
 
-    serializer_class = SheetRequestSerializer
-    permission_classes = [
-        IsAuthenticatedAndProfileIsManager
-    ]
+    read_serializer_class = SheetReadSerializer
+    write_serializer_class = SheetWriteSerializer
 
+    filterset_class = SheetFilterSet
 
-class SheetCreateView(generics.CreateAPIView):
+    def get_permissions(self):
+        permissions = super().get_permissions()
+        if self.request.method == 'POST':
+            return [IsAuthenticatedAndProfileIsManager()]
+        return permissions
 
-    serializer_class = SheetCreateSerializer
-    permission_classes = [
-        IsAuthenticatedAndProfileIsManager
-    ]
-
-    @use_transaction(scope='sheet', lookup_url_kwarg='transaction_id')
-    def create(self, request, *args, **kwargs):
-        request.data.update(self.transaction.get_data())
-        obj = super().create(request, *args, *kwargs)
-        return obj
+    def get_queryset(self):
+        qs = Sheet.objects.balance_qs()
+        return qs
 
 
 class SheetDetailView(generics.RetrieveDestroyAPIView):
 
-    serializer_class = SheetDetailSerializer
+    serializer_class = SheetReadSerializer
     lookup_url_kwarg = 'sheet_id'
 
     def get_permissions(self):
@@ -167,25 +143,3 @@ class SheetBuyerView(views.APIView):
         sheet.buyers.remove(profile_id)
         response = Response([], status=HTTP_204_NO_CONTENT)
         return response
-
-
-class SheetListView(generics.ListAPIView):
-
-    serializer_class = SheetListSerializer
-
-    def get_queryset(self):
-        qs = Sheet.objects.balance_qs()
-        profile = self.request.profile
-        by = self.kwargs['by']
-        if by == 'merchant':
-            where = {'customer': self.request.user}
-            if not profile.is_owner:
-                where.update({'buyers': profile})
-            qs = qs.filter(**where)
-            qs = qs.order_by('merchant__name')
-        elif not profile.is_guest:
-            qs = qs.filter(merchant=self.request.user)
-            qs = qs.order_by('customer__name')
-        else:
-            qs = Sheet.objects.none()
-        return qs

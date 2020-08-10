@@ -1,45 +1,37 @@
 from rest_framework.permissions import IsAuthenticated
-from rest_framework import generics, views
-from rest_framework.status import HTTP_201_CREATED
-from rest_framework.response import Response
 from rest_framework.exceptions import NotFound
+
+from drf_rw_serializers import generics as rw_generics
 
 from rest_framework_simplejwt import views as simplejwt_views
 
 from rest_framework_api_key.permissions import HasAPIKey
 
-from bridges.decorators import use_transaction
-
 from .permissions import (
-    IsAuthenticatedAndProfileIsOwner, IsAuthenticatedAndProfileIsManager
-)
+    IsAuthenticatedAndProfileIsOwner, IsAuthenticatedAndProfileIsManager)
+
 from .serializers import (
-    UserCreateSerializer, UserListSerializer, UserDetailSerializer,
-    ProfileRequestSerializer, ProfileCreateSerializer, ProfileListSerializer,
-    ProfileDetailSerializer
-)
+    UserReadSerializer, UserWriteSerializer, ProfileReadSerializer,
+    ProfileWriteSerializer)
 
 from .models import Profile
 
 
-class UserListView(views.APIView):
+class UserListView(rw_generics.CreateAPIView):
+
+    read_serializer_class = UserReadSerializer
+    write_serializer_class = UserWriteSerializer
 
     permission_classes = [
         HasAPIKey
     ]
 
-    def post(self, request, version):  # skipcq
-        serializer = UserCreateSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        obj = serializer.save()
-        serializer = UserListSerializer(obj)
-        response = Response(serializer.data, status=HTTP_201_CREATED)
-        return response
 
+class CurrentUserDetailView(rw_generics.RetrieveUpdateDestroyAPIView):
 
-class CurrentUserDetailView(generics.RetrieveUpdateDestroyAPIView):
+    read_serializer_class = UserReadSerializer
+    write_serializer_class = UserWriteSerializer
 
-    serializer_class = UserDetailSerializer
     permission_classes = [
         IsAuthenticatedAndProfileIsOwner
     ]
@@ -67,37 +59,24 @@ class TokenRefreshView(simplejwt_views.TokenRefreshView):
     ]
 
 
-class ProfileRequestView(generics.CreateAPIView):
+class ProfileListView(rw_generics.ListCreateAPIView):
 
-    serializer_class = ProfileRequestSerializer
-    permission_classes = [
-        IsAuthenticatedAndProfileIsManager
-    ]
+    read_serializer_class = ProfileReadSerializer
+    write_serializer_class = ProfileWriteSerializer
 
-
-class ProfileCreateView(generics.CreateAPIView):
-
-    serializer_class = ProfileCreateSerializer
-    permission_classes = [
-        HasAPIKey
-    ]
-
-    @use_transaction(scope='profile', lookup_url_kwarg='transaction_id')
-    def create(self, request, *args, **kwargs):
-        request.data.update(self.transaction.get_data())
-        obj = super().create(request, *args, *kwargs)
-        return obj
-
-
-class ProfileListView(generics.ListAPIView):
-
-    serializer_class = ProfileListSerializer
     permission_classes = [
         IsAuthenticated
     ]
+
     filterset_fields = [
         'role'
     ]
+
+    def get_permissions(self):
+        permissions = super().get_permissions()
+        if self.request.method == 'POST':
+            return [HasAPIKey()]
+        return permissions
 
     def get_queryset(self):
         user = self.request.user
@@ -105,9 +84,11 @@ class ProfileListView(generics.ListAPIView):
         return qs
 
 
-class ProfileDetailView(generics.RetrieveUpdateDestroyAPIView):
+class ProfileDetailView(rw_generics.RetrieveUpdateDestroyAPIView):
 
-    serializer_class = ProfileDetailSerializer
+    read_serializer_class = ProfileReadSerializer
+    write_serializer_class = ProfileWriteSerializer
+
     lookup_url_kwarg = 'profile_id'
 
     def get_permissions(self):

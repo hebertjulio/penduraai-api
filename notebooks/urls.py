@@ -1,4 +1,4 @@
-from django.urls import path, re_path
+from django.urls import path
 
 from . import views
 
@@ -6,14 +6,6 @@ from . import views
 app_name = 'notebooks'
 
 urlpatterns = [
-    path(
-        'records/request',
-        views.RecordRequestView.as_view(),
-        name='record_request'),
-    path(
-        'records/transaction/<int:transaction_id>',
-        views.RecordCreateView.as_view(),
-        name='record_create'),
     path(
         'records',
         views.RecordListView.as_view(),
@@ -23,15 +15,7 @@ urlpatterns = [
         views.RecordDetailView.as_view(),
         name='record_detail'),
     path(
-        'sheets/request',
-        views.SheetRequestView.as_view(),
-        name='sheet_request'),
-    path(
-        'sheets/transaction/<int:transaction_id>',
-        views.SheetCreateView.as_view(),
-        name='sheet_create'),
-    re_path(
-        r'sheets/(?P<by>(merchant|customer))',
+        'sheets',
         views.SheetListView.as_view(),
         name='sheet_list'),
     path(

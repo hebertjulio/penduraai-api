@@ -7,13 +7,12 @@ from .models import Transaction
 class TransactionAdmin(admin.ModelAdmin):
     list_display = (
         'id', 'user', 'profile', 'scope', 'data', 'expire_at',
-        'status',
     )
     search_fields = (
         'user__name', 'user__email',
     )
     list_filter = (
-        'status', 'created',
+        'scope', 'created',
     )
     ordering = (
         '-created',

@@ -30,16 +30,6 @@ class TestURL:
         r = self.resolve_by_name('accounts:profile_list', **kwargs)
         assert r.func.cls == views.ProfileListView  # nosec
 
-    def test_resolve_profile_request_url(self):
-        kwargs = {'version': 'v1'}
-        r = self.resolve_by_name('accounts:profile_request', **kwargs)
-        assert r.func.cls == views.ProfileRequestView  # nosec
-
-    def test_resolve_profile_create_url(self):
-        kwargs = {'version': 'v1', 'transaction_id': 1}
-        r = self.resolve_by_name('accounts:profile_create', **kwargs)
-        assert r.func.cls == views.ProfileCreateView  # nosec
-
     def test_resolve_profile_detail_url(self):
         kwargs = {'version': 'v1', 'profile_id': 1}
         r = self.resolve_by_name('accounts:profile_detail', **kwargs)
