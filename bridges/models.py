@@ -1,8 +1,11 @@
-import json
+from datetime import timedelta
 
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
+from django.conf import settings
+
+from jwt import encode as jwt_encode
 
 from model_utils.models import TimeStampedModel
 from model_utils import Choices
@@ -35,6 +38,13 @@ class Transaction(TimeStampedModel):
         _('scope'), max_length=30, db_index=True,
         choices=SCOPE
     )
+
+    @property
+    def token(self):
+        exp = timezone.now() + timedelta(days=1)
+        payload = {'id': self.id, 'aud': 'transaction', 'exp': exp}
+        token = jwt_encode(payload, settings.SECRET_KEY, algorithm='HS256')
+        return token.decode('utf-8')
 
     @property
     def ttl(self):

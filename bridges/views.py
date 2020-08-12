@@ -9,13 +9,12 @@ from rest_framework.response import Response
 
 from drf_rw_serializers import generics as rw_generics
 
-from rest_framework_api_key.permissions import HasAPIKey
-
 from accounts.permissions import (
     IsAuthenticatedAndProfileIsManager, IsAuthenticatedAndProfileIsAttendant)
 
 from .serializers import TransactionWriteSerializer, TransactionReadSerializer
 from .models import Transaction
+from .permissions import HasTransactionToken
 
 
 class TransactionListView(rw_generics.CreateAPIView):
@@ -41,11 +40,15 @@ class TransactionDetailView(generics.RetrieveAPIView):
     lookup_url_kwarg = 'transaction_id'
 
     permission_classes = [
-        HasAPIKey
+        HasTransactionToken
     ]
 
 
 class TransactionDiscardView(views.APIView):
+
+    permission_classes = [
+        HasTransactionToken
+    ]
 
     @classmethod
     def get_object(cls, pk):

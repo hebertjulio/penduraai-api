@@ -20,6 +20,7 @@ class TransactionWriteSerializer(serializers.ModelSerializer):
 
 class TransactionReadSerializer(serializers.ModelSerializer):
 
+    token = serializers.CharField(read_only=True)
     ttl = serializers.IntegerField(read_only=True)
     expired = serializers.BooleanField(read_only=True)
     used = serializers.BooleanField(read_only=True)
