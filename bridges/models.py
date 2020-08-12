@@ -42,11 +42,6 @@ class Transaction(TimeStampedModel):
         ttl = round(diff.total_seconds())
         return ttl
 
-    def get_data(self):
-        if self.data.strip():
-            return json.loads(self.data)
-        return {}
-
     @property
     def expired(self):
         return bool(self.ttl < 1)
