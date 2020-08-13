@@ -105,11 +105,6 @@ class Profile(TimeStampedModel):
         choices=ROLE
     )
 
-    transaction = models.OneToOneField(
-        'bridges.Transaction', on_delete=models.CASCADE,
-        related_name='transactionprofile', null=True, blank=True
-    )
-
     @property
     def is_owner(self):
         return self.role == self.ROLE.owner

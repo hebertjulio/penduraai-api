@@ -1,4 +1,4 @@
-import datetime
+from datetime import timedelta
 
 from django.utils import timezone
 
@@ -29,19 +29,23 @@ class TransactionListView(rw_generics.CreateAPIView):
         return [IsAuthenticatedAndProfileIsManager()]
 
     def perform_create(self, serializer):
-        expire_at = timezone.now() + datetime.timedelta(minutes=30)
+        expire_at = timezone.now() + timedelta(days=1)
         serializer.save(scope=self.kwargs['scope'], expire_at=expire_at)
 
 
 class TransactionDetailView(generics.RetrieveAPIView):
 
-    serializer_class = TransactionReadSerializer
     queryset = Transaction.objects.all()
     lookup_url_kwarg = 'transaction_id'
 
     permission_classes = [
         HasTransactionToken
     ]
+
+    def get_serializer(self,  *args, **kwargs):
+        kwargs.update({'exclude': ['token']})
+        serializer = TransactionReadSerializer(*args, **kwargs)
+        return serializer
 
 
 class TransactionDiscardView(views.APIView):

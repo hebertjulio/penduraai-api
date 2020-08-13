@@ -21,9 +21,15 @@ class TransactionWriteSerializer(serializers.ModelSerializer):
 class TransactionReadSerializer(serializers.ModelSerializer):
 
     token = serializers.CharField(read_only=True)
-    ttl = serializers.IntegerField(read_only=True)
     expired = serializers.BooleanField(read_only=True)
     used = serializers.BooleanField(read_only=True)
+    data = serializers.JSONField(read_only=True, source='data_as_dict')
+
+    def __init__(self, *args, **kwargs):
+        exclude = kwargs.pop('exclude', [])
+        super().__init__(*args, **kwargs)
+        for field in exclude:
+            self.fields.pop(field)
 
     class Meta:
         model = Transaction

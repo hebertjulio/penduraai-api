@@ -1,3 +1,5 @@
+import json
+
 from datetime import timedelta
 
 from django.db import models
@@ -13,6 +15,12 @@ from model_utils import Choices
 
 class Transaction(TimeStampedModel):
 
+    STATUS = Choices(
+        ('unused', _('unused')),
+        ('used', _('used')),
+        ('discarded', _('discarded')),
+    )
+
     SCOPE = Choices(
         ('record', _('record')),
         ('sheet', _('sheet')),
@@ -22,22 +30,21 @@ class Transaction(TimeStampedModel):
     id = models.BigAutoField(primary_key=True, editable=False)
     data = models.TextField(('data'), blank=True)
     expire_at = models.DateTimeField(_('expire at'))
-    discarded = models.BooleanField(_('discarded'), default=False)
 
-    user = models.ForeignKey(
-        'accounts.User', on_delete=models.CASCADE,
-        related_name='usertransactions',
-    )
-
-    profile = models.ForeignKey(
-        'accounts.Profile', on_delete=models.CASCADE,
-        related_name='profiletransactions',
+    status = models.CharField(
+        _('status'), max_length=30, db_index=True,
+        choices=STATUS, default=STATUS.unused
     )
 
     scope = models.CharField(
         _('scope'), max_length=30, db_index=True,
         choices=SCOPE
     )
+
+    @property
+    def data_as_dict(self):
+        value = json.loads(self.data)
+        return value
 
     @property
     def token(self):
@@ -57,9 +64,11 @@ class Transaction(TimeStampedModel):
         return bool(self.ttl < 1)
 
     @property
-    def used(self):
-        related_name = 'transaction' + self.scope
-        return hasattr(self, related_name)
+    def signature(self):
+        data = json.loads(self.data)
+        items = data.items()
+        value = ''.join([key + str(value) for key, value in items])
+        return value
 
     @classmethod
     def get_fields(cls):

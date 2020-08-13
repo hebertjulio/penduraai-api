@@ -5,9 +5,7 @@ from accounts.relations import UserRelatedField, ProfileRelatedField
 from accounts.fields import CurrentProfileDefault
 from accounts.validators import ProfileBelongUserValidator
 
-from bridges.validators import (
-    TransactionScopeValidator, TrasactionUsedValidator,
-    TransactionExpiredValidator)
+from bridges.relations import TransactionRelatedField
 
 from .relations import SheetRelatedField
 from .models import Record, Sheet
@@ -19,6 +17,8 @@ from .validators import (
 
 
 class RecordWriteSerializer(serializers.ModelSerializer):
+
+    transaction = TransactionRelatedField(scope='record')
 
     signatory = serializers.HiddenField(
         default=CurrentProfileDefault()
@@ -58,16 +58,6 @@ class RecordWriteSerializer(serializers.ModelSerializer):
             EmployeeOfMerchantValidator(),
             ProfileCanBuyValidator()
         ]
-        extra_kwargs = {
-            'transaction': {
-                'required': True,
-                'validators': [
-                    TransactionScopeValidator('record'),
-                    TrasactionUsedValidator(),
-                    TransactionExpiredValidator()
-                ]
-            }
-        }
 
 
 class RecordReadSerializer(serializers.ModelSerializer):
@@ -91,6 +81,8 @@ class RecordReadSerializer(serializers.ModelSerializer):
 
 class SheetWriteSerializer(serializers.ModelSerializer):
 
+    transaction = TransactionRelatedField(scope='sheet')
+
     merchant = UserRelatedField(
         validators=[
             CustomerOfYourselfValidator(),
@@ -108,16 +100,6 @@ class SheetWriteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Sheet
         fields = '__all__'
-        extra_kwargs = {
-            'transaction': {
-                'required': True,
-                'validators': [
-                    TransactionScopeValidator('sheet'),
-                    TrasactionUsedValidator(),
-                    TransactionExpiredValidator()
-                ]
-            }
-        }
 
 
 class SheetReadSerializer(serializers.ModelSerializer):

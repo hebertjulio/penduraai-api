@@ -54,11 +54,6 @@ class Record(TimeStampedModel):
         ),
     )
 
-    transaction = models.OneToOneField(
-        'bridges.Transaction', on_delete=models.CASCADE,
-        related_name='transactionrecord'
-    )
-
     @classmethod
     def get_fields(cls):
         return cls._meta.get_fields()
@@ -99,11 +94,6 @@ class Sheet(TimeStampedModel):
             'Designates whether this sheet should be treated as active. '
             'Unselect this instead of deleting sheet.'
         ),
-    )
-
-    transaction = models.OneToOneField(
-        'bridges.Transaction', on_delete=models.CASCADE,
-        related_name='transactionsheet'
     )
 
     @classmethod
