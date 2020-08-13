@@ -1,5 +1,4 @@
-import json
-
+from json import dumps
 from asgiref.sync import sync_to_async
 
 from channels.consumer import AsyncConsumer
@@ -52,7 +51,7 @@ class TransactionConsumer(BaseConsumer):
             pk = event['pk']
             obj = await sync_to_async(Transaction.objects.get)(pk=pk)
             serializer = TransactionReadSerializer(obj)
-            message = json.dumps(serializer.data, cls=DecimalEncoder)
+            message = dumps(serializer.data, cls=DecimalEncoder)
             group = str(event['pk'])
             await self.accept()
             await self.send(message)

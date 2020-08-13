@@ -1,4 +1,4 @@
-import json
+from json import loads
 
 from django.db import models
 from django.utils.translation import gettext_lazy as _
@@ -40,6 +40,11 @@ class Transaction(TimeStampedModel):
     )
 
     @property
+    def data_as_dict(self):
+        value = loads(self.data)
+        return value
+
+    @property
     def token(self):
         payload = {'id': self.id, 'aud': 'transaction', 'exp': self.expire_at}
         token = jwt_encode(payload, settings.SECRET_KEY, algorithm='HS256')
@@ -57,7 +62,7 @@ class Transaction(TimeStampedModel):
 
     @property
     def signature(self):
-        data = json.loads(self.data)
+        data = loads(self.data)
         items = data.items()
         value = ''.join([key + str(value) for key, value in items])
         return value

@@ -1,4 +1,4 @@
-import json
+from json import loads
 
 from django.utils.translation import gettext_lazy as _
 
@@ -13,7 +13,7 @@ class TransactionIntegrityValidator:
 
     def __call__(self, value, serializer_field):
         data = serializer_field.context['request'].data
-        keys = json.loads(value.data).keys()
+        keys = loads(value.data).keys()
         signature = ''.join([key + str(data[key]) for key in keys])
         if value.signature != signature:
             message = _('Transaction signature is invalid.')
