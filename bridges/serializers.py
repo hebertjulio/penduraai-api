@@ -1,14 +1,10 @@
 from rest_framework import serializers
 
-from accounts.fields import CurrentProfileDefault
-
 from .models import Transaction
 
 
 class TransactionWriteSerializer(serializers.ModelSerializer):
 
-    user = serializers.HiddenField(default=serializers.CurrentUserDefault())
-    profile = serializers.HiddenField(default=CurrentProfileDefault())
     data = serializers.JSONField(binary=True, required=True)
 
     class Meta:
@@ -22,7 +18,6 @@ class TransactionReadSerializer(serializers.ModelSerializer):
 
     token = serializers.CharField(read_only=True)
     expired = serializers.BooleanField(read_only=True)
-    used = serializers.BooleanField(read_only=True)
     data = serializers.JSONField(read_only=True, source='data_as_dict')
 
     def __init__(self, *args, **kwargs):
