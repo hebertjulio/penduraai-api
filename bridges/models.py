@@ -1,7 +1,5 @@
 import json
 
-from datetime import timedelta
-
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
@@ -42,14 +40,8 @@ class Transaction(TimeStampedModel):
     )
 
     @property
-    def data_as_dict(self):
-        value = json.loads(self.data)
-        return value
-
-    @property
     def token(self):
-        exp = timezone.now() + timedelta(days=1)
-        payload = {'id': self.id, 'aud': 'transaction', 'exp': exp}
+        payload = {'id': self.id, 'aud': 'transaction', 'exp': self.expire_at}
         token = jwt_encode(payload, settings.SECRET_KEY, algorithm='HS256')
         return token.decode('utf-8')
 

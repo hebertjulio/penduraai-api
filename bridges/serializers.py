@@ -1,11 +1,28 @@
+from datetime import timedelta
+
+from django.utils import timezone
+
 from rest_framework import serializers
 
 from .models import Transaction
+from .encoders import DecimalEncoder
 
 
 class TransactionWriteSerializer(serializers.ModelSerializer):
 
-    data = serializers.JSONField(binary=True, required=True)
+    data = serializers.JSONField(
+        binary=True, encoder=DecimalEncoder,
+        required=True
+    )
+
+    expire_in = serializers.IntegerField(required=True)
+
+    def create(self, validated_data):
+        expire_in = validated_data.pop('expire_in')
+        expire_at = timezone.now() + timedelta(minutes=expire_in)
+        validated_data.update({'expire_at': expire_at})
+        transaction = super().create(validated_data)
+        return transaction
 
     class Meta:
         model = Transaction
@@ -18,7 +35,6 @@ class TransactionReadSerializer(serializers.ModelSerializer):
 
     token = serializers.CharField(read_only=True)
     expired = serializers.BooleanField(read_only=True)
-    data = serializers.JSONField(read_only=True, source='data_as_dict')
 
     def __init__(self, *args, **kwargs):
         exclude = kwargs.pop('exclude', [])

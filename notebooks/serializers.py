@@ -6,6 +6,7 @@ from accounts.fields import CurrentProfileDefault
 from accounts.validators import ProfileBelongUserValidator
 
 from bridges.relations import TransactionRelatedField
+from bridges.decorators import use_transaction
 
 from .relations import SheetRelatedField
 from .models import Record, Sheet
@@ -39,6 +40,7 @@ class RecordWriteSerializer(serializers.ModelSerializer):
         except Sheet.DoesNotExist:
             raise NotFound
 
+    @use_transaction
     def create(self, validated_data):
         merchant = validated_data.pop('merchant')
         sheet = self.get_sheet(merchant)
@@ -93,6 +95,11 @@ class SheetWriteSerializer(serializers.ModelSerializer):
     customer = serializers.HiddenField(
         default=serializers.CurrentUserDefault()
     )
+
+    @use_transaction
+    def create(self, validated_data):
+        sheet = super().create(validated_data)
+        return sheet
 
     def update(self, instance, validated_data):
         raise NotImplementedError

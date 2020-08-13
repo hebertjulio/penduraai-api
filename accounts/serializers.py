@@ -3,6 +3,7 @@ from django.db.transaction import atomic
 from rest_framework import serializers
 
 from bridges.relations import TransactionRelatedField
+from bridges.decorators import use_transaction
 
 from .models import User, Profile
 from .validators import ProfileOwnerRoleValidator
@@ -19,7 +20,6 @@ class UserWriteSerializer(serializers.ModelSerializer):
         user.is_active = True
         user.set_password(validated_data['password'])
         user.save()
-        # create owner profile
         profile = Profile(**{
             'name': user.name, 'pin': pin, 'user': user,
             'role': Profile.ROLE.owner
@@ -67,6 +67,11 @@ class UserReadSerializer(serializers.ModelSerializer):
 class ProfileWriteSerializer(serializers.ModelSerializer):
 
     transaction = TransactionRelatedField(scope='profile')
+
+    @use_transaction
+    def create(self, validated_data):
+        profile = super().create(validated_data)
+        return profile
 
     class Meta:
         model = Profile

@@ -1,7 +1,3 @@
-from datetime import timedelta
-
-from django.utils import timezone
-
 from rest_framework.status import HTTP_200_OK
 from rest_framework import generics, views
 from rest_framework.exceptions import NotFound
@@ -29,8 +25,7 @@ class TransactionListView(rw_generics.CreateAPIView):
         return [IsAuthenticatedAndProfileIsManager()]
 
     def perform_create(self, serializer):
-        expire_at = timezone.now() + timedelta(days=1)
-        serializer.save(scope=self.kwargs['scope'], expire_at=expire_at)
+        serializer.save(scope=self.kwargs['scope'])
 
 
 class TransactionDetailView(generics.RetrieveAPIView):
