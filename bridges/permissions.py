@@ -3,7 +3,9 @@ from django.conf import settings
 from rest_framework.permissions import BasePermission
 
 from jwt import decode as jwt_decode
-from jwt import InvalidAudience, InvalidSignatureError, ExpiredSignatureError
+from jwt import (
+    InvalidAudience, InvalidSignatureError, ExpiredSignatureError,
+    DecodeError)
 
 from .models import Transaction
 
@@ -34,6 +36,8 @@ class HasTransactionToken(BasePermission):
         except InvalidAudience:
             pass
         except ExpiredSignatureError:
+            pass
+        except DecodeError:
             pass
         return None
 
