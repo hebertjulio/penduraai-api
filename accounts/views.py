@@ -2,10 +2,10 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import NotFound
 
 from drf_rw_serializers import generics as rw_generics
-
 from rest_framework_simplejwt import views as simplejwt_views
-
 from rest_framework_api_key.permissions import HasAPIKey
+
+from bridges.permissions import HasTransactionToken
 
 from .permissions import (
     IsAuthenticatedAndProfileIsOwner, IsAuthenticatedAndProfileIsManager)
@@ -14,7 +14,7 @@ from .serializers import (
     UserReadSerializer, UserWriteSerializer, ProfileReadSerializer,
     ProfileWriteSerializer)
 
-from .models import Profile
+from .models import User, Profile
 
 
 class UserListView(rw_generics.CreateAPIView):
@@ -75,10 +75,12 @@ class ProfileListView(rw_generics.ListCreateAPIView):
     def get_permissions(self):
         permissions = super().get_permissions()
         if self.request.method == 'POST':
-            return [HasAPIKey()]
+            return [HasTransactionToken()]
         return permissions
 
     def get_queryset(self):
+        if self.request.user.is_anonymous:
+            return User.objects.none()
         user = self.request.user
         qs = user.userprofiles.filter(is_active=True)
         return qs
