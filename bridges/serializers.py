@@ -6,7 +6,6 @@ from django.utils import timezone
 from rest_framework import serializers
 
 from .models import Transaction
-from .encoders import DecimalEncoder
 
 
 class TransactionWriteSerializer(serializers.ModelSerializer):
@@ -18,22 +17,22 @@ class TransactionWriteSerializer(serializers.ModelSerializer):
         expire_in = validated_data.pop('expire_in')
         expire_at = timezone.now() + timedelta(minutes=expire_in)
         data = dumps(validated_data['data'])
-        validated_data.update({'expire_at': expire_at, 'data': data})
+        validated_data.update({'data': data, 'expire_at': expire_at})
         transaction = super().create(validated_data)
         return transaction
 
     class Meta:
         model = Transaction
         exclude = [
-            'scope', 'expire_at'
+            'expire_at'
         ]
 
 
 class TransactionReadSerializer(serializers.ModelSerializer):
 
-    expired = serializers.BooleanField(read_only=True)
-    token = serializers.CharField(read_only=True)
     data = serializers.JSONField(read_only=True, source='data_as_dict')
+    token = serializers.CharField(read_only=True)
+    expired = serializers.BooleanField(read_only=True)
 
     def __init__(self, *args, **kwargs):
         exclude = kwargs.pop('exclude', [])

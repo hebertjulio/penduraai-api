@@ -2,19 +2,20 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import NotFound
 
 from drf_rw_serializers import generics as rw_generics
+
 from rest_framework_simplejwt import views as simplejwt_views
+
 from rest_framework_api_key.permissions import HasAPIKey
 
-from bridges.permissions import HasTransactionToken
-
-from .permissions import (
-    IsAuthenticatedAndProfileIsOwner, IsAuthenticatedAndProfileIsManager)
+from bridges.permissions import HasTransaction
 
 from .serializers import (
     UserReadSerializer, UserWriteSerializer, ProfileReadSerializer,
     ProfileWriteSerializer)
 
 from .models import User, Profile
+
+from .permissions import IsOwner, IsManager
 
 
 class UserListView(rw_generics.CreateAPIView):
@@ -32,9 +33,9 @@ class CurrentUserDetailView(rw_generics.RetrieveUpdateDestroyAPIView):
     read_serializer_class = UserReadSerializer
     write_serializer_class = UserWriteSerializer
 
-    permission_classes = [
-        IsAuthenticatedAndProfileIsOwner
-    ]
+    def get_permissions(self):
+        permissions = super().get_permissions()
+        return permissions + [IsOwner()]
 
     def get_object(self):
         user = self.request.user
@@ -75,7 +76,7 @@ class ProfileListView(rw_generics.ListCreateAPIView):
     def get_permissions(self):
         permissions = super().get_permissions()
         if self.request.method == 'POST':
-            return [HasTransactionToken()]
+            return [HasAPIKey(), HasTransaction()]
         return permissions
 
     def get_queryset(self):
@@ -99,7 +100,8 @@ class ProfileDetailView(rw_generics.RetrieveUpdateDestroyAPIView):
         profile = self.request.profile
         if profile and profile.id == profile_id:
             return permissions
-        return [IsAuthenticatedAndProfileIsManager()]
+        permissions += [IsManager()]
+        return permissions
 
     def get_object(self):
         profile_id = self.kwargs[self.lookup_url_kwarg]

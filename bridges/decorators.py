@@ -7,10 +7,12 @@ from .models import Transaction
 def use_transaction(func):
     @wraps(func)
     def wapper(self, validated_data):
-        transaction = validated_data.pop('transaction')
         obj = func(self, validated_data)
-        transaction.status = Transaction.STATUS.used
-        transaction.save()
-        send_messages(transaction)
+        request = self.context['request']
+        transaction = getattr(request, 'transaction', None)
+        if transaction:
+            transaction.status = Transaction.STATUS.used
+            transaction.save()
+            send_messages(transaction)
         return obj
     return wapper

@@ -5,8 +5,8 @@ from accounts.relations import UserRelatedField, ProfileRelatedField
 from accounts.fields import CurrentProfileDefault
 from accounts.validators import ProfileBelongUserValidator
 
-from bridges.relations import TransactionRelatedField
 from bridges.decorators import use_transaction
+from bridges.validators import TransactionSignatureValidator
 
 from .relations import SheetRelatedField
 from .models import Record, Sheet
@@ -18,8 +18,6 @@ from .validators import (
 
 
 class RecordWriteSerializer(serializers.ModelSerializer):
-
-    transaction = TransactionRelatedField(scope='record')
 
     signatory = serializers.HiddenField(
         default=CurrentProfileDefault()
@@ -58,7 +56,8 @@ class RecordWriteSerializer(serializers.ModelSerializer):
         ]
         validators = [
             EmployeeOfMerchantValidator(),
-            ProfileCanBuyValidator()
+            ProfileCanBuyValidator(),
+            TransactionSignatureValidator()
         ]
 
 
@@ -83,8 +82,6 @@ class RecordReadSerializer(serializers.ModelSerializer):
 
 class SheetWriteSerializer(serializers.ModelSerializer):
 
-    transaction = TransactionRelatedField(scope='sheet')
-
     merchant = UserRelatedField(
         validators=[
             CustomerOfYourselfValidator(),
@@ -107,6 +104,9 @@ class SheetWriteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Sheet
         fields = '__all__'
+        validators = [
+            TransactionSignatureValidator()
+        ]
 
 
 class SheetReadSerializer(serializers.ModelSerializer):

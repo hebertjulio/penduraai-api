@@ -2,8 +2,8 @@ from django.db.transaction import atomic
 
 from rest_framework import serializers
 
-from bridges.relations import TransactionRelatedField
 from bridges.decorators import use_transaction
+from bridges.validators import TransactionSignatureValidator
 
 from .models import User, Profile
 from .validators import ProfileOwnerRoleValidator
@@ -22,8 +22,7 @@ class UserWriteSerializer(serializers.ModelSerializer):
         user.save()
         profile = Profile(**{
             'name': user.name, 'pin': pin, 'user': user,
-            'role': Profile.ROLE.owner
-        })
+            'role': Profile.ROLE.owner})
         profile.save()
         return user
 
@@ -66,8 +65,6 @@ class UserReadSerializer(serializers.ModelSerializer):
 
 class ProfileWriteSerializer(serializers.ModelSerializer):
 
-    transaction = TransactionRelatedField(scope='profile')
-
     @use_transaction
     def create(self, validated_data):
         profile = super().create(validated_data)
@@ -76,6 +73,9 @@ class ProfileWriteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
         fields = '__all__'
+        validators = [
+            TransactionSignatureValidator()
+        ]
         extra_kwargs = {
             'role': {
                 'validators': [

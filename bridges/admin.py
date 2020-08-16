@@ -6,13 +6,13 @@ from .models import Transaction
 @admin.register(Transaction)
 class TransactionAdmin(admin.ModelAdmin):
     list_display = (
-        'id', 'scope', 'data', 'expire_at', 'status'
+        'id', 'data', 'expire_at', 'expired', 'status'
     )
     search_fields = (
         'user__name', 'user__email',
     )
     list_filter = (
-        'status', 'scope', 'created',
+        'status', 'created',
     )
     ordering = (
         '-created',

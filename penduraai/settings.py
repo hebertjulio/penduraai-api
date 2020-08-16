@@ -64,6 +64,7 @@ MIDDLEWARE = [
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'silk.middleware.SilkyMiddleware',
     'accounts.middleware.LoadProfileMiddleware',
+    'bridges.middleware.LoadTransactionMiddleware',
 ]
 
 ROOT_URLCONF = 'penduraai.urls'
@@ -147,7 +148,8 @@ AUTH_USER_MODEL = 'accounts.User'
 
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
-        'accounts.permissions.IsAuthenticatedAndProfileIsGuest',
+        'rest_framework.permissions.IsAuthenticated',
+        'accounts.permissions.HasProfile',
     ],
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',

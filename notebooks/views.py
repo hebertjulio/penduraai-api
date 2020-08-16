@@ -7,7 +7,9 @@ from rest_framework.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT
 
 from drf_rw_serializers import generics as rw_generics
 
-from accounts.permissions import IsAuthenticatedAndProfileIsManager
+from accounts.permissions import IsManager
+
+from bridges.permissions import HasTransaction
 
 from .models import Record, Sheet
 from .filters import SheetFilterSet
@@ -25,6 +27,10 @@ class RecordListView(rw_generics.ListCreateAPIView):
     filterset_fields = [
         'sheet_id'
     ]
+
+    def get_permissions(self):
+        permissions = super().get_permissions()
+        return permissions + [HasTransaction()]
 
     def get_queryset(self):
         user = self.request.user
@@ -48,9 +54,9 @@ class RecordDetailView(generics.RetrieveDestroyAPIView):
 
     def get_permissions(self):
         permissions = super().get_permissions()
-        if self.request.method == 'GET':
-            return permissions
-        return [IsAuthenticatedAndProfileIsManager()]
+        if self.request.method != 'GET':
+            permissions += [IsManager()]
+        return permissions
 
     def get_object(self):
         record_id = self.kwargs[self.lookup_url_kwarg]
@@ -78,8 +84,9 @@ class SheetListView(rw_generics.ListCreateAPIView):
 
     def get_permissions(self):
         permissions = super().get_permissions()
+        permissions += [HasTransaction()]
         if self.request.method == 'POST':
-            return [IsAuthenticatedAndProfileIsManager()]
+            permissions += [IsManager()]
         return permissions
 
     def get_queryset(self):
@@ -95,7 +102,7 @@ class SheetDetailView(generics.RetrieveDestroyAPIView):
     def get_permissions(self):
         permissions = super().get_permissions()
         if self.request.method == 'DELETE':
-            return [IsAuthenticatedAndProfileIsManager()]
+            permissions += [IsManager()]
         return permissions
 
     def get_object(self):
@@ -117,17 +124,17 @@ class SheetDetailView(generics.RetrieveDestroyAPIView):
 
 class SheetBuyerView(views.APIView):
 
-    permission_classes = [
-        IsAuthenticatedAndProfileIsManager
-    ]
-
-    def get_sheet(self, sheet_id):
-        user = self.request.user
+    @classmethod
+    def get_sheet(cls, user, sheet_id):
         try:
             obj = Sheet.objects.get(pk=sheet_id, customer=user)
             return obj
         except Sheet.DoesNotExist:
             raise NotFound
+
+    def get_permissions(self):
+        permissions = super().get_permissions()
+        return permissions + [IsManager()]
 
     def post(self, request, version, sheet_id, profile_id):  # skipcq
         data = {'sheet': sheet_id, 'profile': profile_id}
@@ -139,7 +146,7 @@ class SheetBuyerView(views.APIView):
         return response
 
     def delete(self, request, version, sheet_id, profile_id):  # skipcq
-        sheet = self.get_sheet(sheet_id)
+        sheet = self.get_sheet(request.user, sheet_id)
         sheet.buyers.remove(profile_id)
         response = Response([], status=HTTP_204_NO_CONTENT)
         return response

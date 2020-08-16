@@ -19,11 +19,7 @@ class Transaction(TimeStampedModel):
         ('discarded', _('discarded')),
     )
 
-    SCOPE = Choices(
-        ('record', _('record')),
-        ('sheet', _('sheet')),
-        ('profile', _('profile')),
-    )
+    AUDIENCE = 'v1'
 
     id = models.BigAutoField(primary_key=True, editable=False)
     data = models.TextField(('data'), blank=True)
@@ -34,11 +30,6 @@ class Transaction(TimeStampedModel):
         choices=STATUS, default=STATUS.unused
     )
 
-    scope = models.CharField(
-        _('scope'), max_length=30, db_index=True,
-        choices=SCOPE
-    )
-
     @property
     def data_as_dict(self):
         value = loads(self.data)
@@ -46,24 +37,19 @@ class Transaction(TimeStampedModel):
 
     @property
     def token(self):
-        payload = {'id': self.id, 'aud': 'transaction', 'exp': self.expire_at}
+        payload = {'id': self.id, 'aud': self.AUDIENCE, 'exp': self.expire_at}
         token = jwt_encode(payload, settings.SECRET_KEY, algorithm='HS256')
         return token.decode('utf-8')
 
     @property
-    def ttl(self):
-        diff = self.expire_at - timezone.now()
-        ttl = round(diff.total_seconds())
-        return ttl
-
-    @property
     def expired(self):
-        return bool(self.ttl < 1)
+        delta = self.expire_at - timezone.now()
+        return bool(delta.total_seconds() < 1)
 
     @property
     def signature(self):
         data = loads(self.data)
-        items = data.items()
+        items = sorted(data.items())
         value = ''.join([key + str(value) for key, value in items])
         return value
 

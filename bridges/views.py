@@ -1,16 +1,17 @@
 from rest_framework.status import HTTP_200_OK
 from rest_framework import generics, views
-from rest_framework.exceptions import NotFound
+from rest_framework.exceptions import NotFound, PermissionDenied
 from rest_framework.response import Response
+
+from rest_framework_api_key.permissions import HasAPIKey
 
 from drf_rw_serializers import generics as rw_generics
 
-from accounts.permissions import (
-    IsAuthenticatedAndProfileIsManager, IsAuthenticatedAndProfileIsAttendant)
+from accounts.permissions import IsManager, IsAttendant
 
 from .serializers import TransactionWriteSerializer, TransactionReadSerializer
 from .models import Transaction
-from .permissions import HasTransactionToken
+from .permissions import HasTransaction
 
 
 class TransactionListView(rw_generics.CreateAPIView):
@@ -18,14 +19,23 @@ class TransactionListView(rw_generics.CreateAPIView):
     write_serializer_class = TransactionWriteSerializer
     read_serializer_class = TransactionReadSerializer
 
-    def get_permissions(self):
-        scope = self.kwargs['scope']
-        if scope == 'record':
-            return [IsAuthenticatedAndProfileIsAttendant()]
-        return [IsAuthenticatedAndProfileIsManager()]
+    @classmethod
+    def get_scope(cls, headers):
+        try:
+            value = headers['Scope']
+        except (ValueError, KeyError):
+            raise PermissionDenied
+        else:
+            if value in ['profile', 'record', 'sheet']:
+                return value
+            raise PermissionDenied
 
-    def perform_create(self, serializer):
-        serializer.save(scope=self.kwargs['scope'])
+    def get_permissions(self):
+        scope = self.get_scope(self.request.headers)
+        permissions = super().get_permissions()
+        if scope == 'record':
+            return permissions + [IsAttendant()]
+        return permissions + [IsManager()]
 
 
 class TransactionDetailView(generics.RetrieveAPIView):
@@ -34,8 +44,15 @@ class TransactionDetailView(generics.RetrieveAPIView):
     lookup_url_kwarg = 'transaction_id'
 
     permission_classes = [
-        HasTransactionToken
+        HasAPIKey, HasTransaction
     ]
+
+    def get_object(self):
+        pk = self.kwargs[self.lookup_url_kwarg]
+        obj = self.request.transaction
+        if obj.id != pk:
+            raise NotFound
+        return obj
 
     def get_serializer(self,  *args, **kwargs):
         kwargs.update({'exclude': ['token']})
@@ -46,16 +63,14 @@ class TransactionDetailView(generics.RetrieveAPIView):
 class TransactionDiscardView(views.APIView):
 
     permission_classes = [
-        HasTransactionToken
+        HasAPIKey, HasTransaction
     ]
 
-    @classmethod
-    def get_object(cls, pk):
-        try:
-            obj = Transaction.objects.get(id=pk)
-            return obj
-        except Transaction.DoesNotExist:
+    def get_object(self, pk):
+        obj = self.request.transaction
+        if obj.id != pk:
             raise NotFound
+        return obj
 
     def put(self, request, version, transaction_id):  # skipcq
         obj = self.get_object(transaction_id)
