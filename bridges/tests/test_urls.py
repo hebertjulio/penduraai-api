@@ -5,6 +5,17 @@ from .. import views
 
 class TestURL:
 
+    def test_resolve_transaction_list_url(self):
+        kwargs = {'version': 'v1', 'scope': 'profile'}
+        r = self.resolve_by_name('bridges:transaction_list', **kwargs)
+        assert r.func.cls == views.TransactionListView  # nosec
+        kwargs = {'version': 'v1', 'scope': 'sheet'}
+        r = self.resolve_by_name('bridges:transaction_list', **kwargs)
+        assert r.func.cls == views.TransactionListView  # nosec
+        kwargs = {'version': 'v1', 'scope': 'record'}
+        r = self.resolve_by_name('bridges:transaction_list', **kwargs)
+        assert r.func.cls == views.TransactionListView  # nosec
+
     def test_resolve_transaction_detail_url(self):
         kwargs = {'version': 'v1', 'transaction_id': 1}
         r = self.resolve_by_name('bridges:transaction_detail', **kwargs)

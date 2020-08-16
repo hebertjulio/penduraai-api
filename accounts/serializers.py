@@ -3,7 +3,7 @@ from django.db.transaction import atomic
 from rest_framework import serializers
 
 from bridges.decorators import use_transaction
-from bridges.validators import TransactionSignatureValidator
+from bridges.validators import TransactionValidator
 
 from .models import User, Profile
 from .validators import ProfileOwnerRoleValidator
@@ -74,7 +74,7 @@ class ProfileWriteSerializer(serializers.ModelSerializer):
         model = Profile
         fields = '__all__'
         validators = [
-            TransactionSignatureValidator()
+            TransactionValidator()
         ]
         extra_kwargs = {
             'role': {
@@ -98,4 +98,19 @@ class ProfileReadSerializer(serializers.ModelSerializer):
         fields = '__all__'
         read_only_fields = [
             f for f in User.get_fields()
+        ]
+
+
+class ProfileScopeSerializer(serializers.ModelSerializer):
+
+    def create(self, validated_data):
+        raise NotImplementedError
+
+    def update(self, instance, validated_data):
+        raise NotImplementedError
+
+    class Meta:
+        model = Profile
+        fields = [
+            'user', 'role'
         ]

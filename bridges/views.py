@@ -1,6 +1,6 @@
 from rest_framework.status import HTTP_200_OK
 from rest_framework import generics, views
-from rest_framework.exceptions import NotFound, PermissionDenied
+from rest_framework.exceptions import NotFound
 from rest_framework.response import Response
 
 from rest_framework_api_key.permissions import HasAPIKey
@@ -8,6 +8,9 @@ from rest_framework_api_key.permissions import HasAPIKey
 from drf_rw_serializers import generics as rw_generics
 
 from accounts.permissions import IsManager, IsAttendant
+from accounts.serializers import ProfileScopeSerializer
+
+from notebooks.serializers import RecordScopeSerializer, SheetScopeSerializer
 
 from .serializers import TransactionWriteSerializer, TransactionReadSerializer
 from .models import Transaction
@@ -19,23 +22,24 @@ class TransactionListView(rw_generics.CreateAPIView):
     write_serializer_class = TransactionWriteSerializer
     read_serializer_class = TransactionReadSerializer
 
-    @classmethod
-    def get_scope(cls, headers):
-        try:
-            value = headers['Scope']
-        except (ValueError, KeyError):
-            raise PermissionDenied
-        else:
-            if value in ['profile', 'record', 'sheet']:
-                return value
-            raise PermissionDenied
+    scopes_serializers = {
+        'profile': ProfileScopeSerializer,
+        'sheet': SheetScopeSerializer,
+        'record': RecordScopeSerializer
+    }
 
     def get_permissions(self):
-        scope = self.get_scope(self.request.headers)
         permissions = super().get_permissions()
+        scope = self.kwargs['scope']
         if scope == 'record':
             return permissions + [IsAttendant()]
         return permissions + [IsManager()]
+
+    def get_write_serializer(self, *args, **kwargs):
+        scope = self.kwargs['scope']
+        serializer = self.scopes_serializers[scope]()
+        kwargs.update({'serializer': serializer})
+        return TransactionWriteSerializer(*args, **kwargs)
 
 
 class TransactionDetailView(generics.RetrieveAPIView):
@@ -74,7 +78,7 @@ class TransactionDiscardView(views.APIView):
 
     def put(self, request, version, transaction_id):  # skipcq
         obj = self.get_object(transaction_id)
-        obj.discarded = True
+        obj.usage = -1
         obj.save()
         serializer = TransactionReadSerializer(obj)
         response = Response(serializer.data, status=HTTP_200_OK)

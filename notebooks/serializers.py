@@ -6,7 +6,7 @@ from accounts.fields import CurrentProfileDefault
 from accounts.validators import ProfileBelongUserValidator
 
 from bridges.decorators import use_transaction
-from bridges.validators import TransactionSignatureValidator
+from bridges.validators import TransactionValidator
 
 from .relations import SheetRelatedField
 from .models import Record, Sheet
@@ -55,9 +55,9 @@ class RecordWriteSerializer(serializers.ModelSerializer):
             'sheet'
         ]
         validators = [
+            TransactionValidator(),
             EmployeeOfMerchantValidator(),
-            ProfileCanBuyValidator(),
-            TransactionSignatureValidator()
+            ProfileCanBuyValidator()
         ]
 
 
@@ -77,6 +77,22 @@ class RecordReadSerializer(serializers.ModelSerializer):
         fields = '__all__'
         read_only_fields = [
             f for f in Record.get_fields()
+        ]
+
+
+class RecordScopeSerializer(serializers.ModelSerializer):
+
+    def create(self, validated_data):
+        raise NotImplementedError
+
+    def update(self, instance, validated_data):
+        raise NotImplementedError
+
+    class Meta:
+        model = Record
+        fields = [
+            'note', 'operation', 'value',
+            'attendant'
         ]
 
 
@@ -105,7 +121,7 @@ class SheetWriteSerializer(serializers.ModelSerializer):
         model = Sheet
         fields = '__all__'
         validators = [
-            TransactionSignatureValidator()
+            TransactionValidator()
         ]
 
 
@@ -130,6 +146,21 @@ class SheetReadSerializer(serializers.ModelSerializer):
         fields = '__all__'
         read_only_fields = [
             f for f in Sheet.get_fields()
+        ]
+
+
+class SheetScopeSerializer(serializers.ModelSerializer):
+
+    def create(self, validated_data):
+        raise NotImplementedError
+
+    def update(self, instance, validated_data):
+        raise NotImplementedError
+
+    class Meta:
+        model = Sheet
+        fields = [
+            'merchant'
         ]
 
 

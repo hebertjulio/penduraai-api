@@ -11,3 +11,9 @@ def send_messages(transaction):
         group = str(transaction.id)
         message = dumps(serializer.data, cls=DecimalEncoder)
         websocket_send.apply_async((group, message))
+
+
+def get_signature(keys, dataset):
+    keys = sorted(keys)
+    signature = ''.join([key + str(dataset[key]) for key in keys])
+    return signature

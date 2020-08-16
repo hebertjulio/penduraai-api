@@ -4,17 +4,36 @@ from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers
 
+from .services import get_signature
 
-class TransactionSignatureValidator:
+
+class TransactionValidator:
 
     requires_context = True
+
+    @classmethod
+    def expired_validator(cls, transaction):
+        if transaction.expired:
+            message = _('Transaction already expired.')
+            raise serializers.ValidationError(message)
+
+    @classmethod
+    def usage_validator(cls, transaction):
+        if transaction.usage < 1:
+            message = _('Transaction usage invalid.')
+            raise serializers.ValidationError(message)
+
+    @classmethod
+    def signature_validator(cls, transaction, dataset):
+        keys = loads(transaction.data).keys()
+        signature = get_signature(keys, dataset)
+        if transaction.signature != signature:
+            message = _('Transaction signature invalid.')
+            raise serializers.ValidationError(message)
 
     def __call__(self, value, serializer_field):
         request = serializer_field.context['request']
         transaction = request.transaction
-        data = request.data
-        keys = sorted(loads(transaction.data).keys())
-        signature = ''.join([key + str(data[key]) for key in keys])
-        if transaction.signature != signature:
-            message = _('Invalid transaction signature.')
-            raise serializers.ValidationError(message)
+        self.expired_validator(transaction)
+        self.usage_validator(transaction)
+        self.signature_validator(transaction, request.data)

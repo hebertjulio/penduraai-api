@@ -2,6 +2,7 @@ from datetime import timedelta
 from json import dumps
 
 from django.utils import timezone
+from django.db.models import Model
 
 from rest_framework import serializers
 
@@ -10,13 +11,20 @@ from .models import Transaction
 
 class TransactionWriteSerializer(serializers.ModelSerializer):
 
-    data = serializers.JSONField(binary=True, required=True)
     expire_in = serializers.IntegerField(required=True)
+
+    def __init__(self, *args, **kwargs):
+        serializer = kwargs.pop('serializer')
+        super().__init__(*args, **kwargs)
+        if serializer:
+            self.fields['data'] = serializer
 
     def create(self, validated_data):
         expire_in = validated_data.pop('expire_in')
         expire_at = timezone.now() + timedelta(minutes=expire_in)
-        data = dumps(validated_data['data'])
+        items = validated_data['data'].items()
+        data = dumps({
+            k: v.id if isinstance(v, Model) else v for k, v in items})
         validated_data.update({'data': data, 'expire_at': expire_at})
         transaction = super().create(validated_data)
         return transaction
@@ -24,7 +32,7 @@ class TransactionWriteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Transaction
         exclude = [
-            'expire_at'
+            'expire_at',
         ]
 
 
@@ -32,7 +40,6 @@ class TransactionReadSerializer(serializers.ModelSerializer):
 
     data = serializers.JSONField(read_only=True, source='data_as_dict')
     token = serializers.CharField(read_only=True)
-    expired = serializers.BooleanField(read_only=True)
 
     def __init__(self, *args, **kwargs):
         exclude = kwargs.pop('exclude', [])

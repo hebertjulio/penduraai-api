@@ -8,27 +8,16 @@ from django.conf import settings
 from jwt import encode as jwt_encode
 
 from model_utils.models import TimeStampedModel
-from model_utils import Choices
 
 
 class Transaction(TimeStampedModel):
-
-    STATUS = Choices(
-        ('unused', _('unused')),
-        ('used', _('used')),
-        ('discarded', _('discarded')),
-    )
 
     AUDIENCE = 'v1'
 
     id = models.BigAutoField(primary_key=True, editable=False)
     data = models.TextField(('data'), blank=True)
     expire_at = models.DateTimeField(_('expire at'))
-
-    status = models.CharField(
-        _('status'), max_length=30, db_index=True,
-        choices=STATUS, default=STATUS.unused
-    )
+    usage = models.SmallIntegerField(_('usage'), default=1)
 
     @property
     def data_as_dict(self):
