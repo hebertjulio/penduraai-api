@@ -22,7 +22,7 @@ class SheetRelatedField(serializers.RelatedField):
             obj = qs.get(pk=data)
             return obj
         except Sheet.DoesNotExist:
-            raise ValidationError(_('Id non-existent.'))
+            raise ValidationError(_('Sheet does not exist.'))
 
     def to_representation(self, value):
         data = {

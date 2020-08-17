@@ -32,7 +32,7 @@ class TransactionWriteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Transaction
         exclude = [
-            'expire_at',
+            'expire_at', 'usage'
         ]
 
 

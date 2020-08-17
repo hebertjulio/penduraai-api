@@ -1,19 +1,27 @@
-from json import dumps
+from hashlib import sha256
 
-from .serializers import TransactionReadSerializer
-from .tasks import websocket_send
-from .encoders import DecimalEncoder
+from django.conf import settings
 
+from jwt import decode as jwt_decode
 
-def send_messages(transaction):
-    if transaction:
-        serializer = TransactionReadSerializer(transaction)
-        group = str(transaction.id)
-        message = dumps(serializer.data, cls=DecimalEncoder)
-        websocket_send.apply_async((group, message))
+from jwt import (
+    InvalidAudience, InvalidSignatureError, ExpiredSignatureError,
+    DecodeError)
 
 
-def get_signature(keys, dataset):
-    keys = sorted(keys)
-    signature = ''.join([key + str(dataset[key]) for key in keys])
-    return signature
+def get_signature(fields, data):
+    value = ''.join([str(data[field]) for field in fields])
+    value = sha256(value.encode()).hexdigest()
+    return value
+
+
+def get_payload(token):
+    try:
+        payload = jwt_decode(
+            token, settings.SECRET_KEY, audience='v1',
+            algorithms=['HS256'])
+        return payload
+    except (
+        InvalidSignatureError, InvalidAudience,
+            ExpiredSignatureError, DecodeError):
+        return None

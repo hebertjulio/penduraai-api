@@ -3,7 +3,7 @@ from django.db.transaction import atomic
 from rest_framework import serializers
 
 from bridges.decorators import use_transaction
-from bridges.validators import TransactionValidator
+from bridges.fields import TransactionField
 
 from .models import User, Profile
 from .validators import ProfileOwnerRoleValidator
@@ -18,12 +18,9 @@ class UserWriteSerializer(serializers.ModelSerializer):
         pin = validated_data.pop('pin')
         user = User(**validated_data)
         user.is_active = True
+        user.pin = pin
         user.set_password(validated_data['password'])
         user.save()
-        profile = Profile(**{
-            'name': user.name, 'pin': pin, 'user': user,
-            'role': Profile.ROLE.owner})
-        profile.save()
         return user
 
     def update(self, instance, validated_data):
@@ -65,6 +62,8 @@ class UserReadSerializer(serializers.ModelSerializer):
 
 class ProfileWriteSerializer(serializers.ModelSerializer):
 
+    transaction = TransactionField(required=True)
+
     @use_transaction
     def create(self, validated_data):
         profile = super().create(validated_data)
@@ -73,9 +72,6 @@ class ProfileWriteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
         fields = '__all__'
-        validators = [
-            TransactionValidator()
-        ]
         extra_kwargs = {
             'role': {
                 'validators': [

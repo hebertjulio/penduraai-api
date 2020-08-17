@@ -9,14 +9,15 @@ from jwt import encode as jwt_encode
 
 from model_utils.models import TimeStampedModel
 
+from .services import get_signature
+
 
 class Transaction(TimeStampedModel):
-
-    AUDIENCE = 'v1'
 
     id = models.BigAutoField(primary_key=True, editable=False)
     data = models.TextField(('data'), blank=True)
     expire_at = models.DateTimeField(_('expire at'))
+    max_usage = models.SmallIntegerField(_('max usage'), default=1)
     usage = models.SmallIntegerField(_('usage'), default=1)
 
     @property
@@ -26,21 +27,20 @@ class Transaction(TimeStampedModel):
 
     @property
     def token(self):
-        payload = {'id': self.id, 'aud': self.AUDIENCE, 'exp': self.expire_at}
+        payload = {'id': self.id, 'aud': 'v1', 'exp': self.expire_at}
         token = jwt_encode(payload, settings.SECRET_KEY, algorithm='HS256')
         return token.decode('utf-8')
+
+    @property
+    def signature(self):
+        fields = [field for field in self.data_as_dict.keys()]
+        value = get_signature(fields, self.data_as_dict)
+        return value
 
     @property
     def expired(self):
         delta = self.expire_at - timezone.now()
         return bool(delta.total_seconds() < 1)
-
-    @property
-    def signature(self):
-        data = loads(self.data)
-        items = sorted(data.items())
-        value = ''.join([key + str(value) for key, value in items])
-        return value
 
     @classmethod
     def get_fields(cls):

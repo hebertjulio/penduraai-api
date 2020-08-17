@@ -1,16 +1,22 @@
+from json import dumps
+
 from functools import wraps
 
-from .services import send_messages
+from .serializers import TransactionReadSerializer
+from .encoders import DecimalEncoder
+from .tasks import websocket_send
 
 
 def use_transaction(func):
     @wraps(func)
     def wapper(self, validated_data):
-        obj = func(self, validated_data)
-        request = self.context['request']
-        transaction = request.transaction
-        transaction.usage -= 1
-        transaction.save()
-        send_messages(transaction)
-        return obj
+        obj = validated_data.pop('transaction')
+        ret = func(self, validated_data)
+        obj.usage += 1
+        obj.save()
+        serializer = TransactionReadSerializer(obj)
+        group = str(obj.id)
+        message = dumps(serializer.data, cls=DecimalEncoder)
+        websocket_send.apply_async((group, message))
+        return ret
     return wapper

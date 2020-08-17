@@ -22,7 +22,7 @@ class UserRelatedField(serializers.RelatedField):
             obj = qs.get(pk=data)
             return obj
         except User.DoesNotExist:
-            raise ValidationError(_('Id non-existent.'))
+            raise ValidationError(_('User does not exist.'))
 
     def to_representation(self, value):
         data = {
@@ -48,7 +48,7 @@ class ProfileRelatedField(serializers.RelatedField):
             obj = qs.get(pk=data)
             return obj
         except Profile.DoesNotExist:
-            raise ValidationError(_('Id non-existent.'))
+            raise ValidationError(_('Profile does not exist.'))
 
     def to_representation(self, value):
         data = {

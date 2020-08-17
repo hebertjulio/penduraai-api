@@ -7,8 +7,6 @@ from rest_framework_simplejwt import views as simplejwt_views
 
 from rest_framework_api_key.permissions import HasAPIKey
 
-from bridges.permissions import HasTransaction
-
 from .serializers import (
     UserReadSerializer, UserWriteSerializer, ProfileReadSerializer,
     ProfileWriteSerializer)
@@ -76,7 +74,7 @@ class ProfileListView(rw_generics.ListCreateAPIView):
     def get_permissions(self):
         permissions = super().get_permissions()
         if self.request.method == 'POST':
-            return [HasAPIKey(), HasTransaction()]
+            return [HasAPIKey()]
         return permissions
 
     def get_queryset(self):

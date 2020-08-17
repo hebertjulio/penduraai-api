@@ -9,8 +9,6 @@ from drf_rw_serializers import generics as rw_generics
 
 from accounts.permissions import IsManager
 
-from bridges.permissions import HasTransaction
-
 from .models import Record, Sheet
 from .filters import SheetFilterSet
 
@@ -27,10 +25,6 @@ class RecordListView(rw_generics.ListCreateAPIView):
     filterset_fields = [
         'sheet_id'
     ]
-
-    def get_permissions(self):
-        permissions = super().get_permissions()
-        return permissions + [HasTransaction()]
 
     def get_queryset(self):
         user = self.request.user
@@ -84,7 +78,6 @@ class SheetListView(rw_generics.ListCreateAPIView):
 
     def get_permissions(self):
         permissions = super().get_permissions()
-        permissions += [HasTransaction()]
         if self.request.method == 'POST':
             permissions += [IsManager()]
         return permissions

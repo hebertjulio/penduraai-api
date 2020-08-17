@@ -1,3 +1,5 @@
+from json import dumps
+
 from rest_framework.status import HTTP_200_OK
 from rest_framework import generics, views
 from rest_framework.exceptions import NotFound
@@ -14,7 +16,9 @@ from notebooks.serializers import RecordScopeSerializer, SheetScopeSerializer
 
 from .serializers import TransactionWriteSerializer, TransactionReadSerializer
 from .models import Transaction
-from .permissions import HasTransaction
+from .encoders import DecimalEncoder
+from .services import get_payload
+from .tasks import websocket_send
 
 
 class TransactionListView(rw_generics.CreateAPIView):
@@ -22,7 +26,7 @@ class TransactionListView(rw_generics.CreateAPIView):
     write_serializer_class = TransactionWriteSerializer
     read_serializer_class = TransactionReadSerializer
 
-    scopes_serializers = {
+    scope_serializers = {
         'profile': ProfileScopeSerializer,
         'sheet': SheetScopeSerializer,
         'record': RecordScopeSerializer
@@ -37,26 +41,27 @@ class TransactionListView(rw_generics.CreateAPIView):
 
     def get_write_serializer(self, *args, **kwargs):
         scope = self.kwargs['scope']
-        serializer = self.scopes_serializers[scope]()
+        serializer = self.scope_serializers[scope]()
         kwargs.update({'serializer': serializer})
         return TransactionWriteSerializer(*args, **kwargs)
 
 
 class TransactionDetailView(generics.RetrieveAPIView):
 
-    queryset = Transaction.objects.all()
-    lookup_url_kwarg = 'transaction_id'
+    lookup_url_kwarg = 'token'
 
     permission_classes = [
-        HasAPIKey, HasTransaction
+        HasAPIKey
     ]
 
     def get_object(self):
-        pk = self.kwargs[self.lookup_url_kwarg]
-        obj = self.request.transaction
-        if obj.id != pk:
+        try:
+            token = self.kwargs[self.lookup_url_kwarg]
+            payload = get_payload(token)
+            obj = Transaction.objects.get(pk=payload['id'])
+            return obj
+        except Transaction.DoesNotExist:
             raise NotFound
-        return obj
 
     def get_serializer(self,  *args, **kwargs):
         kwargs.update({'exclude': ['token']})
@@ -67,19 +72,24 @@ class TransactionDetailView(generics.RetrieveAPIView):
 class TransactionDiscardView(views.APIView):
 
     permission_classes = [
-        HasAPIKey, HasTransaction
+        HasAPIKey
     ]
 
-    def get_object(self, pk):
-        obj = self.request.transaction
-        if obj.id != pk:
+    def get_object(self, token):
+        try:
+            payload = get_payload(token)
+            obj = Transaction.objects.get(pk=payload['id'])
+            return obj
+        except Transaction.DoesNotExist:
             raise NotFound
-        return obj
 
-    def put(self, request, version, transaction_id):  # skipcq
-        obj = self.get_object(transaction_id)
+    def put(self, request, version, token):  # skipcq
+        obj = self.get_object(token)
         obj.usage = -1
         obj.save()
         serializer = TransactionReadSerializer(obj)
         response = Response(serializer.data, status=HTTP_200_OK)
+        group = str(obj.id)
+        message = dumps(serializer.data, cls=DecimalEncoder)
+        websocket_send.apply_async((group, message))
         return response
