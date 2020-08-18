@@ -17,7 +17,7 @@ from notebooks.serializers import RecordScopeSerializer, SheetScopeSerializer
 from .serializers import TransactionWriteSerializer, TransactionReadSerializer
 from .models import Transaction
 from .encoders import DecimalEncoder
-from .services import get_payload
+from .services import decode_token
 from .tasks import websocket_send
 
 
@@ -57,7 +57,7 @@ class TransactionDetailView(generics.RetrieveAPIView):
     def get_object(self):
         try:
             token = self.kwargs[self.lookup_url_kwarg]
-            payload = get_payload(token)
+            payload = decode_token(token)
             obj = Transaction.objects.get(pk=payload['id'])
             return obj
         except Transaction.DoesNotExist:
@@ -77,7 +77,7 @@ class TransactionDiscardView(views.APIView):
 
     def get_object(self, token):
         try:
-            payload = get_payload(token)
+            payload = decode_token(token)
             obj = Transaction.objects.get(pk=payload['id'])
             return obj
         except Transaction.DoesNotExist:

@@ -3,13 +3,10 @@ from json import loads
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
-from django.conf import settings
-
-from jwt import encode as jwt_encode
 
 from model_utils.models import TimeStampedModel
 
-from .services import get_signature
+from .services import generate_signature, encode_token
 
 
 class Transaction(TimeStampedModel):
@@ -18,7 +15,7 @@ class Transaction(TimeStampedModel):
     data = models.TextField(('data'), blank=True)
     expire_at = models.DateTimeField(_('expire at'))
     max_usage = models.SmallIntegerField(_('max usage'), default=1)
-    usage = models.SmallIntegerField(_('usage'), default=1)
+    usage = models.SmallIntegerField(_('usage'), default=0)
 
     @property
     def data_as_dict(self):
@@ -27,14 +24,14 @@ class Transaction(TimeStampedModel):
 
     @property
     def token(self):
-        payload = {'id': self.id, 'aud': 'v1', 'exp': self.expire_at}
-        token = jwt_encode(payload, settings.SECRET_KEY, algorithm='HS256')
-        return token.decode('utf-8')
+        payload = {'id': self.id, 'exp': self.expire_at}
+        token = encode_token(payload)
+        return token
 
     @property
     def signature(self):
-        fields = [field for field in self.data_as_dict.keys()]
-        value = get_signature(fields, self.data_as_dict)
+        values = self.data_as_dict.values()
+        value = generate_signature(values)
         return value
 
     @property

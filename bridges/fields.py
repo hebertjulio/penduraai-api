@@ -3,7 +3,7 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework.validators import ValidationError
 from rest_framework.fields import Field
 
-from .services import get_payload
+from .services import decode_token
 from .models import Transaction
 
 from .validators import (
@@ -25,7 +25,7 @@ class TransactionTokenField(Field):
 
     def to_internal_value(self, data):
         try:
-            payload = get_payload(data)
+            payload = decode_token(data)
             obj = Transaction.objects.get(pk=payload['id'])
             return obj
         except (

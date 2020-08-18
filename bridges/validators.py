@@ -4,7 +4,7 @@ from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers
 
-from .services import get_signature
+from .services import generate_signature
 
 
 class TransactionExpiredValidator:
@@ -29,8 +29,8 @@ class TransactionSignatureValidator:
 
     def __call__(self, value, serializer_field):
         request = serializer_field.context['request']
-        fields = loads(value.data).keys()
-        signature = get_signature(fields, request.data)
+        values = [request.data[field] for field in loads(value.data).keys()]
+        signature = generate_signature(values)
         if value.signature != signature:
             message = _('Transaction signature invalid.')
             raise serializers.ValidationError(message)
