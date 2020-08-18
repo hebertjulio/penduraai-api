@@ -3,7 +3,7 @@ from django.db.transaction import atomic
 from rest_framework import serializers
 
 from bridges.decorators import use_transaction
-from bridges.fields import TransactionField
+from bridges.fields import TransactionTokenField
 
 from .models import User, Profile
 from .validators import ProfileOwnerRoleValidator
@@ -62,7 +62,7 @@ class UserReadSerializer(serializers.ModelSerializer):
 
 class ProfileWriteSerializer(serializers.ModelSerializer):
 
-    transaction = TransactionField(required=True)
+    transaction = TransactionTokenField(required=True)
 
     @use_transaction
     def create(self, validated_data):

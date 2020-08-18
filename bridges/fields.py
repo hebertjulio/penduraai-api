@@ -11,7 +11,7 @@ from .validators import (
     TransactionUsageValidator)
 
 
-class TransactionField(Field):
+class TransactionTokenField(Field):
 
     validators = [
         TransactionExpiredValidator(),
