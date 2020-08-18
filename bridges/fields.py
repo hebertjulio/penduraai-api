@@ -8,7 +8,7 @@ from .models import Transaction
 
 from .validators import (
     TransactionExpiredValidator, TransactionSignatureValidator,
-    TransactionUsageValidator)
+    TransactionTicketsValidator)
 
 
 class TransactionTokenField(Field):
@@ -16,7 +16,7 @@ class TransactionTokenField(Field):
     validators = [
         TransactionExpiredValidator(),
         TransactionSignatureValidator(),
-        TransactionUsageValidator()
+        TransactionTicketsValidator()
     ]
 
     def to_representation(self, instance):

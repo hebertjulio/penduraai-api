@@ -5,7 +5,7 @@ from celery import shared_task
 
 
 @shared_task(bind=True)
-def websocket_send(self, group, message):
+def response_by_websocket(self, group, message):
     channel_layer = get_channel_layer()
     async_to_sync(channel_layer.group_send)(
         str(group), {
@@ -13,3 +13,8 @@ def websocket_send(self, group, message):
             'text': message,
         },
     )
+
+
+@shared_task(bind=True)
+def response_by_push_notification(self, message):
+    pass

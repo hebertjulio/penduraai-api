@@ -14,8 +14,7 @@ class Transaction(TimeStampedModel):
     id = models.BigAutoField(primary_key=True, editable=False)
     data = models.TextField(('data'), blank=True)
     expire_at = models.DateTimeField(_('expire at'))
-    max_usage = models.SmallIntegerField(_('max usage'), default=1)
-    usage = models.SmallIntegerField(_('usage'), default=0)
+    tickets = models.SmallIntegerField(_('tickets'), default=1)
 
     @property
     def data_as_dict(self):

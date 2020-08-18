@@ -4,5 +4,5 @@ from .consumers import TransactionConsumer
 
 
 urlpatterns = [
-    path('transactions/<int:pk>', TransactionConsumer),
+    path('transactions/<str:token>', TransactionConsumer),
 ]

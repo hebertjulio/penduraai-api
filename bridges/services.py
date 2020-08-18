@@ -2,15 +2,22 @@ from hashlib import sha256
 
 from django.conf import settings
 
-from jwt import decode as jwt_decode
-from jwt import encode as jwt_encode
-
 from jwt import (
     InvalidAudience, InvalidSignatureError, ExpiredSignatureError,
     DecodeError)
 
+from jwt import decode as jwt_decode
+from jwt import encode as jwt_encode
+
+from .tasks import response_by_websocket, response_by_push_notification
+
 
 TOKEN_AUDIENCE = 'v1'
+
+
+def response_transaction(group, message):
+    response_by_websocket.apply_async([str(group), str(message)])
+    response_by_push_notification.apply_async([str(message)])
 
 
 def generate_signature(values):

@@ -15,11 +15,11 @@ class TransactionExpiredValidator:
             raise serializers.ValidationError(message)
 
 
-class TransactionUsageValidator:
+class TransactionTicketsValidator:
 
     def __call__(self, value):
-        if not(0 <= value.usage < value.max_usage):
-            message = _('Transaction usage invalid.')
+        if value.tickets < 1:
+            message = _('Transaction dont have tickets.')
             raise serializers.ValidationError(message)
 
 

@@ -1,5 +1,3 @@
-from json import dumps
-
 from rest_framework.status import HTTP_200_OK
 from rest_framework import generics, views
 from rest_framework.exceptions import NotFound
@@ -16,9 +14,7 @@ from notebooks.serializers import RecordScopeSerializer, SheetScopeSerializer
 
 from .serializers import TransactionWriteSerializer, TransactionReadSerializer
 from .models import Transaction
-from .encoders import DecimalEncoder
-from .services import decode_token
-from .tasks import websocket_send
+from .services import decode_token, response_transaction
 
 
 class TransactionListView(rw_generics.CreateAPIView):
@@ -85,11 +81,9 @@ class TransactionDiscardView(views.APIView):
 
     def put(self, request, version, token):  # skipcq
         obj = self.get_object(token)
-        obj.usage = -1
+        obj.tickets = -1
         obj.save()
         serializer = TransactionReadSerializer(obj)
         response = Response(serializer.data, status=HTTP_200_OK)
-        group = str(obj.id)
-        message = dumps(serializer.data, cls=DecimalEncoder)
-        websocket_send.apply_async((group, message))
+        response_transaction(obj.id, obj.tickets)
         return response
