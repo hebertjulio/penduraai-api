@@ -66,6 +66,6 @@ class TicketConsumer(BaseConsumer):
         pass
 
     async def websocket_disconnect(self, event):
-        group = str(event['pk'])
+        group = str(event['token'])
         await self.close()
         await self.channel_layer.group_discard(group, self.channel_name)
