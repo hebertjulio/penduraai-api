@@ -2,6 +2,9 @@ from hashlib import sha256
 
 from django.conf import settings
 
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
+
 from jwt import (
     InvalidAudience, InvalidSignatureError, ExpiredSignatureError,
     DecodeError)
@@ -9,16 +12,20 @@ from jwt import (
 from jwt import decode as jwt_decode
 from jwt import encode as jwt_encode
 
-from .tasks import response_by_websocket, response_by_push_notification
 from .exceptions import TokenEncodeException
 
 
 TOKEN_AUDIENCE = 'v1'
 
 
-def response_ticket(group, message):
-    response_by_websocket.apply_async([str(group), str(message)])
-    response_by_push_notification.apply_async([str(message)])
+def websocket_response(group, message):
+    channel_layer = get_channel_layer()
+    async_to_sync(channel_layer.group_send)(
+        str(group), {
+            'type': 'websocket.send',
+            'text': message,
+        },
+    )
 
 
 def generate_signature(values):
@@ -28,14 +35,14 @@ def generate_signature(values):
     return value
 
 
-def encode_token(payload):
+def token_encode(payload):
     payload.update({'aud': TOKEN_AUDIENCE})
     token = jwt_encode(payload, settings.SECRET_KEY, algorithm='HS256')
     token = token.decode('utf-8')
     return token
 
 
-def decode_token(token):
+def token_decode(token):
     try:
         payload = jwt_decode(
             token, settings.SECRET_KEY, audience=TOKEN_AUDIENCE,

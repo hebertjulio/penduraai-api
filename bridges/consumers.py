@@ -3,19 +3,19 @@ from asgiref.sync import sync_to_async
 from channels.consumer import AsyncConsumer
 from channels.exceptions import StopConsumer
 
-from .services import decode_token
+from .services import token_decode
 from .models import Ticket
 from .exceptions import TokenEncodeException
 
 
 class BaseConsumer(AsyncConsumer):
 
-    async def get_url_route(self):
+    def get_url_route(self):
         kwargs = self.scope['url_route']['kwargs']
         return kwargs
 
     async def dispatch(self, message):
-        url_route = await self.get_url_route()
+        url_route = self.get_url_route()
         message.update(url_route)
         await super().dispatch(message)
 
@@ -47,7 +47,7 @@ class TicketConsumer(BaseConsumer):
 
     async def websocket_connect(self, event):
         try:
-            payload = decode_token(event['token'])
+            payload = token_decode(event['token'])
             pk = payload['id']
             obj = await sync_to_async(Ticket.objects.get)(pk=pk)
             await self.accept()

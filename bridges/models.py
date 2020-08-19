@@ -7,7 +7,7 @@ from django.utils import timezone
 from model_utils.models import TimeStampedModel
 from model_utils.choices import Choices
 
-from .services import generate_signature, encode_token
+from .services import generate_signature, token_encode
 
 
 class Ticket(TimeStampedModel):
@@ -23,6 +23,8 @@ class Ticket(TimeStampedModel):
     scope = models.CharField(('scope'), choices=SCOPE, max_length=30)
     expire_at = models.DateTimeField(_('expire at'))
     usage = models.SmallIntegerField(_('usage'), default=0)
+    push_notification = models.BooleanField(_('push notification'))
+    callback = models.BooleanField(_('callback'))
 
     @property
     def payload_as_dict(self):
@@ -32,7 +34,7 @@ class Ticket(TimeStampedModel):
     @property
     def token(self):
         payload = {'id': self.id, 'exp': self.expire_at}
-        token = encode_token(payload)
+        token = token_encode(payload)
         return token
 
     @property

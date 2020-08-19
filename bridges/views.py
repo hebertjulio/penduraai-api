@@ -14,7 +14,7 @@ from notebooks.serializers import SheetScopeSerializer, RecordScopeSerializer
 
 from .serializers import TicketWriteSerializer, TicketReadSerializer
 from .models import Ticket
-from .services import decode_token, response_ticket
+from .services import token_decode, websocket_response
 from .exceptions import TokenEncodeException
 
 
@@ -36,6 +36,10 @@ class TicketListView(rw_generics.CreateAPIView):
             return permissions + [IsAttendant()]
         return permissions + [IsManager()]
 
+    def perform_create(self, serializer):
+        scope = self.kwargs['scope']
+        serializer.save(scope=scope)
+
     def get_write_serializer(self, *args, **kwargs):
         scope = self.kwargs['scope']
         payload_serializer = self.payload_serializers[scope]
@@ -55,7 +59,7 @@ class TicketDetailView(generics.RetrieveAPIView):
     def get_object(self):
         try:
             token = self.kwargs[self.lookup_url_kwarg]
-            payload = decode_token(token)
+            payload = token_decode(token)
             obj = Ticket.objects.get(pk=payload['id'])
             return obj
         except (Ticket.DoesNotExist,
@@ -71,7 +75,7 @@ class TicketDiscardView(views.APIView):
 
     def get_object(self, token):
         try:
-            payload = decode_token(token)
+            payload = token_decode(token)
             obj = Ticket.objects.get(pk=payload['id'])
             return obj
         except (Ticket.DoesNotExist,
@@ -84,5 +88,6 @@ class TicketDiscardView(views.APIView):
         obj.save()
         serializer = TicketReadSerializer(obj)
         response = Response(serializer.data, status=HTTP_200_OK)
-        response_ticket(obj.id, obj.usage)
+        if obj.callback:
+            websocket_response(str(obj.id), str(obj.usage))
         return response

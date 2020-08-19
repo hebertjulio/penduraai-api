@@ -3,7 +3,7 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework.validators import ValidationError
 from rest_framework.fields import Field
 
-from .services import decode_token
+from .services import token_decode
 from .models import Ticket
 
 from .validators import (
@@ -21,7 +21,7 @@ class TicketTokenField(Field):
 
     def to_internal_value(self, data):
         try:
-            payload = decode_token(data)
+            payload = token_decode(data)
             obj = Ticket.objects.get(pk=payload['id'])
             return obj
         except (Ticket.DoesNotExist,
