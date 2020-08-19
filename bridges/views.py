@@ -14,7 +14,7 @@ from notebooks.serializers import SheetScopeSerializer, RecordScopeSerializer
 
 from .serializers import TicketWriteSerializer, TicketReadSerializer
 from .models import Ticket
-from .services import token_decode, websocket_response
+from .services import token_decode, do_notification
 from .exceptions import TokenEncodeException
 
 
@@ -88,6 +88,7 @@ class TicketDiscardView(views.APIView):
         obj.save()
         serializer = TicketReadSerializer(obj)
         response = Response(serializer.data, status=HTTP_200_OK)
-        if obj.callback:
-            websocket_response(str(obj.id), str(obj.usage))
+        do_notification(
+            obj.id, obj.usage, obj.ws_notification,
+            obj.push_notification)
         return response

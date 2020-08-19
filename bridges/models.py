@@ -24,7 +24,7 @@ class Ticket(TimeStampedModel):
     expire_at = models.DateTimeField(_('expire at'))
     usage = models.SmallIntegerField(_('usage'), default=0)
     push_notification = models.BooleanField(_('push notification'))
-    callback = models.BooleanField(_('callback'))
+    ws_notification = models.BooleanField(_('ws notification'))
 
     @property
     def payload_as_dict(self):

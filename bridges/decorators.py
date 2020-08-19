@@ -1,6 +1,6 @@
 from functools import wraps
 
-from .services import websocket_response
+from .services import do_notification
 
 
 def use_ticket(func):
@@ -10,7 +10,8 @@ def use_ticket(func):
         ret = func(self, validated_data)
         obj.usage = 1
         obj.save()
-        if obj.callback:
-            websocket_response(str(obj.id), str(obj.usage))
+        do_notification(
+            obj.id, obj.usage, obj.ws_notification,
+            obj.push_notification)
         return ret
     return wapper

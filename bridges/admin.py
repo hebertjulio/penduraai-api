@@ -7,7 +7,7 @@ from .models import Ticket
 class TicketAdmin(admin.ModelAdmin):
     list_display = (
         'id', 'scope', 'payload', 'expire_at', 'usage',
-        'callback', 'push_notification'
+        'ws_notification', 'push_notification'
     )
     search_fields = (
         'user__name', 'user__email',
