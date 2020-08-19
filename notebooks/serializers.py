@@ -5,8 +5,8 @@ from accounts.relations import UserRelatedField, ProfileRelatedField
 from accounts.fields import CurrentProfileDefault
 from accounts.validators import ProfileBelongUserValidator
 
-from bridges.decorators import use_transaction
-from bridges.fields import TransactionTokenField
+from bridges.decorators import use_ticket
+from bridges.fields import TicketTokenField
 
 from .relations import SheetRelatedField
 from .models import Record, Sheet
@@ -19,7 +19,7 @@ from .validators import (
 
 class RecordWriteSerializer(serializers.ModelSerializer):
 
-    transaction = TransactionTokenField(required=True)
+    ticket = TicketTokenField(required=True)
 
     signatory = serializers.HiddenField(
         default=CurrentProfileDefault()
@@ -40,7 +40,7 @@ class RecordWriteSerializer(serializers.ModelSerializer):
         except Sheet.DoesNotExist:
             raise NotFound
 
-    @use_transaction
+    @use_ticket
     def create(self, validated_data):
         merchant = validated_data.pop('merchant')
         sheet = self.get_sheet(merchant)
@@ -99,7 +99,7 @@ class RecordScopeSerializer(serializers.ModelSerializer):
 
 class SheetWriteSerializer(serializers.ModelSerializer):
 
-    transaction = TransactionTokenField(required=True)
+    ticket = TicketTokenField(required=True)
 
     merchant = UserRelatedField(
         validators=[
@@ -112,7 +112,7 @@ class SheetWriteSerializer(serializers.ModelSerializer):
         default=serializers.CurrentUserDefault()
     )
 
-    @use_transaction
+    @use_ticket
     def create(self, validated_data):
         sheet = super().create(validated_data)
         return sheet

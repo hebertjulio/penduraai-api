@@ -1,18 +1,18 @@
 from django.contrib import admin
 
-from .models import Transaction
+from .models import Ticket
 
 
-@admin.register(Transaction)
-class TransactionAdmin(admin.ModelAdmin):
+@admin.register(Ticket)
+class TicketAdmin(admin.ModelAdmin):
     list_display = (
-        'id', 'data', 'expire_at', 'tickets'
+        'id', 'scope', 'payload', 'expire_at', 'usage'
     )
     search_fields = (
         'user__name', 'user__email',
     )
     list_filter = (
-        'created',
+        'scope', 'created',
     )
     ordering = (
         '-created',

@@ -4,7 +4,7 @@ from channels.consumer import AsyncConsumer
 from channels.exceptions import StopConsumer
 
 from .services import decode_token
-from .models import Transaction
+from .models import Ticket
 
 
 class BaseConsumer(AsyncConsumer):
@@ -42,7 +42,7 @@ class BaseConsumer(AsyncConsumer):
         raise StopConsumer
 
 
-class TransactionConsumer(BaseConsumer):
+class TicketConsumer(BaseConsumer):
 
     async def websocket_connect(self, event):
         payload = decode_token(event['token'])
@@ -51,11 +51,11 @@ class TransactionConsumer(BaseConsumer):
             await self.close()
         try:
             pk = payload['id']
-            obj = await sync_to_async(Transaction.objects.get)(pk=pk)
+            obj = await sync_to_async(Ticket.objects.get)(pk=pk)
             await self.accept()
-            await self.send(str(obj.tickets))
+            await self.send(str(obj.usage))
             await self.channel_layer.group_add(str(pk), self.channel_name)
-        except Transaction.DoesNotExist:
+        except Ticket.DoesNotExist:
             await self.reject()
             await self.close()
 

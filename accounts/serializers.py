@@ -2,8 +2,8 @@ from django.db.transaction import atomic
 
 from rest_framework import serializers
 
-from bridges.decorators import use_transaction
-from bridges.fields import TransactionTokenField
+from bridges.decorators import use_ticket
+from bridges.fields import TicketTokenField
 
 from .models import User, Profile
 from .validators import ProfileOwnerRoleValidator
@@ -62,9 +62,9 @@ class UserReadSerializer(serializers.ModelSerializer):
 
 class ProfileWriteSerializer(serializers.ModelSerializer):
 
-    transaction = TransactionTokenField(required=True)
+    ticket = TicketTokenField(required=True)
 
-    @use_transaction
+    @use_ticket
     def create(self, validated_data):
         profile = super().create(validated_data)
         return profile

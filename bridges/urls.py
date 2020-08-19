@@ -7,15 +7,15 @@ app_name = 'bridges'
 
 urlpatterns = [
     re_path(
-        r'^transactions/(?P<scope>(profile|sheet|record))$',
-        views.TransactionListView.as_view(),
-        name='transaction_list'),
+        r'^tickets/(?P<scope>(profile|sheet|record))$',
+        views.TicketListView.as_view(),
+        name='ticket_list'),
     path(
-        'transactions/<str:token>',
-        views.TransactionDetailView.as_view(),
-        name='transaction_detail'),
+        'tickets/<str:token>',
+        views.TicketDetailView.as_view(),
+        name='ticket_detail'),
     path(
-        'transactions/<str:token>/discard',
-        views.TransactionDiscardView.as_view(),
-        name='transaction_discard'),
+        'tickets/<str:token>/discard',
+        views.TicketDiscardView.as_view(),
+        name='ticket_discard'),
 ]

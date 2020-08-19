@@ -4,19 +4,19 @@ from rest_framework.validators import ValidationError
 from rest_framework.fields import Field
 
 from .services import decode_token
-from .models import Transaction
+from .models import Ticket
 
 from .validators import (
-    TransactionExpiredValidator, TransactionSignatureValidator,
-    TransactionTicketsValidator)
+    TicketExpiredValidator, TicketSignatureValidator,
+    TicketUsageValidator)
 
 
-class TransactionTokenField(Field):
+class TicketTokenField(Field):
 
     validators = [
-        TransactionExpiredValidator(),
-        TransactionSignatureValidator(),
-        TransactionTicketsValidator()
+        TicketExpiredValidator(),
+        TicketSignatureValidator(),
+        TicketUsageValidator()
     ]
 
     def to_representation(self, instance):
@@ -26,9 +26,9 @@ class TransactionTokenField(Field):
     def to_internal_value(self, data):
         try:
             payload = decode_token(data)
-            obj = Transaction.objects.get(pk=payload['id'])
+            obj = Ticket.objects.get(pk=payload['id'])
             return obj
         except (
                 TypeError,
-                Transaction.DoesNotExist):
-            raise ValidationError(_('Transaction does not exist.'))
+                Ticket.DoesNotExist):
+            raise ValidationError(_('Ticket does not exist.'))

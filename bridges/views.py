@@ -12,15 +12,15 @@ from accounts.serializers import ProfileScopeSerializer
 
 from notebooks.serializers import RecordScopeSerializer, SheetScopeSerializer
 
-from .serializers import TransactionWriteSerializer, TransactionReadSerializer
-from .models import Transaction
-from .services import decode_token, response_transaction
+from .serializers import TicketWriteSerializer, TicketReadSerializer
+from .models import Ticket
+from .services import decode_token, response_ticket
 
 
-class TransactionListView(rw_generics.CreateAPIView):
+class TicketListView(rw_generics.CreateAPIView):
 
-    write_serializer_class = TransactionWriteSerializer
-    read_serializer_class = TransactionReadSerializer
+    write_serializer_class = TicketWriteSerializer
+    read_serializer_class = TicketReadSerializer
 
     scope_serializers = {
         'profile': ProfileScopeSerializer,
@@ -39,10 +39,10 @@ class TransactionListView(rw_generics.CreateAPIView):
         scope = self.kwargs['scope']
         serializer = self.scope_serializers[scope]()
         kwargs.update({'serializer': serializer})
-        return TransactionWriteSerializer(*args, **kwargs)
+        return TicketWriteSerializer(*args, **kwargs)
 
 
-class TransactionDetailView(generics.RetrieveAPIView):
+class TicketDetailView(generics.RetrieveAPIView):
 
     lookup_url_kwarg = 'token'
 
@@ -54,18 +54,18 @@ class TransactionDetailView(generics.RetrieveAPIView):
         try:
             token = self.kwargs[self.lookup_url_kwarg]
             payload = decode_token(token)
-            obj = Transaction.objects.get(pk=payload['id'])
+            obj = Ticket.objects.get(pk=payload['id'])
             return obj
-        except Transaction.DoesNotExist:
+        except Ticket.DoesNotExist:
             raise NotFound
 
     def get_serializer(self,  *args, **kwargs):
         kwargs.update({'exclude': ['token']})
-        serializer = TransactionReadSerializer(*args, **kwargs)
+        serializer = TicketReadSerializer(*args, **kwargs)
         return serializer
 
 
-class TransactionDiscardView(views.APIView):
+class TicketDiscardView(views.APIView):
 
     permission_classes = [
         HasAPIKey
@@ -74,16 +74,16 @@ class TransactionDiscardView(views.APIView):
     def get_object(self, token):
         try:
             payload = decode_token(token)
-            obj = Transaction.objects.get(pk=payload['id'])
+            obj = Ticket.objects.get(pk=payload['id'])
             return obj
-        except Transaction.DoesNotExist:
+        except Ticket.DoesNotExist:
             raise NotFound
 
     def put(self, request, version, token):  # skipcq
         obj = self.get_object(token)
-        obj.tickets = -1
+        obj.usage = -1
         obj.save()
-        serializer = TransactionReadSerializer(obj)
+        serializer = TicketReadSerializer(obj)
         response = Response(serializer.data, status=HTTP_200_OK)
-        response_transaction(obj.id, obj.tickets)
+        response_ticket(obj.id, obj.usage)
         return response

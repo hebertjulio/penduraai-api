@@ -1,5 +1,3 @@
-from json import loads
-
 from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers
@@ -7,30 +5,31 @@ from rest_framework import serializers
 from .services import generate_signature
 
 
-class TransactionExpiredValidator:
+class TicketExpiredValidator:
 
     def __call__(self, value):
         if value.expired:
-            message = _('Transaction already expired.')
+            message = _('Ticket already expired.')
             raise serializers.ValidationError(message)
 
 
-class TransactionTicketsValidator:
+class TicketUsageValidator:
 
     def __call__(self, value):
-        if value.tickets < 1:
-            message = _('Transaction dont have tickets.')
+        if value.usage != 0:
+            message = _('Ticket already usaged.')
             raise serializers.ValidationError(message)
 
 
-class TransactionSignatureValidator:
+class TicketSignatureValidator:
 
     requires_context = True
 
     def __call__(self, value, serializer_field):
         request = serializer_field.context['request']
-        values = [request.data[field] for field in loads(value.data).keys()]
+        fields = value.payload_as_dict.keys()
+        values = [request.data[field] for field in fields]
         signature = generate_signature(values)
         if value.signature != signature:
-            message = _('Transaction signature invalid.')
+            message = _('Ticket signature invalid.')
             raise serializers.ValidationError(message)

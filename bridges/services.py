@@ -15,7 +15,7 @@ from .tasks import response_by_websocket, response_by_push_notification
 TOKEN_AUDIENCE = 'v1'
 
 
-def response_transaction(group, message):
+def response_ticket(group, message):
     response_by_websocket.apply_async([str(group), str(message)])
     response_by_push_notification.apply_async([str(message)])
 
