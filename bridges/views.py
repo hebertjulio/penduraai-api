@@ -15,6 +15,7 @@ from notebooks.serializers import RecordScopeSerializer, SheetScopeSerializer
 from .serializers import TicketWriteSerializer, TicketReadSerializer
 from .models import Ticket
 from .services import decode_token, response_ticket
+from .exceptions import TokenEncodeException
 
 
 class TicketListView(rw_generics.CreateAPIView):
@@ -56,7 +57,8 @@ class TicketDetailView(generics.RetrieveAPIView):
             payload = decode_token(token)
             obj = Ticket.objects.get(pk=payload['id'])
             return obj
-        except Ticket.DoesNotExist:
+        except (Ticket.DoesNotExist,
+                TokenEncodeException):
             raise NotFound
 
     def get_serializer(self,  *args, **kwargs):
@@ -76,7 +78,8 @@ class TicketDiscardView(views.APIView):
             payload = decode_token(token)
             obj = Ticket.objects.get(pk=payload['id'])
             return obj
-        except Ticket.DoesNotExist:
+        except (Ticket.DoesNotExist,
+                TokenEncodeException):
             raise NotFound
 
     def put(self, request, version, token):  # skipcq

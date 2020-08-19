@@ -5,6 +5,7 @@ from channels.exceptions import StopConsumer
 
 from .services import decode_token
 from .models import Ticket
+from .exceptions import TokenEncodeException
 
 
 class BaseConsumer(AsyncConsumer):
@@ -45,17 +46,15 @@ class BaseConsumer(AsyncConsumer):
 class TicketConsumer(BaseConsumer):
 
     async def websocket_connect(self, event):
-        payload = decode_token(event['token'])
-        if not payload:
-            await self.reject()
-            await self.close()
         try:
+            payload = decode_token(event['token'])
             pk = payload['id']
             obj = await sync_to_async(Ticket.objects.get)(pk=pk)
             await self.accept()
             await self.send(str(obj.usage))
             await self.channel_layer.group_add(str(pk), self.channel_name)
-        except Ticket.DoesNotExist:
+        except (Ticket.DoesNotExist,
+                TokenEncodeException):
             await self.reject()
             await self.close()
 

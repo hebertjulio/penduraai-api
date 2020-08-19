@@ -10,6 +10,8 @@ from .validators import (
     TicketExpiredValidator, TicketSignatureValidator,
     TicketUsageValidator)
 
+from .exceptions import TokenEncodeException
+
 
 class TicketTokenField(Field):
 
@@ -28,7 +30,7 @@ class TicketTokenField(Field):
             payload = decode_token(data)
             obj = Ticket.objects.get(pk=payload['id'])
             return obj
-        except (
-                TypeError,
-                Ticket.DoesNotExist):
-            raise ValidationError(_('Ticket does not exist.'))
+        except (Ticket.DoesNotExist,
+                TokenEncodeException,
+                TypeError):
+            raise ValidationError(_('Ticket of token is invalid.'))

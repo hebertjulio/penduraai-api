@@ -10,6 +10,7 @@ from jwt import decode as jwt_decode
 from jwt import encode as jwt_encode
 
 from .tasks import response_by_websocket, response_by_push_notification
+from .exceptions import TokenEncodeException
 
 
 TOKEN_AUDIENCE = 'v1'
@@ -43,4 +44,4 @@ def decode_token(token):
     except (
             InvalidSignatureError, InvalidAudience,
             ExpiredSignatureError, DecodeError):
-        return None
+        raise TokenEncodeException
