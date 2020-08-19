@@ -8,12 +8,16 @@ from .models import Ticket
 
 from .validators import (
     TicketExpiredValidator, TicketSignatureValidator,
-    TicketUsageValidator)
+    TicketUsageValidator, TicketScopeValidator)
 
 from .exceptions import TokenEncodeException
 
 
 class TicketTokenField(Field):
+
+    def __init__(self, *args, **kwargs):
+        self.scope = kwargs.pop('scope')
+        super().__init__(*args, **kwargs)
 
     def to_internal_value(self, data):
         try:
@@ -30,6 +34,7 @@ class TicketTokenField(Field):
         validators += [
             TicketExpiredValidator(),
             TicketSignatureValidator(),
-            TicketUsageValidator()
+            TicketUsageValidator(),
+            TicketScopeValidator(self.scope)
         ]
         return validators

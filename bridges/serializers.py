@@ -37,7 +37,7 @@ class TicketWriteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Ticket
         exclude = [
-            'expire_at', 'usage'
+            'expire_at', 'usage', 'scope'
         ]
 
 

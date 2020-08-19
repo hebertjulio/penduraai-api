@@ -19,7 +19,7 @@ from .validators import (
 
 class RecordWriteSerializer(serializers.ModelSerializer):
 
-    ticket = TicketTokenField(required=True)
+    ticket = TicketTokenField(scope='record', required=True)
 
     signatory = serializers.HiddenField(
         default=CurrentProfileDefault()
@@ -99,7 +99,7 @@ class RecordScopeSerializer(serializers.ModelSerializer):
 
 class SheetWriteSerializer(serializers.ModelSerializer):
 
-    ticket = TicketTokenField(required=True)
+    ticket = TicketTokenField(scope='sheet', required=True)
 
     merchant = UserRelatedField(
         validators=[

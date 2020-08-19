@@ -62,7 +62,7 @@ class UserReadSerializer(serializers.ModelSerializer):
 
 class ProfileWriteSerializer(serializers.ModelSerializer):
 
-    ticket = TicketTokenField(required=True)
+    ticket = TicketTokenField(scope='profile', required=True)
 
     @use_ticket
     def create(self, validated_data):
