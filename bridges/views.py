@@ -10,7 +10,7 @@ from drf_rw_serializers import generics as rw_generics
 from accounts.permissions import IsManager, IsAttendant
 from accounts.serializers import ProfileScopeSerializer
 
-from notebooks.serializers import RecordScopeSerializer, SheetScopeSerializer
+from notebooks.serializers import SheetScopeSerializer, RecordScopeSerializer
 
 from .serializers import TicketWriteSerializer, TicketReadSerializer
 from .models import Ticket
@@ -23,7 +23,7 @@ class TicketListView(rw_generics.CreateAPIView):
     write_serializer_class = TicketWriteSerializer
     read_serializer_class = TicketReadSerializer
 
-    scope_serializers = {
+    payload_serializers = {
         'profile': ProfileScopeSerializer,
         'sheet': SheetScopeSerializer,
         'record': RecordScopeSerializer
@@ -38,13 +38,14 @@ class TicketListView(rw_generics.CreateAPIView):
 
     def get_write_serializer(self, *args, **kwargs):
         scope = self.kwargs['scope']
-        serializer = self.scope_serializers[scope]()
-        kwargs.update({'serializer': serializer})
+        payload_serializer = self.payload_serializers[scope]
+        kwargs['payload_serializer'] = payload_serializer()
         return TicketWriteSerializer(*args, **kwargs)
 
 
 class TicketDetailView(generics.RetrieveAPIView):
 
+    serializer_class = TicketReadSerializer
     lookup_url_kwarg = 'token'
 
     permission_classes = [
@@ -60,11 +61,6 @@ class TicketDetailView(generics.RetrieveAPIView):
         except (Ticket.DoesNotExist,
                 TokenEncodeException):
             raise NotFound
-
-    def get_serializer(self,  *args, **kwargs):
-        kwargs.update({'exclude': ['token']})
-        serializer = TicketReadSerializer(*args, **kwargs)
-        return serializer
 
 
 class TicketDiscardView(views.APIView):

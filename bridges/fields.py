@@ -15,16 +15,6 @@ from .exceptions import TokenEncodeException
 
 class TicketTokenField(Field):
 
-    validators = [
-        TicketExpiredValidator(),
-        TicketSignatureValidator(),
-        TicketUsageValidator()
-    ]
-
-    def to_representation(self, instance):
-        print(instance)
-        return instance
-
     def to_internal_value(self, data):
         try:
             payload = decode_token(data)
@@ -34,3 +24,12 @@ class TicketTokenField(Field):
                 TokenEncodeException,
                 TypeError):
             raise ValidationError(_('Ticket of token is invalid.'))
+
+    def get_validators(self):
+        validators = super().get_validators()
+        validators += [
+            TicketExpiredValidator(),
+            TicketSignatureValidator(),
+            TicketUsageValidator()
+        ]
+        return validators
