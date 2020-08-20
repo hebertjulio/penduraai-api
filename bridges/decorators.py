@@ -1,6 +1,7 @@
 from functools import wraps
 
-from .services import do_notification
+from .services import send_ws_message
+from .tasks import push_notification
 
 
 def use_ticket(func):
@@ -10,8 +11,7 @@ def use_ticket(func):
         ret = func(self, validated_data)
         obj.usage = 1
         obj.save()
-        do_notification(
-            obj.id, obj.usage, obj.ws_notification,
-            obj.push_notification)
+        send_ws_message(obj.id, obj.usage)
+        push_notification.apply([obj.id, obj.message])
         return ret
     return wapper

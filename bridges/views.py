@@ -14,7 +14,8 @@ from notebooks.serializers import SheetScopeSerializer, RecordScopeSerializer
 
 from .serializers import TicketWriteSerializer, TicketReadSerializer
 from .models import Ticket
-from .services import token_decode, do_notification
+from .services import token_decode, send_ws_message
+from .tasks import push_notification
 from .exceptions import TokenEncodeException
 
 
@@ -88,7 +89,6 @@ class TicketDiscardView(views.APIView):
         obj.save()
         serializer = TicketReadSerializer(obj)
         response = Response(serializer.data, status=HTTP_200_OK)
-        do_notification(
-            obj.id, obj.usage, obj.ws_notification,
-            obj.push_notification)
+        send_ws_message(obj.id, obj.usage)
+        push_notification.apply([obj.id, obj.message])
         return response

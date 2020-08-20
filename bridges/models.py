@@ -23,8 +23,6 @@ class Ticket(TimeStampedModel):
     scope = models.CharField(('scope'), choices=SCOPE, max_length=30)
     expire_at = models.DateTimeField(_('expire at'))
     usage = models.SmallIntegerField(_('usage'), default=0)
-    push_notification = models.BooleanField(_('push notification'))
-    ws_notification = models.BooleanField(_('ws notification'))
 
     @property
     def payload_as_dict(self):
