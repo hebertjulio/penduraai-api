@@ -7,10 +7,10 @@ class SheetFilterSet(filters.FilterSet):
 
     by = filters.CharFilter(method='filter_by')
 
-    def __init__(self, *args, author=None, **kwargs):
+    def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    def filter_by(self, queryset, name, value):
+    def filter_by(self, queryset, name, value):  # skipcq
         user = self.request.user
         profile = self.request.profile
         by = {
