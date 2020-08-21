@@ -55,9 +55,7 @@ class UserReadSerializer(serializers.ModelSerializer):
         exclude = [
             'password', 'groups', 'user_permissions'
         ]
-        read_only_fields = [
-            f for f in User.get_fields()
-        ]
+        read_only_fields = User.get_fields()
 
 
 class ProfileWriteSerializer(serializers.ModelSerializer):
@@ -92,6 +90,4 @@ class ProfileReadSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
         fields = '__all__'
-        read_only_fields = [
-            f for f in User.get_fields()
-        ]
+        read_only_fields = User.get_fields()

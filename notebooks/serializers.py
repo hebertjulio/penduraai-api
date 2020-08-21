@@ -75,9 +75,7 @@ class RecordReadSerializer(serializers.ModelSerializer):
     class Meta:
         model = Record
         fields = '__all__'
-        read_only_fields = [
-            f for f in Record.get_fields()
-        ]
+        read_only_fields = Record.get_fields()
 
 
 class SheetWriteSerializer(serializers.ModelSerializer):
@@ -127,9 +125,7 @@ class SheetReadSerializer(serializers.ModelSerializer):
     class Meta:
         model = Sheet
         fields = '__all__'
-        read_only_fields = [
-            f for f in Sheet.get_fields()
-        ]
+        read_only_fields = Sheet.get_fields()
 
 
 class SheetProfileAddSerializer(serializers.Serializer):
