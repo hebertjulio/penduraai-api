@@ -11,6 +11,10 @@ class TicketTokenField(Field):
         self.scope = kwargs.pop('scope')
         super().__init__(*args, **kwargs)
 
+    def to_representation(self, value):
+        value = super().to_representation(value)
+        return value
+
     def to_internal_value(self, data):
         data = token_decode(data)
         ticket = Ticket(data['scope'], data['key'])

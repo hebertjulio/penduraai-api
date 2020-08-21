@@ -15,3 +15,6 @@ class TicketSerializer(serializers.Serializer):
         ticket.data = validated_data['data']
         ticket.expire = validated_data['expire']
         return ticket
+
+    def update(self, instance, validated_data):
+        raise NotImplementedError
