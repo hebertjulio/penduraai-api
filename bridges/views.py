@@ -7,7 +7,7 @@ from accounts.permissions import IsManager, IsAttendant
 
 from .serializers import TicketSerializer
 from .db import Ticket
-from .services import get_token_data, send_ws_message
+from .services import token_decode, send_ws_message
 from .tasks import push_notification
 
 
@@ -36,7 +36,7 @@ class TicketDetailView(views.APIView):
     ]
 
     def get(self, request, version, token):  # skipcq
-        data = get_token_data(token)
+        data = token_decode(token)
         ticket = Ticket(data['scope'], data['key'])
         ticket.exist(raise_exception=True)
         serializer = TicketSerializer(ticket)
@@ -51,7 +51,7 @@ class TicketDiscardView(views.APIView):
     ]
 
     def put(self, request, version, token):  # skipcq
-        data = get_token_data(token)
+        data = token_decode(token)
         ticket = Ticket(data['scope'], data['key'])
         ticket.exist(raise_exception=True)
         send_ws_message(ticket.key, 'rejected')

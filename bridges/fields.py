@@ -1,6 +1,6 @@
 from rest_framework.fields import Field
 
-from .services import get_token_data
+from .services import token_decode
 from .db import Ticket
 from .validators import TicketScopeValidator, TicketSignatureValidator
 
@@ -12,7 +12,7 @@ class TicketTokenField(Field):
         super().__init__(*args, **kwargs)
 
     def to_internal_value(self, data):
-        data = get_token_data(data)
+        data = token_decode(data)
         ticket = Ticket(data['scope'], data['key'])
         ticket.exist(raise_exception=True)
         return ticket

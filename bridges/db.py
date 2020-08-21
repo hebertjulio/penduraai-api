@@ -5,13 +5,12 @@ from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
 
-from jwt import encode as jwt_encode
 from redis import from_url
 
 from rest_framework.exceptions import APIException
 from rest_framework.status import HTTP_400_BAD_REQUEST
 
-from .services import get_signature
+from .services import get_signature, token_encode
 
 
 class Ticket:
@@ -58,12 +57,8 @@ class Ticket:
     @property
     def token(self):
         expire = timezone.now() + timedelta(seconds=self.expire)
-        data = {
-            'key': self.key, 'scope': self.scope,
-            'aud': self.AUDIENCE, 'exp': expire
-        }
-        token = jwt_encode(data, settings.SECRET_KEY, algorithm='HS256')
-        token = token.decode('utf-8')
+        data = {'key': self.key, 'scope': self.scope}
+        token = token_encode(data, expire)
         return token
 
     @token.setter

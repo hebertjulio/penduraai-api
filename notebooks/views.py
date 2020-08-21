@@ -8,11 +8,12 @@ from drf_rw_serializers import generics as rw_generics
 
 from accounts.permissions import IsManager
 
-from .models import Record, Sheet
-from .filters import SheetFilterSet
 from .serializers import (
     RecordReadSerializer, RecordWriteSerializer, SheetReadSerializer,
     SheetWriteSerializer, SheetProfileAddSerializer)
+
+from .models import Record, Sheet
+from .filters import SheetFilterSet
 
 
 class RecordListView(rw_generics.ListCreateAPIView):

@@ -1,7 +1,7 @@
 from channels.consumer import AsyncConsumer
 from channels.exceptions import StopConsumer
 
-from .services import get_token_data
+from .services import token_decode
 from .exceptions import TokenDecodeException
 
 
@@ -44,7 +44,7 @@ class TicketConsumer(BaseConsumer):
 
     async def websocket_connect(self, event):
         try:
-            data = get_token_data(event['token'])
+            data = token_decode(event['token'])
             group = data['key']
             await self.accept()
             await self.channel_layer.group_add(group, self.channel_name)
@@ -61,7 +61,7 @@ class TicketConsumer(BaseConsumer):
 
     async def websocket_disconnect(self, event):
         try:
-            data = get_token_data(event['token'])
+            data = token_decode(event['token'])
             group = data['key']
             await self.channel_layer.group_discard(group, self.channel_name)
         except TokenDecodeException:
