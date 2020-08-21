@@ -2,7 +2,7 @@ from channels.consumer import AsyncConsumer
 from channels.exceptions import StopConsumer
 
 from .services import get_token_data
-from .exceptions import TokenEncodeException
+from .exceptions import TokenDecodeException
 
 
 class BaseConsumer(AsyncConsumer):
@@ -48,7 +48,7 @@ class TicketConsumer(BaseConsumer):
             group = data['key']
             await self.accept()
             await self.channel_layer.group_add(group, self.channel_name)
-        except TokenEncodeException:
+        except TokenDecodeException:
             await self.reject()
             await self.close()
 
@@ -64,6 +64,6 @@ class TicketConsumer(BaseConsumer):
             data = get_token_data(event['token'])
             group = data['key']
             await self.channel_layer.group_discard(group, self.channel_name)
-        except TokenEncodeException:
+        except TokenDecodeException:
             pass
         await self.close()

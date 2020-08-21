@@ -1,8 +1,4 @@
-from django.utils.translation import gettext_lazy as _
+class TokenDecodeException(Exception):
 
-
-class TokenEncodeException(Exception):
-
-    def __init__(self):
-        message = _('Token is invalid.')
+    def __init__(self, message):
         super().__init__(message)

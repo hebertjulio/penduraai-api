@@ -8,10 +8,9 @@ from asgiref.sync import async_to_sync
 from jwt import (
     InvalidAudience, InvalidSignatureError, ExpiredSignatureError,
     DecodeError)
-
 from jwt import decode as jwt_decode
 
-from .exceptions import TokenEncodeException
+from .exceptions import TokenDecodeException
 
 
 def send_ws_message(group, message):
@@ -24,9 +23,16 @@ def send_ws_message(group, message):
     )
 
 
-def generate_signature(values):
-    values = [str(value) for value in values]
-    value = ''.join(sorted(values))
+def get_signature(data, scope):
+    if not isinstance(data, dict):
+        raise ValueError
+    fields = {
+        'profile': ['user', 'role'],
+        'sheet': ['merchant'],
+        'record': ['note', 'merchant', 'value', 'operation']
+    }
+    value = [str(data.get(field, '')) for field in fields[scope]]
+    value = ':'.join(value)
     value = sha256(value.encode()).hexdigest()
     return value
 
@@ -38,5 +44,5 @@ def get_token_data(token):
             algorithms=['HS256'])
         return data
     except (InvalidSignatureError, InvalidAudience,
-            ExpiredSignatureError, DecodeError):
-        raise TokenEncodeException
+            ExpiredSignatureError, DecodeError) as e:
+        raise TokenDecodeException(str(e))

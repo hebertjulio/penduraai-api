@@ -10,7 +10,6 @@ from bridges.fields import TicketTokenField
 
 from .relations import SheetRelatedField
 from .models import Record, Sheet
-
 from .validators import (
     CustomerOfYourselfValidator, AlreadyCustomerOfMerchantValidator,
     EmployeeOfMerchantValidator, CustomerOfMerchantValidator,

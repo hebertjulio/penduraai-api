@@ -1,23 +1,22 @@
 from json import loads, dumps
+from uuid import uuid4
 
 from django.conf import settings
 
 from jwt import encode as jwt_encode
-
 from redis import from_url
 
-from .services import generate_signature
+from .services import get_signature
 
 
 class Ticket:
 
-    prefix = 'ticket'
-    db = from_url(settings.BRIDGES_REDIS_URL)
+    __db = from_url(settings.BRIDGES_REDIS_URL)
+    __data = {}
 
-    def __init__(self, key, scope, expire=30):
+    def __init__(self, scope, key=None):
         self.scope = scope
-        self.key = key
-        self.expire = expire
+        self.key = key or str(uuid4())
 
     @property
     def name(self):
@@ -30,40 +29,45 @@ class Ticket:
 
     @property
     def signature(self):
-        values = self.data.values()
-        signature = generate_signature(values)
+        signature = get_signature(self.data, self.scope)
         return signature
 
     @property
     def data(self):
-        value = self.db.get(self.name) or '{}'
-        value = loads(value)
-        return value
+        data = self.__db.get(self.name)
+        data = loads(data) if data else self.__data
+        return data
 
     @data.setter
     def data(self, value):
         if not isinstance(value, dict):
             raise ValueError
-        value = dumps(value)
-        ttl = self.db.ttl(self.name)
-        expire = ttl if ttl > 0 else self.expire
-        self.db.set(self.name, value, ex=expire)
+        self.__data = value
 
     @property
     def token(self):
         data = {'key': self.key, 'scope': self.scope, 'aud': 'ticket'}
-        value = jwt_encode(data, settings.SECRET_KEY, algorithm='HS256')
-        value = value.decode('utf-8')
-        return value
+        token = jwt_encode(data, settings.SECRET_KEY, algorithm='HS256')
+        token = token.decode('utf-8')
+        return token
 
-    @property
-    def ttl(self):
-        value = self.db.ttl(self.name)
-        return value
+    def exist(self, raise_exception=False):
+        keys = self.__db.keys(*[self.name])
+        exist = len(keys) > 0
+        if raise_exception and not exist:
+            raise self.DoesNotExist
+        return exist
 
-    def exist(self):
-        ttl = self.db.ttl(self.name)
-        return ttl > 0
+    def persist(self, expire=None):
+        if expire is None and self.exist():
+            expire = self.__db.ttl(self.name)
+        data = dumps(self.data)
+        self.__db.set(self.name, data, ex=expire)
 
     def discard(self):
-        self.db.delete(*[self.name])
+        self.__db.delete(*[self.name])
+
+    class DoesNotExist(Exception):
+
+        def __init__(self):
+            super().__init__('Ticket does not exist.')

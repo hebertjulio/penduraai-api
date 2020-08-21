@@ -5,15 +5,11 @@ from rest_framework.fields import Field
 
 from .services import get_token_data
 from .db import Ticket
-from .validators import TicketSignatureValidator
-from .exceptions import TokenEncodeException
+from .validators import TicketScopeValidator, TicketSignatureValidator
+from .exceptions import TokenDecodeException
 
 
 class TicketTokenField(Field):
-
-    validators = [
-        TicketSignatureValidator()
-    ]
 
     def __init__(self, *args, **kwargs):
         self.scope = kwargs.pop('scope')
@@ -22,10 +18,17 @@ class TicketTokenField(Field):
     def to_internal_value(self, data):
         try:
             data = get_token_data(data)
-            ticket = Ticket(data['key'], self.scope)
-        except TokenEncodeException:
-            raise ValidationError(_('Ticket of token is invalid.'))
-        else:
-            if not ticket.exist():
-                raise ValidationError(_('Ticket does not exist.'))
+            ticket = Ticket(data['scope'], data['key'])
+            ticket.exist(raise_exception=True)
             return ticket
+        except (Ticket.DoesNotExist,
+                TokenDecodeException) as e:
+            raise ValidationError(_(str(e)))
+
+    def get_validators(self):
+        validators = super().get_validators()
+        validators += [
+            TicketScopeValidator(self.scope),
+            TicketSignatureValidator()
+        ]
+        return validators

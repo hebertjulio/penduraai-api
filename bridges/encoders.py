@@ -1,5 +1,4 @@
 from json import JSONEncoder
-
 from decimal import Decimal
 
 

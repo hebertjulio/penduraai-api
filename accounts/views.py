@@ -1,18 +1,13 @@
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import NotFound
-
 from drf_rw_serializers import generics as rw_generics
-
 from rest_framework_simplejwt import views as simplejwt_views
-
 from rest_framework_api_key.permissions import HasAPIKey
 
 from .serializers import (
     UserReadSerializer, UserWriteSerializer, ProfileReadSerializer,
     ProfileWriteSerializer)
-
 from .models import User, Profile
-
 from .permissions import IsOwner, IsManager
 
 
