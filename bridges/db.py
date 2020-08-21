@@ -1,18 +1,22 @@
-from json import loads, dumps
 from uuid import uuid4
 
 from django.conf import settings
+from django.utils.translation import gettext_lazy as _
 
 from jwt import encode as jwt_encode
 from redis import from_url
+
+from rest_framework.exceptions import APIException
+from rest_framework.status import HTTP_400_BAD_REQUEST
 
 from .services import get_signature
 
 
 class Ticket:
 
-    __db = from_url(settings.BRIDGES_REDIS_URL)
-    __data = {}
+    db = from_url(
+        settings.BRIDGES_REDIS_URL, db=None, **{
+            'decode_responses': True})
 
     def __init__(self, scope, key=None):
         self.scope = scope
@@ -32,17 +36,20 @@ class Ticket:
         signature = get_signature(self.data, self.scope)
         return signature
 
+    @signature.setter
+    def signature(self, value):  # skipcq
+        raise NotImplementedError
+
     @property
     def data(self):
-        data = self.__db.get(self.name)
-        data = loads(data) if data else self.__data
+        data = self.db.hgetall(self.name) or {}
         return data
 
     @data.setter
     def data(self, value):
         if not isinstance(value, dict):
             raise ValueError
-        self.__data = value
+        self.db.hmset(self.name, value)
 
     @property
     def token(self):
@@ -51,23 +58,33 @@ class Ticket:
         token = token.decode('utf-8')
         return token
 
+    @token.setter
+    def token(self, value):  # skipcq
+        raise NotImplementedError
+
+    @property
+    def expire(self):
+        expire = self.db.ttl(self.name)
+        return expire
+
+    @expire.setter
+    def expire(self, value):
+        if not isinstance(value, int):
+            raise ValueError
+        self.db.expire(self.name, value)
+
     def exist(self, raise_exception=False):
-        keys = self.__db.keys(*[self.name])
+        keys = self.db.keys(*[self.name])
         exist = len(keys) > 0
         if raise_exception and not exist:
             raise self.DoesNotExist
         return exist
 
-    def persist(self, expire=None):
-        if expire is None and self.exist():
-            expire = self.__db.ttl(self.name)
-        data = dumps(self.data)
-        self.__db.set(self.name, data, ex=expire)
-
     def discard(self):
-        self.__db.delete(*[self.name])
+        self.db.delete(*[self.name])
 
-    class DoesNotExist(Exception):
+    class DoesNotExist(APIException):
 
-        def __init__(self):
-            super().__init__('Ticket does not exist.')
+        status_code = HTTP_400_BAD_REQUEST
+        default_code = 'invalid'
+        default_detail = _('Ticket does not exist.')
