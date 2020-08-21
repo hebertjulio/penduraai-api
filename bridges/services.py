@@ -46,6 +46,7 @@ def token_encode(data, expire):
     data = {**data, **{'aud': _AUDIENCE, 'exp': expire}}
     token = jwt_encode(data, settings.SECRET_KEY, algorithm='HS256')
     token = token.decode('utf-8')
+    return token
 
 
 def token_decode(token):
