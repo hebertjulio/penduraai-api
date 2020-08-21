@@ -13,6 +13,7 @@ class LoadProfileMiddleware:
         response = self.get_response(request)
         return response
 
+    @classmethod
     def get_object(cls, request):
         pk = cls.get_pk(request.headers)
         if not pk:
