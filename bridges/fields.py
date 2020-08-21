@@ -3,17 +3,17 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework.validators import ValidationError
 from rest_framework.fields import Field
 
-from .services import token_decode
-from .models import Ticket
-
-from .validators import (
-    TicketExpiredValidator, TicketSignatureValidator,
-    TicketUsageValidator, TicketScopeValidator)
-
+from .services import get_token_data
+from .db import Ticket
+from .validators import TicketSignatureValidator
 from .exceptions import TokenEncodeException
 
 
 class TicketTokenField(Field):
+
+    validators = [
+        TicketSignatureValidator()
+    ]
 
     def __init__(self, *args, **kwargs):
         self.scope = kwargs.pop('scope')
@@ -21,20 +21,11 @@ class TicketTokenField(Field):
 
     def to_internal_value(self, data):
         try:
-            payload = token_decode(data)
-            obj = Ticket.objects.get(pk=payload['id'])
-            return obj
-        except (Ticket.DoesNotExist,
-                TokenEncodeException,
-                TypeError):
+            data = get_token_data(data)
+            ticket = Ticket(data['key'], self.scope)
+        except TokenEncodeException:
             raise ValidationError(_('Ticket of token is invalid.'))
-
-    def get_validators(self):
-        validators = super().get_validators()
-        validators += [
-            TicketExpiredValidator(),
-            TicketSignatureValidator(),
-            TicketUsageValidator(),
-            TicketScopeValidator(self.scope)
-        ]
-        return validators
+        else:
+            if not ticket.exist():
+                raise ValidationError(_('Ticket does not exist.'))
+            return ticket

@@ -1,10 +1,7 @@
-from asgiref.sync import sync_to_async
-
 from channels.consumer import AsyncConsumer
 from channels.exceptions import StopConsumer
 
-from .services import token_decode
-from .models import Ticket
+from .services import get_token_data
 from .exceptions import TokenEncodeException
 
 
@@ -47,14 +44,11 @@ class TicketConsumer(BaseConsumer):
 
     async def websocket_connect(self, event):
         try:
-            payload = token_decode(event['token'])
-            pk = payload['id']
-            obj = await sync_to_async(Ticket.objects.get)(pk=pk)
+            data = get_token_data(event['token'])
+            group = data['key']
             await self.accept()
-            await self.send(str(obj.usage))
-            await self.channel_layer.group_add(str(pk), self.channel_name)
-        except (Ticket.DoesNotExist,
-                TokenEncodeException):
+            await self.channel_layer.group_add(group, self.channel_name)
+        except TokenEncodeException:
             await self.reject()
             await self.close()
 
@@ -66,6 +60,10 @@ class TicketConsumer(BaseConsumer):
         pass
 
     async def websocket_disconnect(self, event):
-        group = str(event['token'])
+        try:
+            data = get_token_data(event['token'])
+            group = data['key']
+            await self.channel_layer.group_discard(group, self.channel_name)
+        except TokenEncodeException:
+            pass
         await self.close()
-        await self.channel_layer.group_discard(group, self.channel_name)

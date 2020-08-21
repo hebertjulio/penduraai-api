@@ -95,18 +95,3 @@ class ProfileReadSerializer(serializers.ModelSerializer):
         read_only_fields = [
             f for f in User.get_fields()
         ]
-
-
-class ProfileScopeSerializer(serializers.ModelSerializer):
-
-    def create(self, validated_data):
-        raise NotImplementedError
-
-    def update(self, instance, validated_data):
-        raise NotImplementedError
-
-    class Meta:
-        model = Profile
-        fields = [
-            'user', 'role'
-        ]

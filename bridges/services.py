@@ -10,20 +10,16 @@ from jwt import (
     DecodeError)
 
 from jwt import decode as jwt_decode
-from jwt import encode as jwt_encode
 
 from .exceptions import TokenEncodeException
 
 
-TOKEN_AUDIENCE = 'v1'
-
-
-def send_ws_message(self, group, message):
+def send_ws_message(group, message):
     channel_layer = get_channel_layer()
     async_to_sync(channel_layer.group_send)(
-        str(group), {
+        group, {
             'type': 'websocket.send',
-            'text': str(message),
+            'text': message,
         },
     )
 
@@ -35,19 +31,12 @@ def generate_signature(values):
     return value
 
 
-def token_encode(payload):
-    payload.update({'aud': TOKEN_AUDIENCE})
-    token = jwt_encode(payload, settings.SECRET_KEY, algorithm='HS256')
-    token = token.decode('utf-8')
-    return token
-
-
-def token_decode(token):
+def get_token_data(token):
     try:
-        payload = jwt_decode(
-            token, settings.SECRET_KEY, audience=TOKEN_AUDIENCE,
+        data = jwt_decode(
+            token, settings.SECRET_KEY, audience='ticket',
             algorithms=['HS256'])
-        return payload
+        return data
     except (InvalidSignatureError, InvalidAudience,
             ExpiredSignatureError, DecodeError):
         raise TokenEncodeException

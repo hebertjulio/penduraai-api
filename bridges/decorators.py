@@ -7,11 +7,10 @@ from .tasks import push_notification
 def use_ticket(func):
     @wraps(func)
     def wapper(self, validated_data):
-        obj = validated_data.pop('ticket')
+        ticket = validated_data.pop('ticket')
         ret = func(self, validated_data)
-        obj.usage = 1
-        obj.save()
-        send_ws_message(obj.id, obj.usage)
-        push_notification.apply([obj.id, obj.message])
+        send_ws_message(ticket.key, 'confimed')
+        push_notification.apply([ticket.key, '*message*'])
+        ticket.discard()
         return ret
     return wapper

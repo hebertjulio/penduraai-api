@@ -81,22 +81,6 @@ class RecordReadSerializer(serializers.ModelSerializer):
         ]
 
 
-class RecordScopeSerializer(serializers.ModelSerializer):
-
-    def create(self, validated_data):
-        raise NotImplementedError
-
-    def update(self, instance, validated_data):
-        raise NotImplementedError
-
-    class Meta:
-        model = Record
-        fields = [
-            'note', 'operation', 'value',
-            'attendant'
-        ]
-
-
 class SheetWriteSerializer(serializers.ModelSerializer):
 
     ticket = TicketTokenField(scope='sheet', required=True)
@@ -146,21 +130,6 @@ class SheetReadSerializer(serializers.ModelSerializer):
         fields = '__all__'
         read_only_fields = [
             f for f in Sheet.get_fields()
-        ]
-
-
-class SheetScopeSerializer(serializers.ModelSerializer):
-
-    def create(self, validated_data):
-        raise NotImplementedError
-
-    def update(self, instance, validated_data):
-        raise NotImplementedError
-
-    class Meta:
-        model = Sheet
-        fields = [
-            'merchant'
         ]
 
 

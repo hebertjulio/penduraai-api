@@ -5,40 +5,13 @@ from rest_framework import serializers
 from .services import generate_signature
 
 
-class TicketScopeValidator:
-
-    def __init__(self, scope):
-        self.scope = scope
-
-    def __call__(self, value):
-        if value.scope != self.scope:
-            message = _('Ticket scope invalid.')
-            raise serializers.ValidationError(message)
-
-
-class TicketExpiredValidator:
-
-    def __call__(self, value):
-        if value.expired:
-            message = _('Ticket already expired.')
-            raise serializers.ValidationError(message)
-
-
-class TicketUsageValidator:
-
-    def __call__(self, value):
-        if value.usage != 0:
-            message = _('Ticket already usaged.')
-            raise serializers.ValidationError(message)
-
-
 class TicketSignatureValidator:
 
     requires_context = True
 
     def __call__(self, value, serializer_field):
         request = serializer_field.context['request']
-        fields = value.payload_as_dict.keys()
+        fields = value.data.keys()
         values = [request.data.get(field, '') for field in fields]
         signature = generate_signature(values)
         if value.signature != signature:

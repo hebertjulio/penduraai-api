@@ -1,34 +1,20 @@
 from rest_framework.status import HTTP_200_OK
-from rest_framework import generics, views
+from rest_framework import views
 from rest_framework.exceptions import NotFound
 from rest_framework.response import Response
 
 from rest_framework_api_key.permissions import HasAPIKey
 
-from drf_rw_serializers import generics as rw_generics
-
 from accounts.permissions import IsManager, IsAttendant
-from accounts.serializers import ProfileScopeSerializer
 
-from notebooks.serializers import SheetScopeSerializer, RecordScopeSerializer
-
-from .serializers import TicketWriteSerializer, TicketReadSerializer
-from .models import Ticket
-from .services import token_decode, send_ws_message
+from .serializers import TicketSerializer
+from .db import Ticket
+from .services import get_token_data, send_ws_message
 from .tasks import push_notification
 from .exceptions import TokenEncodeException
 
 
-class TicketListView(rw_generics.CreateAPIView):
-
-    write_serializer_class = TicketWriteSerializer
-    read_serializer_class = TicketReadSerializer
-
-    payload_serializers = {
-        'profile': ProfileScopeSerializer,
-        'sheet': SheetScopeSerializer,
-        'record': RecordScopeSerializer
-    }
+class TicketListView(views.APIView):
 
     def get_permissions(self):
         permissions = super().get_permissions()
@@ -37,35 +23,33 @@ class TicketListView(rw_generics.CreateAPIView):
             return permissions + [IsAttendant()]
         return permissions + [IsManager()]
 
-    def perform_create(self, serializer):
-        scope = self.kwargs['scope']
-        serializer.save(scope=scope)
-
-    def get_write_serializer(self, *args, **kwargs):
-        scope = self.kwargs['scope']
-        payload_serializer = self.payload_serializers[scope]
-        kwargs['payload_serializer'] = payload_serializer()
-        return TicketWriteSerializer(*args, **kwargs)
+    def post(self, request, version, scope):  # skipcq
+        request.data.update({'scope': scope})
+        serializer = TicketSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        response = Response(serializer.data, status=HTTP_200_OK)
+        return response
 
 
-class TicketDetailView(generics.RetrieveAPIView):
-
-    serializer_class = TicketReadSerializer
-    lookup_url_kwarg = 'token'
+class TicketDetailView(views.APIView):
 
     permission_classes = [
         HasAPIKey
     ]
 
-    def get_object(self):
+    def get(self, request, version, token):  # skipcq
         try:
-            token = self.kwargs[self.lookup_url_kwarg]
-            payload = token_decode(token)
-            obj = Ticket.objects.get(pk=payload['id'])
-            return obj
-        except (Ticket.DoesNotExist,
-                TokenEncodeException):
+            data = get_token_data(token)
+            ticket = Ticket(data['key'], data['scope'])
+        except TokenEncodeException:
             raise NotFound
+        else:
+            if not ticket.exist():
+                raise NotFound
+            serializer = TicketSerializer(ticket)
+            response = Response(serializer.data, status=HTTP_200_OK)
+            return response
 
 
 class TicketDiscardView(views.APIView):
@@ -74,21 +58,18 @@ class TicketDiscardView(views.APIView):
         HasAPIKey
     ]
 
-    def get_object(self, token):
-        try:
-            payload = token_decode(token)
-            obj = Ticket.objects.get(pk=payload['id'])
-            return obj
-        except (Ticket.DoesNotExist,
-                TokenEncodeException):
-            raise NotFound
-
     def put(self, request, version, token):  # skipcq
-        obj = self.get_object(token)
-        obj.usage = -1
-        obj.save()
-        serializer = TicketReadSerializer(obj)
-        response = Response(serializer.data, status=HTTP_200_OK)
-        send_ws_message(obj.id, obj.usage)
-        push_notification.apply([obj.id, obj.message])
-        return response
+        try:
+            data = get_token_data(token)
+            ticket = Ticket(data['key'], data['scope'])
+        except TokenEncodeException:
+            raise NotFound
+        else:
+            if not ticket.exist():
+                raise NotFound
+            send_ws_message(ticket.key, 'rejected')
+            push_notification.apply([ticket.key, '*message*'])
+            serializer = TicketSerializer(ticket)
+            response = Response(serializer.data, status=HTTP_200_OK)
+            ticket.discard()
+            return response
