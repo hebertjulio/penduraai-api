@@ -15,8 +15,6 @@ from .services import get_signature, token_encode
 
 class Ticket:
 
-    AUDIENCE = 'ticket'
-
     db = from_url(
         settings.BRIDGES_REDIS_URL, db=None, **{
             'decode_responses': True})
