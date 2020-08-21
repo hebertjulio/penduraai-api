@@ -11,6 +11,7 @@ from jwt import (
 from jwt import decode as jwt_decode
 
 from .exceptions import TokenDecodeException
+from .db import Ticket
 
 
 def send_ws_message(group, message):
@@ -40,7 +41,7 @@ def get_signature(data, scope):
 def get_token_data(token):
     try:
         data = jwt_decode(
-            token, settings.SECRET_KEY, audience='ticket',
+            token, settings.SECRET_KEY, audience=Ticket.AUDIENCE,
             algorithms=['HS256'])
         return data
     except (InvalidSignatureError, InvalidAudience,

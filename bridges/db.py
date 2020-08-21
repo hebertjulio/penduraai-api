@@ -1,7 +1,9 @@
+from datetime import timedelta
 from uuid import uuid4
 
 from django.conf import settings
 from django.utils.translation import gettext_lazy as _
+from django.utils import timezone
 
 from jwt import encode as jwt_encode
 from redis import from_url
@@ -13,6 +15,8 @@ from .services import get_signature
 
 
 class Ticket:
+
+    AUDIENCE = 'ticket'
 
     db = from_url(
         settings.BRIDGES_REDIS_URL, db=None, **{
@@ -53,7 +57,11 @@ class Ticket:
 
     @property
     def token(self):
-        data = {'key': self.key, 'scope': self.scope, 'aud': 'ticket'}
+        expire = timezone.now() + timedelta(seconds=self.expire)
+        data = {
+            'key': self.key, 'scope': self.scope,
+            'aud': self.AUDIENCE, 'exp': expire
+        }
         token = jwt_encode(data, settings.SECRET_KEY, algorithm='HS256')
         token = token.decode('utf-8')
         return token
