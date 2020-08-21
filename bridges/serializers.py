@@ -10,6 +10,12 @@ class TicketSerializer(serializers.Serializer):
     data = serializers.JSONField(binary=True, required=True)
     token = serializers.CharField(read_only=True)
 
+    def __init__(self, *args, **kwargs):
+        exclude = kwargs.pop('exclude', [])
+        super().__init__(*args, **kwargs)
+        for field in exclude:
+            del self.fields[field]
+
     def create(self, validated_data):
         ticket = Ticket(validated_data['scope'])
         ticket.data = validated_data['data']

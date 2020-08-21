@@ -39,7 +39,7 @@ class TicketDetailView(views.APIView):
         data = token_decode(token)
         ticket = Ticket(data['scope'], data['key'])
         ticket.exist(raise_exception=True)
-        serializer = TicketSerializer(ticket)
+        serializer = TicketSerializer(ticket, exclude=['token'])
         response = Response(serializer.data, status=HTTP_200_OK)
         return response
 
@@ -56,7 +56,7 @@ class TicketDiscardView(views.APIView):
         ticket.exist(raise_exception=True)
         send_ws_message(ticket.key, 'rejected')
         push_notification.apply([ticket.key, '*message*'])
-        serializer = TicketSerializer(ticket)
+        serializer = TicketSerializer(ticket, exclude=['token'])
         response = Response(serializer.data, status=HTTP_200_OK)
         ticket.discard()
         return response
