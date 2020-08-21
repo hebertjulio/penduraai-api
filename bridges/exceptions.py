@@ -10,4 +10,4 @@ class TokenDecodeException(APIException):
     default_code = 'invalid'
 
     def __init__(self, detail):
-        super().__init__(self, _(detail))
+        super().__init__(detail=_(detail))
