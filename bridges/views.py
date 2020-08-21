@@ -8,7 +8,6 @@ from accounts.permissions import IsManager, IsAttendant
 from .serializers import TicketSerializer
 from .db import Ticket
 from .services import token_decode, send_ws_message
-from .tasks import push_notification
 
 
 class TicketListView(views.APIView):
@@ -55,7 +54,6 @@ class TicketDiscardView(views.APIView):
         ticket = Ticket(data['scope'], data['key'])
         ticket.exist(raise_exception=True)
         send_ws_message(ticket.key, 'rejected')
-        push_notification.apply([ticket.key, '*message*'])
         serializer = TicketSerializer(ticket, exclude=['token'])
         response = Response(serializer.data, status=HTTP_200_OK)
         ticket.discard()
