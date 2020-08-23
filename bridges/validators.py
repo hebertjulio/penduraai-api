@@ -5,6 +5,14 @@ from rest_framework import serializers
 from .services import get_signature
 
 
+class TicketUsageValidator:
+
+    def __call__(self, value):
+        if value.usage != 0:
+            message = _('Ticket usage is invalid.')
+            raise serializers.ValidationError(message)
+
+
 class TicketScopeValidator:
 
     def __init__(self, scope):

@@ -36,7 +36,7 @@ class TicketDetailView(views.APIView):
 
     def get(self, request, version, token):  # skipcq
         data = token_decode(token)
-        ticket = Ticket(data['scope'], data['key'])
+        ticket = Ticket(data['id'])
         ticket.exist(raise_exception=True)
         serializer = TicketSerializer(ticket, exclude=['token'])
         response = Response(serializer.data, status=HTTP_200_OK)
@@ -51,10 +51,10 @@ class TicketDiscardView(views.APIView):
 
     def put(self, request, version, token):  # skipcq
         data = token_decode(token)
-        ticket = Ticket(data['scope'], data['key'])
+        ticket = Ticket(data['id'])
         ticket.exist(raise_exception=True)
-        send_ws_message(ticket.key, 'rejected')
+        ticket.usage = -1
+        send_ws_message(ticket.id, 'rejected')
         serializer = TicketSerializer(ticket, exclude=['token'])
         response = Response(serializer.data, status=HTTP_200_OK)
-        ticket.discard()
         return response

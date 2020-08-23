@@ -1,3 +1,4 @@
+from json import loads, dumps
 from datetime import timedelta
 from uuid import uuid4
 
@@ -19,18 +20,59 @@ class Ticket:
         settings.BRIDGES_REDIS_URL, db=None, **{
             'decode_responses': True})
 
-    def __init__(self, scope, key=None):
-        self.scope = scope
-        self.key = key or str(uuid4())
+    def __init__(self, id_=None):
+        self.id = id_ or str(uuid4())
 
     @property
     def name(self):
-        name = 'ticket:%s:%s' % (self.scope, self.key)
+        name = 'ticket:' + self.id
         return name
 
     @name.setter
     def name(self, value):  # skipcq
         raise NotImplementedError
+
+    @property
+    def scope(self):
+        dataset = self.db.hgetall(self.name) or {}
+        value = dataset.get('scope', '')
+        return value
+
+    @scope.setter
+    def scope(self, value):
+        if not isinstance(value, str):
+            raise ValueError
+        dataset = self.db.hgetall(self.name) or {}
+        dataset.update({'scope': value})
+        self.db.hmset(self.name, dataset)
+
+    @property
+    def data(self):
+        dataset = self.db.hgetall(self.name) or {}
+        value = dataset.get('data', {})
+        return loads(value)
+
+    @data.setter
+    def data(self, value):
+        if not isinstance(value, dict):
+            raise ValueError
+        dataset = self.db.hgetall(self.name) or {}
+        dataset.update({'data': dumps(value)})
+        self.db.hmset(self.name, dataset)
+
+    @property
+    def usage(self):
+        dataset = self.db.hgetall(self.name) or {}
+        value = dataset.get('usage', -2)
+        return int(value)
+
+    @usage.setter
+    def usage(self, value):
+        if not isinstance(value, int):
+            raise ValueError
+        dataset = self.db.hgetall(self.name) or {}
+        dataset.update({'usage': value})
+        self.db.hmset(self.name, dataset)
 
     @property
     def signature(self):
@@ -42,20 +84,9 @@ class Ticket:
         raise NotImplementedError
 
     @property
-    def data(self):
-        data = self.db.hgetall(self.name) or {}
-        return data
-
-    @data.setter
-    def data(self, value):
-        if not isinstance(value, dict):
-            raise ValueError
-        self.db.hmset(self.name, value)
-
-    @property
     def token(self):
         expire = timezone.now() + timedelta(seconds=self.expire)
-        data = {'key': self.key, 'scope': self.scope}
+        data = {'id': self.id}
         token = token_encode(data, expire)
         return token
 
@@ -80,9 +111,6 @@ class Ticket:
         if raise_exception and not exist:
             raise self.DoesNotExist
         return exist
-
-    def discard(self):
-        self.db.delete(*[self.name])
 
     class DoesNotExist(APIException):
 
