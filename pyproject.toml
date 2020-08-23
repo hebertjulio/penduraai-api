@@ -7,7 +7,7 @@ license = "MIT"
 
 [tool.poetry.dependencies]
 python = "3.8.2"
-django = "^3.0.6"
+django = "3.0.9"
 djangorestframework-simplejwt = "^4.4.0"
 djangorestframework = "^3.11.0"
 django-model-utils = "^4.0.0"
@@ -29,6 +29,7 @@ drf-rw-serializers = "^1.0.3"
 celery = "^4.4.7"
 django-cors-headers = "^3.4.0"
 pyjwt = "^1.7.1"
+pylama = "^7.7.1"
 
 
 [tool.poetry.dev-dependencies]
