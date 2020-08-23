@@ -34,45 +34,33 @@ class Ticket:
 
     @property
     def scope(self):
-        dataset = self.db.hgetall(self.name) or {}
-        value = dataset.get('scope', '')
-        return value
+        return self.get_hm('scope')
 
     @scope.setter
     def scope(self, value):
         if not isinstance(value, str):
             raise ValueError
-        dataset = self.db.hgetall(self.name) or {}
-        dataset.update({'scope': value})
-        self.db.hmset(self.name, dataset)
+        self.set_hm('scope', value)
 
     @property
     def data(self):
-        dataset = self.db.hgetall(self.name) or {}
-        value = dataset.get('data', {})
-        return loads(value)
+        return loads(self.get_hm('data'))
 
     @data.setter
     def data(self, value):
         if not isinstance(value, dict):
             raise ValueError
-        dataset = self.db.hgetall(self.name) or {}
-        dataset.update({'data': dumps(value)})
-        self.db.hmset(self.name, dataset)
+        self.set_hm('data', dumps(value))
 
     @property
-    def usage(self):
-        dataset = self.db.hgetall(self.name) or {}
-        value = dataset.get('usage', -2)
-        return int(value)
+    def status(self):
+        return self.get_hm('status')
 
-    @usage.setter
-    def usage(self, value):
-        if not isinstance(value, int):
+    @status.setter
+    def status(self, value):
+        if not isinstance(value, str):
             raise ValueError
-        dataset = self.db.hgetall(self.name) or {}
-        dataset.update({'usage': value})
-        self.db.hmset(self.name, dataset)
+        self.set_hm('status', value)
 
     @property
     def signature(self):
@@ -96,14 +84,24 @@ class Ticket:
 
     @property
     def expire(self):
-        expire = self.db.ttl(self.name)
-        return expire
+        return self.db.ttl(self.name)
 
     @expire.setter
     def expire(self, value):
         if not isinstance(value, int):
             raise ValueError
         self.db.expire(self.name, value)
+
+    def set_hm(self, attr, value):
+        if not isinstance(value, str):
+            raise ValueError
+        hm = self.db.hgetall(self.name) or {}
+        hm.update({attr: value})
+        self.db.hmset(self.name, hm)
+
+    def get_hm(self, attr):
+        hm = self.db.hgetall(self.name) or {}
+        return hm.get(attr, None)
 
     def exist(self, raise_exception=False):
         keys = self.db.keys(*[self.name])

@@ -53,8 +53,8 @@ class TicketDiscardView(views.APIView):
         data = token_decode(token)
         ticket = Ticket(data['id'])
         ticket.exist(raise_exception=True)
-        ticket.usage = -1
-        send_ws_message(ticket.id, 'rejected')
+        ticket.status = 'discarded'
+        send_ws_message(ticket.id, ticket.status)
         serializer = TicketSerializer(ticket, exclude=['token'])
         response = Response(serializer.data, status=HTTP_200_OK)
         return response

@@ -5,7 +5,7 @@ from .db import Ticket
 
 from .validators import (
     TicketScopeValidator, TicketSignatureValidator,
-    TicketUsageValidator)
+    TicketStatusValidator)
 
 
 class TicketTokenField(Field):
@@ -27,7 +27,7 @@ class TicketTokenField(Field):
     def get_validators(self):
         validators = super().get_validators()
         validators += [
-            TicketUsageValidator(),
+            TicketStatusValidator(),
             TicketScopeValidator(self.scope),
             TicketSignatureValidator()
         ]

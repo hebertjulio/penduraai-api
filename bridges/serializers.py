@@ -7,7 +7,7 @@ class TicketSerializer(serializers.Serializer):
 
     scope = serializers.CharField(required=True)
     expire = serializers.IntegerField(required=True)
-    usage = serializers.IntegerField(read_only=True)
+    status = serializers.CharField(read_only=True)
     data = serializers.JSONField(binary=True, required=True)
     token = serializers.CharField(read_only=True)
 
@@ -21,7 +21,7 @@ class TicketSerializer(serializers.Serializer):
         ticket = Ticket()
         ticket.scope = validated_data['scope']
         ticket.data = validated_data['data']
-        ticket.usage = 0
+        ticket.status = 'unused'
         ticket.expire = validated_data['expire']
         return ticket
 

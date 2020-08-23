@@ -7,8 +7,8 @@ def use_ticket(func):
     @wraps(func)
     def wapper(self, validated_data):
         ticket = validated_data.pop('ticket')
-        ticket.usage = 1
+        ticket.status = 'used'
         ret = func(self, validated_data)
-        send_ws_message(ticket.id, 'confimed')
+        send_ws_message(ticket.id, ticket.status)
         return ret
     return wapper
