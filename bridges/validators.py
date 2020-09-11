@@ -8,7 +8,7 @@ from .services import get_signature
 class TicketStatusValidator:
 
     def __call__(self, value):
-        if value.usage != 'unused':
+        if value.status != 'unused':
             message = _('Ticket status is invalid.')
             raise serializers.ValidationError(message)
 

@@ -20,7 +20,7 @@ class RecordWriteSerializer(serializers.ModelSerializer):
 
     ticket = TicketTokenField(scope='record', required=True)
 
-    signatory = serializers.HiddenField(
+    signatary = serializers.HiddenField(
         default=CurrentProfileDefault()
     )
 
@@ -65,6 +65,7 @@ class RecordReadSerializer(serializers.ModelSerializer):
 
     sheet = SheetRelatedField(read_only=True)
     attendant = ProfileRelatedField(read_only=True)
+    signatary = ProfileRelatedField(read_only=True)
 
     def create(self, validated_data):
         raise NotImplementedError

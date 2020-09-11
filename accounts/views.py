@@ -90,7 +90,7 @@ class ProfileDetailView(rw_generics.RetrieveUpdateDestroyAPIView):
 
     def get_permissions(self):
         permissions = super().get_permissions()
-        profile_id = self.kwargs[self.lookup_field]
+        profile_id = self.kwargs[self.lookup_url_kwarg]
         profile = self.request.profile
         if profile and profile.id == profile_id:
             return permissions

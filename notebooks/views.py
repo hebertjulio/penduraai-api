@@ -33,8 +33,8 @@ class RecordListView(rw_generics.ListCreateAPIView):
         elif profile.is_attendant or profile.is_manager:
             where = Q(sheet__merchant=user)
         else:
-            where = Q(sheet__customer=user) & Q(signatory=profile)
-        qs = Record.objects.select_related('sheet', 'attendant', 'signatory')
+            where = Q(sheet__customer=user) & Q(signatary=profile)
+        qs = Record.objects.select_related('sheet', 'attendant', 'signatary')
         qs = qs.filter(where)
         qs = qs.order_by('-created')
         return qs
