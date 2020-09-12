@@ -93,6 +93,10 @@ class RecordDetailView(generics.RetrieveDestroyAPIView):
 
 class SheetConfirmView(views.APIView):
 
+    def get_permissions(self):
+        permissions = super().get_permissions()
+        return permissions + [IsManager()]
+
     @use_ticket(discard=True, scope='sheet')
     def post(self, request, version, token):
         context = {'request': request}
@@ -106,9 +110,7 @@ class SheetConfirmView(views.APIView):
 
 class SheetListView(generics.ListAPIView):
 
-    read_serializer_class = SheetReadSerializer
-    write_serializer_class = SheetWriteSerializer
-
+    serializer_class = SheetReadSerializer
     filterset_class = SheetFilterSet
 
     def get_queryset(self):

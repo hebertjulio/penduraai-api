@@ -65,6 +65,10 @@ class TokenRefreshView(simplejwt_views.TokenRefreshView):
 
 class ProfileConfirmView(views.APIView):
 
+    permission_classes = [
+        HasAPIKey
+    ]
+
     @use_ticket(discard=True, scope='profile')
     def post(self, request, version, token):
         data = request.data
@@ -79,8 +83,7 @@ class ProfileConfirmView(views.APIView):
 
 class ProfileListView(generics.ListAPIView):
 
-    read_serializer_class = ProfileReadSerializer
-    write_serializer_class = ProfileWriteSerializer
+    serializer_class = ProfileReadSerializer
 
     permission_classes = [
         IsAuthenticated
@@ -89,12 +92,6 @@ class ProfileListView(generics.ListAPIView):
     filterset_fields = [
         'role'
     ]
-
-    def get_permissions(self):
-        permissions = super().get_permissions()
-        if self.request.method == 'POST':
-            return [HasAPIKey()]
-        return permissions
 
     def get_queryset(self):
         if self.request.user.is_anonymous:
