@@ -1,14 +1,26 @@
-from functools import wraps
+from functools import wraps, partial
 
-from .services import send_ws_message
+from .services import token_decode
+from .db import Ticket
 
 
-def use_ticket(func):
+def use_ticket(func=None, discard=None, scope=None):
+    if discard is None:
+        raise ValueError
+
+    if func is None:
+        return partial(use_ticket, discard=discard, scope=scope)
+
     @wraps(func)
-    def wapper(self, validated_data):
-        ticket = validated_data.pop('ticket')
-        ticket.status = 'used'
-        ret = func(self, validated_data)
-        send_ws_message(ticket.id, ticket.status)
+    def wapper(self, request, version, token):
+        data = token_decode(token)
+        self.ticket = Ticket(data['id'])
+        self.ticket.exist(raise_exception=True)
+        if scope and scope != self.ticket.scope:
+            raise ValueError
+        ret = func(self, request, version, token)
+        if discard:
+            self.ticket.delete()
         return ret
+
     return wapper

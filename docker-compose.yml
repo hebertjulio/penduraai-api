@@ -4,7 +4,7 @@ services:
 
   redis:
     container_name: penduraai_redis
-    image: redis:5.0.5
+    image: redis:6.0.5-alpine
     volumes:
       - penduraai-redis:/data
     entrypoint: redis-server --requirepass penduraai --appendonly yes

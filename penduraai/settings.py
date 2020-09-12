@@ -14,6 +14,7 @@ import os
 import datetime
 
 import dj_database_url
+import corsheaders
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -239,6 +240,14 @@ CACHES = {
 
 SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
 SESSION_CACHE_ALIAS = 'default'
+
+
+# https://github.com/adamchainz/django-cors-headers
+
+CORS_ORIGIN_ALLOW_ALL = True
+CORS_ALLOW_HEADERS = list(corsheaders.defaults.default_headers) + [
+    'profile',
+]
 
 
 # HERE STARTS DYNACONF EXTENSION LOAD (Keep at the very bottom of settings.py)

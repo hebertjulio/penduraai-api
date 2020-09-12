@@ -5,9 +5,8 @@ from rest_framework_api_key.permissions import HasAPIKey
 
 from accounts.permissions import IsManager, IsAttendant
 
-from .serializers import TicketSerializer
-from .db import Ticket
-from .services import token_decode, send_ws_message
+from .serializers import TicketWriteSerializer, TicketReadSerializer
+from .decorators import use_ticket
 
 
 class TicketListView(views.APIView):
@@ -20,12 +19,13 @@ class TicketListView(views.APIView):
         return permissions + [IsManager()]
 
     def post(self, request, version, scope):  # skipcq
-        request.data.update({'scope': scope})
-        serializer = TicketSerializer(data=request.data)
+        request.data.update({'scope': scope, 'expire': 1800})
+        context = {'request': request}
+        serializer = TicketWriteSerializer(data=request.data, context=context)
         serializer.is_valid(raise_exception=True)
-        serializer.save()
-        response = Response(serializer.data, status=HTTP_200_OK)
-        return response
+        ticket = serializer.save()
+        serializer = TicketReadSerializer(ticket)
+        return Response(serializer.data, status=HTTP_200_OK)
 
 
 class TicketDetailView(views.APIView):
@@ -34,13 +34,10 @@ class TicketDetailView(views.APIView):
         HasAPIKey
     ]
 
+    @use_ticket(discard=False)
     def get(self, request, version, token):  # skipcq
-        data = token_decode(token)
-        ticket = Ticket(data['id'])
-        ticket.exist(raise_exception=True)
-        serializer = TicketSerializer(ticket, exclude=['token'])
-        response = Response(serializer.data, status=HTTP_200_OK)
-        return response
+        serializer = TicketReadSerializer(self.ticket, exclude=['token'])
+        return Response(serializer.data, status=HTTP_200_OK)
 
 
 class TicketDiscardView(views.APIView):
@@ -49,12 +46,7 @@ class TicketDiscardView(views.APIView):
         HasAPIKey
     ]
 
+    @use_ticket(discard=True)
     def put(self, request, version, token):  # skipcq
-        data = token_decode(token)
-        ticket = Ticket(data['id'])
-        ticket.exist(raise_exception=True)
-        ticket.status = 'discarded'
-        send_ws_message(ticket.id, ticket.status)
-        serializer = TicketSerializer(ticket, exclude=['token'])
-        response = Response(serializer.data, status=HTTP_200_OK)
-        return response
+        serializer = TicketReadSerializer(self.ticket, exclude=['token'])
+        return Response(serializer.data, status=HTTP_200_OK)

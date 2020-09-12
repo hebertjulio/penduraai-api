@@ -1,50 +1,27 @@
 from rest_framework import serializers
-from rest_framework.exceptions import NotFound
 
 from accounts.relations import UserRelatedField, ProfileRelatedField
 from accounts.fields import CurrentProfileDefault
 from accounts.validators import ProfileBelongUserValidator
 
-from bridges.decorators import use_ticket
-from bridges.fields import TicketTokenField
-
 from .relations import SheetRelatedField
 from .models import Record, Sheet
+
 from .validators import (
     CustomerOfYourselfValidator, AlreadyCustomerOfMerchantValidator,
     EmployeeOfMerchantValidator, CustomerOfMerchantValidator,
-    SheetBelongCustomerValidator, ProfileCanBuyValidator)
+    SheetBelongCustomerValidator, ProfileCanBuyValidator
+)
 
 
 class RecordWriteSerializer(serializers.ModelSerializer):
-
-    ticket = TicketTokenField(scope='record', required=True)
 
     signatary = serializers.HiddenField(
         default=CurrentProfileDefault()
     )
 
-    merchant = UserRelatedField(
-        validators=[
-            CustomerOfMerchantValidator()
-        ]
-    )
-
-    def get_sheet(self, merchant):
-        try:
-            request = self.context['request']
-            user = request.user
-            sheet = merchant.merchantsheets.get(customer=user)
-            return sheet
-        except Sheet.DoesNotExist:
-            raise NotFound
-
-    @use_ticket
     def create(self, validated_data):
-        merchant = validated_data.pop('merchant')
-        sheet = self.get_sheet(merchant)
-        obj = Record(**{**validated_data, **{'sheet': sheet}})
-        obj.save()
+        obj = super().create(validated_data)
         return obj
 
     def update(self, instance, validated_data):
@@ -52,9 +29,15 @@ class RecordWriteSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Record
-        exclude = [
-            'sheet'
-        ]
+        fields = '__all__'
+        extra_kwargs = {
+            'sheet': {
+                'validators': [
+                    CustomerOfYourselfValidator(),
+                    CustomerOfMerchantValidator()
+                ]
+            }
+        }
         validators = [
             EmployeeOfMerchantValidator(),
             ProfileCanBuyValidator()
@@ -81,8 +64,6 @@ class RecordReadSerializer(serializers.ModelSerializer):
 
 class SheetWriteSerializer(serializers.ModelSerializer):
 
-    ticket = TicketTokenField(scope='sheet', required=True)
-
     merchant = UserRelatedField(
         validators=[
             CustomerOfYourselfValidator(),
@@ -94,7 +75,6 @@ class SheetWriteSerializer(serializers.ModelSerializer):
         default=serializers.CurrentUserDefault()
     )
 
-    @use_ticket
     def create(self, validated_data):
         sheet = super().create(validated_data)
         return sheet

@@ -15,6 +15,10 @@ urlpatterns = [
         views.CurrentUserDetailView.as_view(),
         name='current_user_detail'),
     path(
+        'profiles/token/<str:token>',
+        views.ProfileConfirmView.as_view(),
+        name='profile_confirm'),
+    path(
         'profiles',
         views.ProfileListView.as_view(),
         name='profile_list'),

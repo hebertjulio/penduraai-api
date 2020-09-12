@@ -11,7 +11,7 @@ from redis import from_url
 from rest_framework.exceptions import APIException
 from rest_framework.status import HTTP_400_BAD_REQUEST
 
-from .services import get_signature, token_encode
+from .services import token_encode
 
 
 class Ticket:
@@ -53,23 +53,24 @@ class Ticket:
         self.set_hm('data', dumps(value))
 
     @property
-    def status(self):
-        return self.get_hm('status')
+    def user(self):
+        return int(self.get_hm('user'))
 
-    @status.setter
-    def status(self, value):
-        if not isinstance(value, str):
+    @user.setter
+    def user(self, value):
+        if not isinstance(value, int):
             raise ValueError
-        self.set_hm('status', value)
+        self.set_hm('user', value)
 
     @property
-    def signature(self):
-        signature = get_signature(self.data, self.scope)
-        return signature
+    def profile(self):
+        return int(self.get_hm('profile'))
 
-    @signature.setter
-    def signature(self, value):  # skipcq
-        raise NotImplementedError
+    @profile.setter
+    def profile(self, value):
+        if not isinstance(value, int):
+            raise ValueError
+        self.set_hm('profile', value)
 
     @property
     def token(self):
@@ -93,8 +94,6 @@ class Ticket:
         self.db.expire(self.name, value)
 
     def set_hm(self, attr, value):
-        if not isinstance(value, str):
-            raise ValueError
         hm = self.db.hgetall(self.name) or {}
         hm.update({attr: value})
         self.db.hmset(self.name, hm)
@@ -109,6 +108,9 @@ class Ticket:
         if raise_exception and not exist:
             raise self.DoesNotExist
         return exist
+
+    def delete(self):
+        self.db.delete(*[self.name])
 
     class DoesNotExist(APIException):
 

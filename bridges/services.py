@@ -1,5 +1,3 @@
-from hashlib import sha256
-
 from django.conf import settings
 
 from channels.layers import get_channel_layer
@@ -26,20 +24,6 @@ def send_ws_message(group, message):
             'text': message,
         },
     )
-
-
-def get_signature(data, scope):
-    if not isinstance(data, dict):
-        raise ValueError
-    fields = {
-        'profile': ['user', 'role'],
-        'sheet': ['merchant'],
-        'record': ['note', 'merchant', 'value', 'operation']
-    }
-    value = [str(data.get(field, '')) for field in fields[scope]]
-    value = ':'.join(value)
-    value = sha256(value.encode()).hexdigest()
-    return value
 
 
 def token_encode(data, expire):

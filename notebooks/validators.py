@@ -9,8 +9,7 @@ class CustomerOfMerchantValidator:
 
     def __call__(self, value, serializer_field):
         request = serializer_field.context['request']
-        qs = request.user.customersheets.filter(merchant=value, is_active=True)
-        if not qs.exists():
+        if value.customer.id != request.user.id:
             message = _('You aren\'t customer of merchant.')
             raise serializers.ValidationError(message)
 

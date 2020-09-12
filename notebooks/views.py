@@ -1,25 +1,48 @@
 from django.db.models import Q
 
+from rest_framework.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT
 from rest_framework import generics, views
 from rest_framework.exceptions import NotFound
 from rest_framework.response import Response
-from rest_framework.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT
-from drf_rw_serializers import generics as rw_generics
 
 from accounts.permissions import IsManager
+from bridges.decorators import use_ticket
 
 from .serializers import (
     RecordReadSerializer, RecordWriteSerializer, SheetReadSerializer,
-    SheetWriteSerializer, SheetProfileAddSerializer)
+    SheetWriteSerializer, SheetProfileAddSerializer
+)
 
 from .models import Record, Sheet
 from .filters import SheetFilterSet
 
 
-class RecordListView(rw_generics.ListCreateAPIView):
+class RecordConfirmView(views.APIView):
 
-    read_serializer_class = RecordReadSerializer
-    write_serializer_class = RecordWriteSerializer
+    @classmethod
+    def get_sheet(cls, merchant, customer):
+        try:
+            return Sheet.objects.get(
+                merchant=merchant, customer=customer)
+        except Sheet.DoesNotExist:
+            raise NotFound
+
+    @use_ticket(discard=True, scope='record')
+    def post(self, request, version, token):
+        context = {'request': request}
+        sheet = self.get_sheet(self.ticket.user, request.user)
+        data = {'sheet': sheet.id, 'attendant': self.ticket.profile}
+        data.update(self.ticket.data)
+        serializer = RecordWriteSerializer(data=data, context=context)
+        serializer.is_valid(raise_exception=True)
+        obj = serializer.save()
+        serializer = RecordReadSerializer(obj)
+        return Response(serializer.data, HTTP_201_CREATED)
+
+
+class RecordListView(generics.ListAPIView):
+
+    serializer_class = RecordReadSerializer
 
     filterset_fields = [
         'sheet_id'
@@ -68,18 +91,25 @@ class RecordDetailView(generics.RetrieveDestroyAPIView):
         instance.save()
 
 
-class SheetListView(rw_generics.ListCreateAPIView):
+class SheetConfirmView(views.APIView):
+
+    @use_ticket(discard=True, scope='sheet')
+    def post(self, request, version, token):
+        context = {'request': request}
+        data = {'merchant': self.ticket.user}
+        serializer = SheetWriteSerializer(data=data, context=context)
+        serializer.is_valid(raise_exception=True)
+        obj = serializer.save()
+        serializer = SheetReadSerializer(obj)
+        return Response(serializer.data, HTTP_201_CREATED)
+
+
+class SheetListView(generics.ListAPIView):
 
     read_serializer_class = SheetReadSerializer
     write_serializer_class = SheetWriteSerializer
 
     filterset_class = SheetFilterSet
-
-    def get_permissions(self):
-        permissions = super().get_permissions()
-        if self.request.method == 'POST':
-            permissions += [IsManager()]
-        return permissions
 
     def get_queryset(self):
         qs = Sheet.objects.balance_qs()

@@ -13,5 +13,3 @@ CACHES__default__LOCATION = "redis://:penduraai@localhost:6379/2"
 CELERY_BROKER_URL = "redis://:penduraai@localhost:6379/3"
 
 BRIDGES_REDIS_URL = "redis://:penduraai@localhost:6379/4"
-
-CORS_ORIGIN_ALLOW_ALL = true

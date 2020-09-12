@@ -1,12 +1,21 @@
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import NotFound
+from rest_framework import views, generics
+from rest_framework.status import HTTP_201_CREATED
+from rest_framework.response import Response
+
 from drf_rw_serializers import generics as rw_generics
+
 from rest_framework_simplejwt import views as simplejwt_views
+
 from rest_framework_api_key.permissions import HasAPIKey
+
+from bridges.decorators import use_ticket
 
 from .serializers import (
     UserReadSerializer, UserWriteSerializer, ProfileReadSerializer,
-    ProfileWriteSerializer)
+    ProfileWriteSerializer
+)
 
 from .models import User, Profile
 from .permissions import IsOwner, IsManager
@@ -54,7 +63,21 @@ class TokenRefreshView(simplejwt_views.TokenRefreshView):
     ]
 
 
-class ProfileListView(rw_generics.ListCreateAPIView):
+class ProfileConfirmView(views.APIView):
+
+    @use_ticket(discard=True, scope='profile')
+    def post(self, request, version, token):
+        data = request.data
+        data.update({**{'user': self.ticket.user}, **self.ticket.data})
+        context = {'request': request}
+        serializer = ProfileWriteSerializer(data=data, context=context)
+        serializer.is_valid(raise_exception=True)
+        obj = serializer.save()
+        serializer = ProfileReadSerializer(obj)
+        return Response(serializer.data, HTTP_201_CREATED)
+
+
+class ProfileListView(generics.ListAPIView):
 
     read_serializer_class = ProfileReadSerializer
     write_serializer_class = ProfileWriteSerializer
