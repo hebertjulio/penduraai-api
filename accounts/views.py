@@ -37,6 +37,8 @@ class CurrentUserDetailView(rw_generics.RetrieveUpdateDestroyAPIView):
     write_serializer_class = UserWriteSerializer
 
     def get_permissions(self):
+        if self.request.method == 'GET':
+            return [IsAuthenticated()]
         permissions = super().get_permissions()
         return permissions + [IsOwner()]
 
