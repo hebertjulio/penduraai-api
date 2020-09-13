@@ -28,7 +28,7 @@ class RecordConfirmView(views.APIView):
             raise NotFound
 
     @use_ticket(discard=True, scope='record')
-    def post(self, request, version, token):
+    def post(self, request, version, ticket_id):
         context = {'request': request}
         sheet = self.get_sheet(self.ticket.user, request.user)
         data = {'sheet': sheet.id, 'attendant': self.ticket.profile}
@@ -98,7 +98,7 @@ class SheetConfirmView(views.APIView):
         return permissions + [IsManager()]
 
     @use_ticket(discard=True, scope='sheet')
-    def post(self, request, version, token):
+    def post(self, request, version, ticket_id):
         context = {'request': request}
         data = {'merchant': self.ticket.user}
         serializer = SheetWriteSerializer(data=data, context=context)

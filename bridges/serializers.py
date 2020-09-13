@@ -29,18 +29,12 @@ class TicketWriteSerializer(serializers.Serializer):
 
 class TicketReadSerializer(serializers.Serializer):
 
+    id = serializers.CharField(read_only=True)
     scope = serializers.CharField(read_only=True)
     user = serializers.IntegerField(read_only=True)
     profile = serializers.IntegerField(read_only=True)
     data = serializers.JSONField(read_only=True)
     expire = serializers.IntegerField(read_only=True)
-    token = serializers.CharField(read_only=True)
-
-    def __init__(self, *args, **kwargs):
-        exclude = kwargs.pop('exclude', [])
-        super().__init__(*args, **kwargs)
-        for field in exclude:
-            del self.fields[field]
 
     def create(self, validated_data):
         raise NotImplementedError

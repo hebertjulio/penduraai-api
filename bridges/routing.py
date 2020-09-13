@@ -4,5 +4,5 @@ from .consumers import TicketConsumer
 
 
 urlpatterns = [
-    path('tickets/<str:token>', TicketConsumer),
+    path('tickets/<str:ticket_id>', TicketConsumer),
 ]

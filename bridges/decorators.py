@@ -1,6 +1,5 @@
 from functools import wraps, partial
 
-from .services import token_decode
 from .db import Ticket
 
 
@@ -12,13 +11,12 @@ def use_ticket(func=None, discard=None, scope=None):
         return partial(use_ticket, discard=discard, scope=scope)
 
     @wraps(func)
-    def wapper(self, request, version, token):
-        data = token_decode(token)
-        self.ticket = Ticket(data['id'])
+    def wapper(self, request, version, ticket_id):
+        self.ticket = Ticket(ticket_id)
         self.ticket.exist(raise_exception=True)
         if scope and scope != self.ticket.scope:
             raise ValueError
-        ret = func(self, request, version, token)
+        ret = func(self, request, version, ticket_id)
         if discard:
             self.ticket.delete()
         return ret

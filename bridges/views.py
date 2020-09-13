@@ -35,8 +35,8 @@ class TicketDetailView(views.APIView):
     ]
 
     @use_ticket(discard=False)
-    def get(self, request, version, token):  # skipcq
-        serializer = TicketReadSerializer(self.ticket, exclude=['token'])
+    def get(self, request, version, ticket_id):  # skipcq
+        serializer = TicketReadSerializer(self.ticket)
         return Response(serializer.data, status=HTTP_200_OK)
 
 
@@ -47,6 +47,6 @@ class TicketDiscardView(views.APIView):
     ]
 
     @use_ticket(discard=True)
-    def put(self, request, version, token):  # skipcq
-        serializer = TicketReadSerializer(self.ticket, exclude=['token'])
+    def put(self, request, version, ticket_id):  # skipcq
+        serializer = TicketReadSerializer(self.ticket)
         return Response(serializer.data, status=HTTP_200_OK)

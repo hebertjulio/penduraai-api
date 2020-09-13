@@ -7,7 +7,7 @@ app_name = 'notebooks'
 
 urlpatterns = [
     path(
-        'records/token/<str:token>',
+        'records/ticket/<str:ticket_id>',
         views.RecordConfirmView.as_view(),
         name='record_confirm'),
     path(
@@ -19,7 +19,7 @@ urlpatterns = [
         views.RecordDetailView.as_view(),
         name='record_detail'),
     path(
-        'sheets/token/<str:token>',
+        'sheets/ticket/<str:ticket_id>',
         views.SheetConfirmView.as_view(),
         name='sheet_confirm'),
     path(

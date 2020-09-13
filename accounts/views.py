@@ -70,7 +70,7 @@ class ProfileConfirmView(views.APIView):
     ]
 
     @use_ticket(discard=True, scope='profile')
-    def post(self, request, version, token):
+    def post(self, request, version, ticket_id):
         data = request.data
         data.update({**{'user': self.ticket.user}, **self.ticket.data})
         context = {'request': request}

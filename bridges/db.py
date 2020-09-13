@@ -1,17 +1,13 @@
 from json import loads, dumps
-from datetime import timedelta
 from uuid import uuid4
 
 from django.conf import settings
 from django.utils.translation import gettext_lazy as _
-from django.utils import timezone
 
 from redis import from_url
 
 from rest_framework.exceptions import APIException
 from rest_framework.status import HTTP_400_BAD_REQUEST
-
-from .services import token_encode
 
 
 class Ticket:
@@ -71,17 +67,6 @@ class Ticket:
         if not isinstance(value, int):
             raise ValueError
         self.set_hm('profile', value)
-
-    @property
-    def token(self):
-        expire = timezone.now() + timedelta(seconds=self.expire)
-        data = {'id': self.id}
-        token = token_encode(data, expire)
-        return token
-
-    @token.setter
-    def token(self, value):  # skipcq
-        raise NotImplementedError
 
     @property
     def expire(self):

@@ -1,8 +1,7 @@
 from channels.consumer import AsyncConsumer
 from channels.exceptions import StopConsumer
 
-from .services import token_decode
-from .exceptions import TokenDecodeException
+from .db import Ticket
 
 
 class BaseConsumer(AsyncConsumer):
@@ -44,11 +43,12 @@ class TicketConsumer(BaseConsumer):
 
     async def websocket_connect(self, event):
         try:
-            data = token_decode(event['token'])
-            group = data['key']
+            ticket = Ticket(event['ticket_id'])
+            ticket.exist(raise_exception=True)
             await self.accept()
-            await self.channel_layer.group_add(group, self.channel_name)
-        except TokenDecodeException:
+            await self.channel_layer.group_add(
+                event['ticket_id'], self.channel_name)
+        except Ticket.DoesNotExist:
             await self.reject()
             await self.close()
 
@@ -60,10 +60,6 @@ class TicketConsumer(BaseConsumer):
         pass
 
     async def websocket_disconnect(self, event):
-        try:
-            data = token_decode(event['token'])
-            group = data['key']
-            await self.channel_layer.group_discard(group, self.channel_name)
-        except TokenDecodeException:
-            pass
+        await self.channel_layer.group_discard(
+            event['ticket_id'], self.channel_name)
         await self.close()

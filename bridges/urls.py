@@ -11,11 +11,11 @@ urlpatterns = [
         views.TicketListView.as_view(),
         name='ticket_list'),
     path(
-        'tickets/<str:token>',
+        'tickets/<str:ticket_id>',
         views.TicketDetailView.as_view(),
         name='ticket_detail'),
     path(
-        'tickets/<str:token>/discard',
+        'tickets/<str:ticket_id>/discard',
         views.TicketDiscardView.as_view(),
         name='ticket_discard'),
 ]
