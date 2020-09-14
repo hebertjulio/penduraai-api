@@ -11,9 +11,9 @@ urlpatterns = [
         views.UserListView.as_view(),
         name='user_list'),
     path(
-        'current-user',
-        views.CurrentUserDetailView.as_view(),
-        name='current_user_detail'),
+        'users/current',
+        views.UserCurrentView.as_view(),
+        name='user_current'),
     path(
         'profiles/ticket/<str:ticket_id>',
         views.ProfileConfirmView.as_view(),
@@ -26,6 +26,14 @@ urlpatterns = [
         'profiles/<int:profile_id>',
         views.ProfileDetailView.as_view(),
         name='profile_detail'),
+    path(
+        'profiles/current',
+        views.ProfileCurrentView.as_view(),
+        name='profile_current'),
+    path(
+        'profiles/<int:profile_id>/unlock',
+        views.ProfileUnlockView.as_view(),
+        name='profile_unlock'),
     path(
         'token-obtain-pair',
         views.TokenObtainPairView.as_view(),

@@ -50,7 +50,7 @@ class RecordListView(generics.ListAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        profile = self.request.profile
+        profile = self.request.user.profile
         if profile.is_owner:
             where = Q(sheet__merchant=user) | Q(sheet__customer=user)
         elif profile.is_attendant or profile.is_manager:

@@ -1,6 +1,10 @@
 from django.db.transaction import atomic
 
 from rest_framework import serializers
+from rest_framework.exceptions import NotFound
+
+from rest_framework_simplejwt.settings import api_settings
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import User, Profile
 from .validators import ProfileOwnerRoleValidator
@@ -49,10 +53,10 @@ class UserReadSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
+        read_only_fields = User.get_fields()
         exclude = [
             'password', 'groups', 'user_permissions'
         ]
-        read_only_fields = User.get_fields()
 
 
 class ProfileWriteSerializer(serializers.ModelSerializer):
@@ -79,5 +83,26 @@ class ProfileReadSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Profile
-        fields = '__all__'
         read_only_fields = User.get_fields()
+        exclude = [
+            'pin'
+        ]
+
+
+class ProfileUnlockSerializer(serializers.Serializer):
+
+    id = serializers.IntegerField(write_only=True)
+    pin = serializers.RegexField(regex=Profile.PIN_REGEX, write_only=True)
+    access = serializers.CharField(read_only=True)
+
+    def validate(self, validated_data):
+        try:
+            user = self.context['request'].user
+            profile = user.userprofiles.get(
+                id=validated_data['id'], pin=validated_data['pin'])
+            refresh = RefreshToken()
+            refresh[api_settings.USER_ID_CLAIM] = user.id
+            refresh['profile_id'] = profile.id
+            return {'access': refresh.access_token}
+        except Profile.DoesNotExist:
+            raise NotFound

@@ -1,7 +1,7 @@
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import NotFound
 from rest_framework import views, generics
-from rest_framework.status import HTTP_201_CREATED
+from rest_framework.status import HTTP_201_CREATED, HTTP_200_OK
 from rest_framework.response import Response
 
 from drf_rw_serializers import generics as rw_generics
@@ -14,7 +14,7 @@ from bridges.decorators import use_ticket
 
 from .serializers import (
     UserReadSerializer, UserWriteSerializer, ProfileReadSerializer,
-    ProfileWriteSerializer
+    ProfileWriteSerializer, ProfileUnlockSerializer
 )
 
 from .models import User, Profile
@@ -31,7 +31,7 @@ class UserListView(rw_generics.CreateAPIView):
     ]
 
 
-class CurrentUserDetailView(rw_generics.RetrieveUpdateDestroyAPIView):
+class UserCurrentView(rw_generics.RetrieveUpdateDestroyAPIView):
 
     read_serializer_class = UserReadSerializer
     write_serializer_class = UserWriteSerializer
@@ -73,10 +73,9 @@ class ProfileConfirmView(views.APIView):
 
     @use_ticket(discard=True, scope='profile')
     def post(self, request, version, ticket_id):
-        data = request.data
-        data.update({**{'user': self.ticket.user}, **self.ticket.data})
-        context = {'request': request}
-        serializer = ProfileWriteSerializer(data=data, context=context)
+        request.data.update({**{'user': self.ticket.user}, **self.ticket.data})
+        serializer = ProfileWriteSerializer(
+            data=request.data, context={'request': request})
         serializer.is_valid(raise_exception=True)
         obj = serializer.save()
         serializer = ProfileReadSerializer(obj)
@@ -112,22 +111,40 @@ class ProfileDetailView(rw_generics.RetrieveUpdateDestroyAPIView):
 
     def get_permissions(self):
         permissions = super().get_permissions()
-        profile_id = self.kwargs[self.lookup_url_kwarg]
-        profile = self.request.profile
-        if profile and profile.id == profile_id:
-            return permissions
         permissions += [IsManager()]
         return permissions
 
     def get_object(self):
         profile_id = self.kwargs[self.lookup_url_kwarg]
         user = self.request.user
+
         try:
-            obj = user.userprofiles.get(id=profile_id)
-            return obj
+            return user.userprofiles.get(id=profile_id)
         except Profile.DoesNotExist:
             raise NotFound
 
     def perform_destroy(self, instance):
         instance.is_active = False
         instance.save()
+
+
+class ProfileCurrentView(views.APIView):
+
+    def get(self, request, version):
+        profile = getattr(self.request.user, 'profile', None)
+        serializer = ProfileReadSerializer(profile)
+        return Response(serializer.data, status=HTTP_200_OK)
+
+
+class ProfileUnlockView(views.APIView):
+
+    permission_classes = [
+        IsAuthenticated
+    ]
+
+    def post(self, request, version, profile_id):
+        request.data.update({'id': profile_id})
+        serializer = ProfileUnlockSerializer(
+            data=request.data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        return Response(serializer.data, HTTP_200_OK)

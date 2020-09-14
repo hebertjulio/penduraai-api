@@ -12,7 +12,7 @@ class SheetFilterSet(filters.FilterSet):
 
     def filter_by(self, queryset, name, value):  # skipcq
         user = self.request.user
-        profile = self.request.profile
+        profile = self.request.user.profile
         by = {
             'merchant': self.filter_by_merchant,
             'customer': self.filter_by_customer
