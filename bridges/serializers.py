@@ -1,5 +1,5 @@
-from rest_framework import serializers
 from rest_framework.serializers import CurrentUserDefault
+from rest_framework import serializers
 
 from accounts.fields import CurrentProfileDefault
 

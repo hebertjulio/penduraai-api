@@ -15,7 +15,7 @@ urlpatterns = [
         views.UserCurrentView.as_view(),
         name='user_current'),
     path(
-        'profiles/ticket/<str:ticket_id>',
+        'profiles/ticket/<str:ticket_id>/confirm',
         views.ProfileConfirmView.as_view(),
         name='profile_confirm'),
     path(

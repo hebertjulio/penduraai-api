@@ -4,17 +4,18 @@ from rest_framework.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT
 from rest_framework import generics, views
 from rest_framework.exceptions import NotFound
 from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
 
-from accounts.permissions import IsManager
+from accounts.permissions import IsManager, IsGuest
 from bridges.decorators import use_ticket
+
+from .filters import SheetFilterSet
+from .models import Record, Sheet
 
 from .serializers import (
     RecordReadSerializer, RecordWriteSerializer, SheetReadSerializer,
     SheetWriteSerializer, SheetProfileAddSerializer
 )
-
-from .models import Record, Sheet
-from .filters import SheetFilterSet
 
 
 class RecordConfirmView(views.APIView):
@@ -29,11 +30,14 @@ class RecordConfirmView(views.APIView):
 
     @use_ticket(discard=True, scope='record')
     def post(self, request, version, ticket_id):
-        context = {'request': request}
         sheet = self.get_sheet(self.ticket.user, request.user)
-        data = {'sheet': sheet.id, 'attendant': self.ticket.profile}
-        data.update(self.ticket.data)
-        serializer = RecordWriteSerializer(data=data, context=context)
+        data = {
+            'sheet': sheet.id, 'attendant': self.ticket.profile,
+            **self.ticket.data
+        }
+        serializer = RecordWriteSerializer(
+            data=data, context={'request': request}
+        )
         serializer.is_valid(raise_exception=True)
         obj = serializer.save()
         serializer = RecordReadSerializer(obj)
@@ -50,7 +54,7 @@ class RecordListView(generics.ListAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        profile = self.request.user.profile
+        profile = user.profile
         if profile.is_owner:
             where = Q(sheet__merchant=user) | Q(sheet__customer=user)
         elif profile.is_attendant or profile.is_manager:
@@ -69,10 +73,10 @@ class RecordDetailView(generics.RetrieveDestroyAPIView):
     lookup_url_kwarg = 'record_id'
 
     def get_permissions(self):
-        permissions = super().get_permissions()
-        if self.request.method != 'GET':
-            permissions += [IsManager()]
-        return permissions
+        permissions = [IsAuthenticated()]
+        if self.request.method == 'GET':
+            return permissions + [IsGuest()]
+        return permissions + [IsManager()]
 
     def get_object(self):
         record_id = self.kwargs[self.lookup_url_kwarg]
@@ -93,9 +97,10 @@ class RecordDetailView(generics.RetrieveDestroyAPIView):
 
 class SheetConfirmView(views.APIView):
 
-    def get_permissions(self):
-        permissions = super().get_permissions()
-        return permissions + [IsManager()]
+    permission_classes = [
+        IsAuthenticated,
+        IsManager
+    ]
 
     @use_ticket(discard=True, scope='sheet')
     def post(self, request, version, ticket_id):
@@ -124,20 +129,18 @@ class SheetDetailView(generics.RetrieveDestroyAPIView):
     lookup_url_kwarg = 'sheet_id'
 
     def get_permissions(self):
-        permissions = super().get_permissions()
+        permissions = [IsAuthenticated()]
         if self.request.method == 'DELETE':
-            permissions += [IsManager()]
-        return permissions
+            return permissions + [IsManager()]
+        return permissions + [IsGuest()]
 
     def get_object(self):
         sheet_id = self.kwargs[self.lookup_url_kwarg]
-        user = self.request.user
-        where = Q(merchant=user)
+        where = Q(merchant=self.request.user)
         if self.request.method == 'GET':
-            where = where | Q(customer=user)
+            where = where | Q(customer=self.request.user)
         try:
-            obj = Sheet.objects.get(Q(id=sheet_id) & (where))
-            return obj
+            return Sheet.objects.get(Q(id=sheet_id) & (where))
         except Sheet.DoesNotExist:
             raise NotFound
 
@@ -148,17 +151,10 @@ class SheetDetailView(generics.RetrieveDestroyAPIView):
 
 class SheetBuyerView(views.APIView):
 
-    @classmethod
-    def get_sheet(cls, user, sheet_id):
-        try:
-            obj = Sheet.objects.get(pk=sheet_id, customer=user)
-            return obj
-        except Sheet.DoesNotExist:
-            raise NotFound
-
-    def get_permissions(self):
-        permissions = super().get_permissions()
-        return permissions + [IsManager()]
+    permission_classes = [
+        IsAuthenticated,
+        IsManager
+    ]
 
     def post(self, request, version, sheet_id, profile_id):  # skipcq
         data = {'sheet': sheet_id, 'profile': profile_id}
@@ -170,7 +166,10 @@ class SheetBuyerView(views.APIView):
         return response
 
     def delete(self, request, version, sheet_id, profile_id):  # skipcq
-        sheet = self.get_sheet(request.user, sheet_id)
+        try:
+            sheet = Sheet.objects.get(pk=sheet_id, customer=request.user)
+        except Sheet.DoesNotExist:
+            raise NotFound
         sheet.buyers.remove(profile_id)
         response = Response([], status=HTTP_204_NO_CONTENT)
         return response

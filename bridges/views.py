@@ -1,6 +1,8 @@
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.status import HTTP_200_OK
 from rest_framework import views
 from rest_framework.response import Response
+
 from rest_framework_api_key.permissions import HasAPIKey
 
 from accounts.permissions import IsManager, IsAttendant
@@ -12,9 +14,8 @@ from .decorators import use_ticket
 class TicketListView(views.APIView):
 
     def get_permissions(self):
-        permissions = super().get_permissions()
-        scope = self.kwargs['scope']
-        if scope == 'record':
+        permissions = [IsAuthenticated()]
+        if self.kwargs['scope'] == 'record':
             return permissions + [IsAttendant()]
         return permissions + [IsManager()]
 

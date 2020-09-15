@@ -1,13 +1,13 @@
 from django.db.transaction import atomic
 
-from rest_framework import serializers
 from rest_framework.exceptions import NotFound
+from rest_framework import serializers
 
 from rest_framework_simplejwt.settings import api_settings
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from .models import User, Profile
 from .validators import ProfileOwnerRoleValidator
+from .models import User, Profile
 
 
 class UserWriteSerializer(serializers.ModelSerializer):
@@ -99,7 +99,8 @@ class ProfileUnlockSerializer(serializers.Serializer):
         try:
             user = self.context['request'].user
             profile = user.userprofiles.get(
-                id=validated_data['id'], pin=validated_data['pin'])
+                id=validated_data['id'], pin=validated_data['pin']
+            )
             refresh = RefreshToken()
             refresh[api_settings.USER_ID_CLAIM] = user.id
             refresh['profile_id'] = profile.id

@@ -1,5 +1,5 @@
-from channels.consumer import AsyncConsumer
 from channels.exceptions import StopConsumer
+from channels.consumer import AsyncConsumer
 
 from .db import Ticket
 
