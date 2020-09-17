@@ -241,14 +241,6 @@ SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
 SESSION_CACHE_ALIAS = 'default'
 
 
-# https://github.com/adamchainz/django-cors-headers
-
-CORS_ORIGIN_ALLOW_ALL = True
-CORS_ALLOW_HEADERS = list(corsheaders.defaults.default_headers) + [
-    'profile',
-]
-
-
 # HERE STARTS DYNACONF EXTENSION LOAD (Keep at the very bottom of settings.py)
 # Read more at https://dynaconf.readthedocs.io/en/latest/guides/django.html
 
