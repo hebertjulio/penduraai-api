@@ -29,7 +29,7 @@ class UserListView(rw_generics.CreateAPIView):
     ]
 
 
-class UserCurrentView(rw_generics.RetrieveUpdateDestroyAPIView):
+class CurrentUserView(rw_generics.RetrieveUpdateDestroyAPIView):
 
     write_serializer_class = UserWriteSerializer
     read_serializer_class = UserReadSerializer
@@ -126,14 +126,6 @@ class ProfileDetailView(rw_generics.RetrieveUpdateDestroyAPIView):
         instance.save()
 
 
-class ProfileCurrentView(views.APIView):
-
-    def get(self, request, version):
-        profile = getattr(self.request.user, 'profile', None)
-        serializer = ProfileReadSerializer(profile)
-        return Response(serializer.data, status=HTTP_200_OK)
-
-
 class ProfileUnlockView(views.APIView):
 
     permission_classes = [
@@ -147,3 +139,18 @@ class ProfileUnlockView(views.APIView):
         )
         serializer.is_valid(raise_exception=True)
         return Response(serializer.data, HTTP_200_OK)
+
+
+class ProfileRolesView(views.APIView):
+
+    def get(self, request, version):
+        roles = [{'id': k, 'name': v} for k, v in sorted(Profile.ROLE)]
+        return Response(roles, HTTP_200_OK)
+
+
+class CurrentProfileView(views.APIView):
+
+    def get(self, request, version):
+        profile = getattr(self.request.user, 'profile', None)
+        serializer = ProfileReadSerializer(profile)
+        return Response(serializer.data, status=HTTP_200_OK)
