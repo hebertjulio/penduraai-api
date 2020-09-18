@@ -58,7 +58,7 @@ class ProfileListView(rw_generics.ListCreateAPIView):
     ]
 
     filterset_fields = [
-        'role'
+        'role', 'is_active'
     ]
 
     def get_permissions(self):
@@ -69,7 +69,7 @@ class ProfileListView(rw_generics.ListCreateAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        return user.userprofiles.filter(is_active=True)
+        return user.userprofiles.all()
 
 
 class ProfileConfirmView(rw_generics.CreateAPIView):
