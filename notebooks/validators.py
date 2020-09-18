@@ -56,8 +56,7 @@ class SheetBelongCustomerValidator:
 
     def __call__(self, value, serializer_field):
         request = serializer_field.context['request']
-        user = request.user
-        qs = user.customersheets.filter(id=value.id)
+        qs = request.user.customersheets.filter(id=value.id)
         if not qs.exists():
             message = _('This sheet does not belong to you.')
             raise serializers.ValidationError(message)
@@ -69,8 +68,9 @@ class ProfileCanBuyValidator:
 
     def __call__(self, value, serializer_field):
         request = serializer_field.context['request']
-        if not value.is_owner:
-            qs = request.user.buyers.filter(id=value.id)
+        profile = request.user.profile
+        if not profile.is_owner:
+            qs = value.merchantsheets.filter(buyers__id=profile.id)
             if not qs.exists():
                 message = _('You cannot buy from this merchant.')
                 raise serializers.ValidationError(message)

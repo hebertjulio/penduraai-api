@@ -31,6 +31,10 @@ class RecordListView(rw_generics.ListCreateAPIView):
         'sheet_id'
     ]
 
+    def initial(self, request, *args, **kwargs):
+        request.data.update({'attendant': request.user.profile.id})
+        super().initial(request, *args, **kwargs)
+
     def get_permissions(self):
         permissions = [IsAuthenticated()]
         if self.request.method == 'GET':

@@ -22,8 +22,7 @@ class RecordCreateSerializer(serializers.ModelSerializer):
         default=serializers.CurrentUserDefault())
 
     attendant = ProfileRelatedField(
-        validators=[EmployeeOfMerchantValidator()],
-        default=CurrentProfileDefault())
+        validators=[EmployeeOfMerchantValidator()])
 
     @create_transaction(expire=1800, scope='record')
     def create(self, validated_data):
@@ -39,12 +38,9 @@ class RecordCreateSerializer(serializers.ModelSerializer):
 class RecordConfirmSerializer(serializers.ModelSerializer):
 
     merchant = UserRelatedField(
-        validators=[CustomerOfMerchantValidator()],
-        default=serializers.CurrentUserDefault())
+        validators=[CustomerOfMerchantValidator(), ProfileCanBuyValidator()])
 
-    signatary = ProfileRelatedField(
-        validators=[ProfileCanBuyValidator()],
-        default=CurrentProfileDefault())
+    signatary = serializers.HiddenField(default=CurrentProfileDefault())
 
     def create(self, validated_data):
         merchant = validated_data.pop('merchant')
