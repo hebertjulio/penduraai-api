@@ -130,9 +130,7 @@ class ProfileUnlockView(views.APIView):
 class ProfileRolesView(views.APIView):
 
     def get(self, request, version):
-        roles = [
-            {'id': k, 'name': v} for k, v in sorted(Profile.ROLE)
-            if k != 'owner']
+        roles = [{'id': k, 'name': v} for k, v in sorted(Profile.ROLE)]
         return Response(roles, HTTP_200_OK)
 
 
