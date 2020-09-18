@@ -43,7 +43,7 @@ class UserAdmin(BaseUserAdmin):
 @admin.register(Profile)
 class ProfileAdmin(admin.ModelAdmin):
     list_display = (
-        'user', 'name', 'pin', 'role',
+        'user', 'name', 'pin', 'role', 'is_active',
     )
     search_fields = (
         'user__name', 'user__email', 'name',
@@ -52,7 +52,7 @@ class ProfileAdmin(admin.ModelAdmin):
         'user',
     )
     list_filter = (
-        'role',
+        'role', 'is_active',
     )
     ordering = (
         'user__id', 'name',
