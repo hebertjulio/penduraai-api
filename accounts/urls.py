@@ -38,12 +38,4 @@ urlpatterns = [
         'profiles/current',
         views.ProfileCurrentView.as_view(),
         name='profile_current'),
-    path(
-        'token-obtain-pair',
-        views.TokenObtainPairView.as_view(),
-        name='token_obtain_pair'),
-    path(
-        'token-refresh',
-        views.TokenRefreshView.as_view(),
-        name='token_refresh'),
 ]

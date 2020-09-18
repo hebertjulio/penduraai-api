@@ -5,7 +5,6 @@ from rest_framework.status import HTTP_200_OK
 from rest_framework.response import Response
 
 from drf_rw_serializers import generics as rw_generics
-from rest_framework_simplejwt import views as simplejwt_views
 from rest_framework_api_key.permissions import HasAPIKey
 
 from bridges.decorators import use_transaction
@@ -144,17 +143,3 @@ class ProfileCurrentView(rw_generics.RetrieveUpdateAPIView):
 
     def get_object(self):
         return getattr(self.request.user, 'profile', None)
-
-
-class TokenObtainPairView(simplejwt_views.TokenObtainPairView):
-
-    permission_classes = [
-        HasAPIKey
-    ]
-
-
-class TokenRefreshView(simplejwt_views.TokenRefreshView):
-
-    permission_classes = [
-        HasAPIKey
-    ]
