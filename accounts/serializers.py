@@ -6,6 +6,8 @@ from rest_framework import serializers
 from rest_framework_simplejwt.settings import api_settings
 from rest_framework_simplejwt.tokens import RefreshToken
 
+from bridges.decorators import create_transaction
+
 from .validators import ProfileOwnerRoleValidator
 from .models import User, Profile
 
@@ -61,6 +63,17 @@ class UserReadSerializer(serializers.ModelSerializer):
 
 class ProfileWriteSerializer(serializers.ModelSerializer):
 
+    user = serializers.HiddenField(
+        default=serializers.CurrentUserDefault()
+    )
+
+    @create_transaction(expire=1800, scope='profile')
+    def create(self, validated_data):
+        return validated_data
+
+    def update(self, instance, validated_data):
+        raise NotImplementedError
+
     class Meta:
         model = Profile
         fields = '__all__'
@@ -74,6 +87,8 @@ class ProfileWriteSerializer(serializers.ModelSerializer):
 
 
 class ProfileReadSerializer(serializers.ModelSerializer):
+
+    transaction = serializers.UUIDField(read_only=True)
 
     def create(self, validated_data):
         raise NotImplementedError

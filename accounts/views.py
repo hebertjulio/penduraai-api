@@ -1,6 +1,6 @@
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import NotFound
-from rest_framework import views, generics
+from rest_framework import views
 from rest_framework.status import HTTP_201_CREATED, HTTP_200_OK
 from rest_framework.response import Response
 
@@ -8,10 +8,10 @@ from drf_rw_serializers import generics as rw_generics
 from rest_framework_simplejwt import views as simplejwt_views
 from rest_framework_api_key.permissions import HasAPIKey
 
-from bridges.decorators import use_ticket
+from bridges.decorators import load_transaction
 
 from .permissions import IsOwner, IsManager
-from .models import User, Profile
+from .models import Profile
 
 from .serializers import (
     UserReadSerializer, UserWriteSerializer, ProfileReadSerializer,
@@ -29,7 +29,7 @@ class UserListView(rw_generics.CreateAPIView):
     ]
 
 
-class CurrentUserView(rw_generics.RetrieveUpdateDestroyAPIView):
+class UserCurrentView(rw_generics.RetrieveUpdateDestroyAPIView):
 
     write_serializer_class = UserWriteSerializer
     read_serializer_class = UserReadSerializer
@@ -48,43 +48,10 @@ class CurrentUserView(rw_generics.RetrieveUpdateDestroyAPIView):
         instance.save()
 
 
-class TokenObtainPairView(simplejwt_views.TokenObtainPairView):
+class ProfileListView(rw_generics.ListCreateAPIView):
 
-    permission_classes = [
-        HasAPIKey
-    ]
-
-
-class TokenRefreshView(simplejwt_views.TokenRefreshView):
-
-    permission_classes = [
-        HasAPIKey
-    ]
-
-
-class ProfileConfirmView(views.APIView):
-
-    permission_classes = [
-        HasAPIKey
-    ]
-
-    @use_ticket(discard=True, scope='profile')
-    def post(self, request, version, ticket_id):
-        request.data.update({
-            **{'user': self.ticket.user}, **self.ticket.data
-        })
-        serializer = ProfileWriteSerializer(
-            data=request.data, context={'request': request}
-        )
-        serializer.is_valid(raise_exception=True)
-        obj = serializer.save()
-        serializer = ProfileReadSerializer(obj)
-        return Response(serializer.data, HTTP_201_CREATED)
-
-
-class ProfileListView(generics.ListAPIView):
-
-    serializer_class = ProfileReadSerializer
+    write_serializer_class = ProfileWriteSerializer
+    read_serializer_class = ProfileReadSerializer
 
     permission_classes = [
         IsAuthenticated
@@ -94,9 +61,13 @@ class ProfileListView(generics.ListAPIView):
         'role'
     ]
 
+    def get_permissions(self):
+        permissions = [IsAuthenticated()]
+        if self.request.method == 'GET':
+            return permissions
+        return permissions + [IsManager()]
+
     def get_queryset(self):
-        if self.request.user.is_anonymous:
-            return User.objects.none()
         user = self.request.user
         return user.userprofiles.filter(is_active=True)
 
@@ -126,6 +97,20 @@ class ProfileDetailView(rw_generics.RetrieveUpdateDestroyAPIView):
         instance.save()
 
 
+class ProfileConfirmView(views.APIView):
+
+    permission_classes = [
+        HasAPIKey
+    ]
+
+    @load_transaction
+    def post(self, request, version, transaction_id):
+        profile = Profile.objects.create(**self.transaction.data)
+        serializer = ProfileReadSerializer(profile)
+        self.transaction.status = 'used'
+        return Response(serializer.data, HTTP_201_CREATED)
+
+
 class ProfileUnlockView(views.APIView):
 
     permission_classes = [
@@ -148,9 +133,24 @@ class ProfileRolesView(views.APIView):
         return Response(roles, HTTP_200_OK)
 
 
-class CurrentProfileView(views.APIView):
+class ProfileCurrentView(rw_generics.RetrieveUpdateAPIView):
 
-    def get(self, request, version):
-        profile = getattr(self.request.user, 'profile', None)
-        serializer = ProfileReadSerializer(profile)
-        return Response(serializer.data, status=HTTP_200_OK)
+    write_serializer_class = ProfileWriteSerializer
+    read_serializer_class = ProfileReadSerializer
+
+    def get_object(self):
+        return getattr(self.request.user, 'profile', None)
+
+
+class TokenObtainPairView(simplejwt_views.TokenObtainPairView):
+
+    permission_classes = [
+        HasAPIKey
+    ]
+
+
+class TokenRefreshView(simplejwt_views.TokenRefreshView):
+
+    permission_classes = [
+        HasAPIKey
+    ]

@@ -6,8 +6,11 @@ from rest_framework.exceptions import NotFound
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 
-from accounts.permissions import IsManager, IsGuest
-from bridges.decorators import use_ticket
+from drf_rw_serializers import generics as rw_generics
+
+from accounts.permissions import IsManager, IsGuest, IsAttendant
+
+from bridges.decorators import load_transaction
 
 from .filters import SheetFilterSet
 from .models import Record, Sheet
@@ -18,39 +21,20 @@ from .serializers import (
 )
 
 
-class RecordConfirmView(views.APIView):
+class RecordListView(rw_generics.ListCreateAPIView):
 
-    @classmethod
-    def get_sheet(cls, merchant, customer):
-        try:
-            return Sheet.objects.get(
-                merchant=merchant, customer=customer)
-        except Sheet.DoesNotExist:
-            raise NotFound
-
-    @use_ticket(discard=True, scope='record')
-    def post(self, request, version, ticket_id):
-        sheet = self.get_sheet(self.ticket.user, request.user)
-        data = {
-            'sheet': sheet.id, 'attendant': self.ticket.profile,
-            **self.ticket.data
-        }
-        serializer = RecordWriteSerializer(
-            data=data, context={'request': request}
-        )
-        serializer.is_valid(raise_exception=True)
-        obj = serializer.save()
-        serializer = RecordReadSerializer(obj)
-        return Response(serializer.data, HTTP_201_CREATED)
-
-
-class RecordListView(generics.ListAPIView):
-
-    serializer_class = RecordReadSerializer
+    write_serializer_class = RecordWriteSerializer
+    read_serializer_class = RecordReadSerializer
 
     filterset_fields = [
         'sheet_id'
     ]
+
+    def get_permissions(self):
+        permissions = [IsAuthenticated()]
+        if self.request.method == 'GET':
+            return permissions + [IsGuest()]
+        return permissions + [IsAttendant()]
 
     def get_queryset(self):
         user = self.request.user
@@ -95,27 +79,31 @@ class RecordDetailView(generics.RetrieveDestroyAPIView):
         instance.save()
 
 
-class SheetConfirmView(views.APIView):
+class RecordConfirmView(views.APIView):
 
-    permission_classes = [
-        IsAuthenticated,
-        IsManager
-    ]
+    @classmethod
+    def get_sheet(cls, merchant, customer):
+        try:
+            return Sheet.objects.get(
+                merchant=merchant, customer=customer)
+        except Sheet.DoesNotExist:
+            raise NotFound
 
-    @use_ticket(discard=True, scope='sheet')
-    def post(self, request, version, ticket_id):
-        context = {'request': request}
-        data = {'merchant': self.ticket.user}
-        serializer = SheetWriteSerializer(data=data, context=context)
-        serializer.is_valid(raise_exception=True)
-        obj = serializer.save()
-        serializer = SheetReadSerializer(obj)
+    @load_transaction
+    def post(self, request, version, transaction_id):
+        data = self.transaction.data
+        sheet = self.get_sheet(data.pop('merchant'), request.user)
+        data = {'sheet': sheet.id, 'signatary': request.user.profile.id}
+        record = Record.objects.create(**data)
+        serializer = RecordReadSerializer(record)
+        self.transaction.status = 'used'
         return Response(serializer.data, HTTP_201_CREATED)
 
 
-class SheetListView(generics.ListAPIView):
+class SheetListView(rw_generics.ListCreateAPIView):
 
-    serializer_class = SheetReadSerializer
+    write_serializer_class = SheetWriteSerializer
+    read_serializer_class = SheetReadSerializer
     filterset_class = SheetFilterSet
 
     def get_queryset(self):
@@ -147,6 +135,23 @@ class SheetDetailView(generics.RetrieveDestroyAPIView):
     def perform_destroy(self, instance):
         instance.is_active = False
         instance.save()
+
+
+class SheetConfirmView(views.APIView):
+
+    permission_classes = [
+        IsAuthenticated,
+        IsManager
+    ]
+
+    @load_transaction
+    def post(self, request, version, transaction_id):
+        data = self.transaction.data
+        data.update({'customer': request.user.id})
+        sheet = Sheet.objects.create(**data)
+        serializer = SheetReadSerializer(sheet)
+        self.transaction.status = 'used'
+        return Response(serializer.data, HTTP_201_CREATED)
 
 
 class SheetBuyerView(views.APIView):

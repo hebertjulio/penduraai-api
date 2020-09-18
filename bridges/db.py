@@ -9,8 +9,10 @@ from redis import from_url
 from rest_framework.exceptions import APIException
 from rest_framework.status import HTTP_400_BAD_REQUEST
 
+from .encoders import DecimalEncoder
 
-class Ticket:
+
+class Transaction:
 
     db = from_url(
         settings.BRIDGES_REDIS_URL, db=None, **{
@@ -21,12 +23,22 @@ class Ticket:
 
     @property
     def name(self):
-        name = 'ticket:' + self.id
+        name = 'transaction:' + self.id
         return name
 
     @name.setter
     def name(self, value):  # skipcq
         raise NotImplementedError
+
+    @property
+    def data(self):
+        return loads(self.get_hm('data'))
+
+    @data.setter
+    def data(self, value):
+        if not isinstance(value, dict):
+            raise ValueError
+        self.set_hm('data', dumps(value, cls=DecimalEncoder))
 
     @property
     def scope(self):
@@ -39,34 +51,14 @@ class Ticket:
         self.set_hm('scope', value)
 
     @property
-    def data(self):
-        return loads(self.get_hm('data'))
+    def status(self):
+        return self.get_hm('status')
 
-    @data.setter
-    def data(self, value):
-        if not isinstance(value, dict):
+    @status.setter
+    def status(self, value):
+        if value not in ['unused', 'used', 'discarded']:
             raise ValueError
-        self.set_hm('data', dumps(value))
-
-    @property
-    def user(self):
-        return int(self.get_hm('user'))
-
-    @user.setter
-    def user(self, value):
-        if not isinstance(value, int):
-            raise ValueError
-        self.set_hm('user', value)
-
-    @property
-    def profile(self):
-        return int(self.get_hm('profile'))
-
-    @profile.setter
-    def profile(self, value):
-        if not isinstance(value, int):
-            raise ValueError
-        self.set_hm('profile', value)
+        self.set_hm('status', value)
 
     @property
     def expire(self):
@@ -101,4 +93,4 @@ class Ticket:
 
         status_code = HTTP_400_BAD_REQUEST
         default_code = 'invalid'
-        default_detail = _('Ticket does not exist.')
+        default_detail = _('Transaction does not exist.')

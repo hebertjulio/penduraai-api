@@ -1,4 +1,4 @@
-from django.urls import path, re_path
+from django.urls import path
 
 from . import views
 
@@ -6,16 +6,12 @@ from . import views
 app_name = 'bridges'
 
 urlpatterns = [
-    re_path(
-        r'^tickets/(?P<scope>(profile|sheet|record))$',
-        views.TicketListView.as_view(),
-        name='ticket_list'),
     path(
-        'tickets/<str:ticket_id>',
-        views.TicketDetailView.as_view(),
-        name='ticket_detail'),
+        'transactions/<str:transaction_id>',
+        views.TransactionDetailView.as_view(),
+        name='transaction_detail'),
     path(
-        'tickets/<str:ticket_id>/discard',
-        views.TicketDiscardView.as_view(),
-        name='ticket_discard'),
+        'transactions/<str:transaction_id>/discard',
+        views.TransactionDiscardView.as_view(),
+        name='transaction_discard'),
 ]

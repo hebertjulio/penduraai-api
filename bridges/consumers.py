@@ -1,7 +1,7 @@
 from channels.exceptions import StopConsumer
 from channels.consumer import AsyncConsumer
 
-from .db import Ticket
+from .db import Transaction
 
 
 class BaseConsumer(AsyncConsumer):
@@ -39,16 +39,16 @@ class BaseConsumer(AsyncConsumer):
         raise StopConsumer
 
 
-class TicketConsumer(BaseConsumer):
+class TransactionConsumer(BaseConsumer):
 
     async def websocket_connect(self, event):
         try:
-            ticket = Ticket(event['ticket_id'])
-            ticket.exist(raise_exception=True)
+            transaction = Transaction(event['transaction_id'])
+            transaction.exist(raise_exception=True)
             await self.accept()
             await self.channel_layer.group_add(
-                event['ticket_id'], self.channel_name)
-        except Ticket.DoesNotExist:
+                event['transaction_id'], self.channel_name)
+        except Transaction.DoesNotExist:
             await self.reject()
             await self.close()
 
@@ -61,5 +61,5 @@ class TicketConsumer(BaseConsumer):
 
     async def websocket_disconnect(self, event):
         await self.channel_layer.group_discard(
-            event['ticket_id'], self.channel_name)
+            event['transaction_id'], self.channel_name)
         await self.close()
