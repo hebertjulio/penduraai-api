@@ -104,6 +104,15 @@ class SheetConfirmSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class SheetUpdateSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Sheet
+        fields = [
+            'is_active'
+        ]
+
+
 class SheetReadSerializer(serializers.ModelSerializer):
 
     transaction = serializers.UUIDField(read_only=True)

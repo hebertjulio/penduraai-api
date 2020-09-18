@@ -18,7 +18,7 @@ from .models import Record, Sheet
 from .serializers import (
     RecordReadSerializer, RecordCreateSerializer, RecordConfirmSerializer,
     SheetReadSerializer, SheetCreateSerializer, SheetConfirmSerializer,
-    SheetProfileAddSerializer
+    SheetProfileAddSerializer, SheetUpdateSerializer
 )
 
 
@@ -124,16 +124,18 @@ class SheetConfirmView(rw_generics.CreateAPIView):
         return super().create(request, *args, **kwargs)
 
 
-class SheetDetailView(generics.RetrieveDestroyAPIView):
+class SheetDetailView(rw_generics.RetrieveUpdateAPIView):
 
-    serializer_class = SheetReadSerializer
+    write_serializer_class = SheetUpdateSerializer
+    read_serializer_class = SheetReadSerializer
+
     lookup_url_kwarg = 'sheet_id'
 
     def get_permissions(self):
         permissions = [IsAuthenticated()]
-        if self.request.method == 'DELETE':
-            return permissions + [IsManager()]
-        return permissions + [IsGuest()]
+        if self.request.method == 'GET':
+            return permissions + [IsGuest()]
+        return permissions + [IsManager()]
 
     def get_object(self):
         sheet_id = self.kwargs[self.lookup_url_kwarg]
