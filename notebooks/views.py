@@ -97,6 +97,12 @@ class SheetListView(rw_generics.ListCreateAPIView):
     read_serializer_class = SheetReadSerializer
     filterset_class = SheetFilterSet
 
+    def get_permissions(self):
+        permissions = [IsAuthenticated()]
+        if self.request.method == 'GET':
+            return permissions + [IsGuest()]
+        return permissions + [IsManager()]
+
     def get_queryset(self):
         qs = Sheet.objects.balance_qs()
         return qs
