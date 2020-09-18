@@ -8,6 +8,13 @@ from .models import User, Profile
 
 class UserRelatedField(serializers.RelatedField):
 
+    def get_object(self, pk):
+        try:
+            qs = self.get_queryset()
+            return qs.get(pk=pk)
+        except User.DoesNotExist:
+            raise ValidationError(_('User does not exist.'))
+
     def get_queryset(self):
         if self.read_only:
             return None
@@ -17,22 +24,21 @@ class UserRelatedField(serializers.RelatedField):
     def to_internal_value(self, data):
         if isinstance(data, User):
             return data
-        try:
-            qs = self.get_queryset()
-            obj = qs.get(pk=data)
-            return obj
-        except User.DoesNotExist:
-            raise ValidationError(_('User does not exist.'))
+        return self.get_object(data)
 
     def to_representation(self, value):
-        data = {
-            'id': value.id,
-            'name': value.name
-        }
+        data = {'id': value.id, 'name': value.name}
         return data
 
 
 class ProfileRelatedField(serializers.RelatedField):
+
+    def get_object(self, pk):
+        try:
+            qs = self.get_queryset()
+            return qs.get(pk=pk)
+        except Profile.DoesNotExist:
+            raise ValidationError(_('Profile does not exist.'))
 
     def get_queryset(self):
         if self.read_only:
@@ -43,16 +49,8 @@ class ProfileRelatedField(serializers.RelatedField):
     def to_internal_value(self, data):
         if isinstance(data, Profile):
             return data
-        try:
-            qs = self.get_queryset()
-            obj = qs.get(pk=data)
-            return obj
-        except Profile.DoesNotExist:
-            raise ValidationError(_('Profile does not exist.'))
+        return self.get_object(data)
 
     def to_representation(self, value):
-        data = {
-            'id': value.id,
-            'name': value.name
-        }
+        data = {'id': value.id, 'name': value.name}
         return data

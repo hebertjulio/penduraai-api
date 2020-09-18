@@ -21,10 +21,8 @@ def create_transaction(func=None, expire=None, scope=None):
             k: v.id if isinstance(v, Model) else v
             for k, v in validated_data.items()
         }
-
         transaction = Transaction()
         transaction.scope = scope
-        transaction.status = 'unused'
         transaction.expire = expire
         transaction.data = data
         validated_data.update({'transaction': transaction.id})
@@ -32,10 +30,16 @@ def create_transaction(func=None, expire=None, scope=None):
     return wapper
 
 
-def load_transaction(func):
+def use_transaction(func=None, lookup_url_kwarg=None):
+    if func is None:
+        return partial(use_transaction, lookup_url_kwarg=lookup_url_kwarg)
+
     @wraps(func)
-    def wapper(self, request, version, transaction_id):
+    def wapper(self, request, *args, **kwargs):
+        transaction_id = kwargs[lookup_url_kwarg]
         self.transaction = Transaction(transaction_id)
         self.transaction.exist(raise_exception=True)
-        return func(self, request, version, transaction_id)
+        result = func(self, request, *args, **kwargs)
+        self.transaction.delete()
+        return result
     return wapper

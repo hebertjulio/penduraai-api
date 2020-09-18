@@ -1,10 +1,10 @@
 from django.db.transaction import atomic
 
-from rest_framework.exceptions import NotFound
 from rest_framework import serializers
 
 from rest_framework_simplejwt.settings import api_settings
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.exceptions import AuthenticationFailed
 
 from bridges.decorators import create_transaction
 
@@ -12,9 +12,9 @@ from .validators import ProfileOwnerRoleValidator
 from .models import User, Profile
 
 
-class UserWriteSerializer(serializers.ModelSerializer):
+class UserCreateSerializer(serializers.ModelSerializer):
 
-    pin = serializers.RegexField(regex=Profile.PIN_REGEX, write_only=True)
+    pin = serializers.RegexField(regex=Profile.PIN_REGEX)
 
     @atomic
     def create(self, validated_data):
@@ -25,6 +25,19 @@ class UserWriteSerializer(serializers.ModelSerializer):
         user.set_password(validated_data['password'])
         user.save()
         return user
+
+    class Meta:
+        model = User
+        exclude = [
+            'user_permissions', 'groups', 'is_superuser',
+            'is_staff'
+        ]
+        read_only_fields = [
+            'is_active', 'last_login'
+        ]
+
+
+class UserUpdateSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         user = instance
@@ -47,12 +60,6 @@ class UserWriteSerializer(serializers.ModelSerializer):
 
 class UserReadSerializer(serializers.ModelSerializer):
 
-    def create(self, validated_data):
-        raise NotImplementedError
-
-    def update(self, instance, validated_data):
-        raise NotImplementedError
-
     class Meta:
         model = User
         read_only_fields = User.get_fields()
@@ -61,22 +68,50 @@ class UserReadSerializer(serializers.ModelSerializer):
         ]
 
 
-class ProfileWriteSerializer(serializers.ModelSerializer):
+class ProfileCreateSerializer(serializers.ModelSerializer):
 
     user = serializers.HiddenField(
-        default=serializers.CurrentUserDefault()
-    )
+        default=serializers.CurrentUserDefault())
 
     @create_transaction(expire=1800, scope='profile')
     def create(self, validated_data):
         return validated_data
 
-    def update(self, instance, validated_data):
-        raise NotImplementedError
+    class Meta:
+        model = Profile
+        exclude = [
+            'pin'
+        ]
+        extra_kwargs = {
+            'role': {
+                'validators': [
+                    ProfileOwnerRoleValidator()
+                ]
+            },
+        }
+
+
+class ProfileConfirmSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Profile
         fields = '__all__'
+        extra_kwargs = {
+            'role': {
+                'validators': [
+                    ProfileOwnerRoleValidator()
+                ]
+            },
+        }
+
+
+class ProfileUpdateSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Profile
+        exclude = [
+            'user'
+        ]
         extra_kwargs = {
             'role': {
                 'validators': [
@@ -114,11 +149,11 @@ class ProfileUnlockSerializer(serializers.Serializer):
         try:
             user = self.context['request'].user
             profile = user.userprofiles.get(
-                id=validated_data['id'], pin=validated_data['pin']
-            )
+                id=validated_data['id'], pin=validated_data['pin'],
+                is_active=True)
             refresh = RefreshToken()
             refresh[api_settings.USER_ID_CLAIM] = user.id
             refresh['profile_id'] = profile.id
             return {'access': refresh.access_token}
         except Profile.DoesNotExist:
-            raise NotFound
+            raise AuthenticationFailed

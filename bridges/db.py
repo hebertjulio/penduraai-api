@@ -51,16 +51,6 @@ class Transaction:
         self.set_hm('scope', value)
 
     @property
-    def status(self):
-        return self.get_hm('status')
-
-    @status.setter
-    def status(self, value):
-        if value not in ['unused', 'used', 'discarded']:
-            raise ValueError
-        self.set_hm('status', value)
-
-    @property
     def expire(self):
         return self.db.ttl(self.name)
 

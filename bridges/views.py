@@ -1,33 +1,25 @@
-from rest_framework.status import HTTP_200_OK
-from rest_framework import views
-from rest_framework.response import Response
+from rest_framework import generics
 
 from rest_framework_api_key.permissions import HasAPIKey
 
 from .serializers import TransactionReadSerializer
-from .decorators import load_transaction
+from .db import Transaction
 
 
-class TransactionDetailView(views.APIView):
+class TransactionDetailView(generics.RetrieveDestroyAPIView):
 
-    permission_classes = [
-        HasAPIKey
-    ]
-
-    @load_transaction
-    def get(self, request, version, transaction_id):  # skipcq
-        serializer = TransactionReadSerializer(self.transaction)
-        return Response(serializer.data, status=HTTP_200_OK)
-
-
-class TransactionDiscardView(views.APIView):
+    serializer_class = TransactionReadSerializer
+    lookup_url_kwarg = 'transaction_id'
 
     permission_classes = [
         HasAPIKey
     ]
 
-    @load_transaction
-    def put(self, request, version, transaction_id):  # skipcq
-        self.transaction.status = 'discarded'
-        serializer = TransactionReadSerializer(self.transaction)
-        return Response(serializer.data, status=HTTP_200_OK)
+    def get_object(self):
+        transaction_id = self.kwargs[self.lookup_url_kwarg]
+        transaction = Transaction(transaction_id)
+        transaction.exist(raise_exception=True)
+        return transaction
+
+    def perform_destroy(self, instance):
+        instance.delete()

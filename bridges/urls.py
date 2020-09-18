@@ -10,8 +10,4 @@ urlpatterns = [
         'transactions/<str:transaction_id>',
         views.TransactionDetailView.as_view(),
         name='transaction_detail'),
-    path(
-        'transactions/<str:transaction_id>/discard',
-        views.TransactionDiscardView.as_view(),
-        name='transaction_discard'),
 ]

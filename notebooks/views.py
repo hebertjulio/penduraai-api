@@ -10,20 +10,21 @@ from drf_rw_serializers import generics as rw_generics
 
 from accounts.permissions import IsManager, IsGuest, IsAttendant
 
-from bridges.decorators import load_transaction
+from bridges.decorators import use_transaction
 
 from .filters import SheetFilterSet
 from .models import Record, Sheet
 
 from .serializers import (
-    RecordReadSerializer, RecordWriteSerializer, SheetReadSerializer,
-    SheetWriteSerializer, SheetProfileAddSerializer
+    RecordReadSerializer, RecordCreateSerializer, RecordConfirmSerializer,
+    SheetReadSerializer, SheetCreateSerializer, SheetConfirmSerializer,
+    SheetProfileAddSerializer
 )
 
 
 class RecordListView(rw_generics.ListCreateAPIView):
 
-    write_serializer_class = RecordWriteSerializer
+    write_serializer_class = RecordCreateSerializer
     read_serializer_class = RecordReadSerializer
 
     filterset_fields = [
@@ -49,6 +50,17 @@ class RecordListView(rw_generics.ListCreateAPIView):
         qs = qs.filter(where)
         qs = qs.order_by('-created')
         return qs
+
+
+class RecordConfirmView(rw_generics.CreateAPIView):
+
+    write_serializer_class = RecordConfirmSerializer
+    read_serializer_class = RecordReadSerializer
+
+    @use_transaction(lookup_url_kwarg='transaction_id')
+    def create(self, request, *args, **kwargs):
+        request.data.update(self.transaction.data)
+        return super().create(request, *args, **kwargs)
 
 
 class RecordDetailView(generics.RetrieveDestroyAPIView):
@@ -79,36 +91,31 @@ class RecordDetailView(generics.RetrieveDestroyAPIView):
         instance.save()
 
 
-class RecordConfirmView(views.APIView):
-
-    @classmethod
-    def get_sheet(cls, merchant, customer):
-        try:
-            return Sheet.objects.get(
-                merchant=merchant, customer=customer)
-        except Sheet.DoesNotExist:
-            raise NotFound
-
-    @load_transaction
-    def post(self, request, version, transaction_id):
-        data = self.transaction.data
-        sheet = self.get_sheet(data.pop('merchant'), request.user)
-        data = {'sheet': sheet.id, 'signatary': request.user.profile.id}
-        record = Record.objects.create(**data)
-        serializer = RecordReadSerializer(record)
-        self.transaction.status = 'used'
-        return Response(serializer.data, HTTP_201_CREATED)
-
-
 class SheetListView(rw_generics.ListCreateAPIView):
 
-    write_serializer_class = SheetWriteSerializer
+    write_serializer_class = SheetCreateSerializer
     read_serializer_class = SheetReadSerializer
     filterset_class = SheetFilterSet
 
     def get_queryset(self):
         qs = Sheet.objects.balance_qs()
         return qs
+
+
+class SheetConfirmView(rw_generics.CreateAPIView):
+
+    write_serializer_class = SheetConfirmSerializer
+    read_serializer_class = SheetReadSerializer
+
+    permission_classes = [
+        IsAuthenticated,
+        IsManager
+    ]
+
+    @use_transaction(lookup_url_kwarg='transaction_id')
+    def create(self, request, *args, **kwargs):
+        request.data.update(self.transaction.data)
+        return super().create(request, *args, **kwargs)
 
 
 class SheetDetailView(generics.RetrieveDestroyAPIView):
@@ -135,23 +142,6 @@ class SheetDetailView(generics.RetrieveDestroyAPIView):
     def perform_destroy(self, instance):
         instance.is_active = False
         instance.save()
-
-
-class SheetConfirmView(views.APIView):
-
-    permission_classes = [
-        IsAuthenticated,
-        IsManager
-    ]
-
-    @load_transaction
-    def post(self, request, version, transaction_id):
-        data = self.transaction.data
-        data.update({'customer': request.user.id})
-        sheet = Sheet.objects.create(**data)
-        serializer = SheetReadSerializer(sheet)
-        self.transaction.status = 'used'
-        return Response(serializer.data, HTTP_201_CREATED)
 
 
 class SheetBuyerView(views.APIView):
