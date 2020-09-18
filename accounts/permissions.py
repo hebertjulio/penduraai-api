@@ -7,7 +7,9 @@ class IsOwner(BasePermission):
 
     def has_permission(self, request, view):
         profile = getattr(request.user, 'profile', None)
-        return bool(profile and profile.role == Profile.ROLE.owner)
+        return bool(
+            profile and profile.is_active
+            and profile.role == Profile.ROLE.owner)
 
 
 class IsManager(IsOwner):
@@ -16,7 +18,9 @@ class IsManager(IsOwner):
         has_permission = super().has_permission(request, view)
         if not has_permission:
             profile = getattr(request.user, 'profile', None)
-            return bool(profile and profile.role == Profile.ROLE.manager)
+            return bool(
+                profile and profile.is_active
+                and profile.role == Profile.ROLE.manager)
         return has_permission
 
 
@@ -26,7 +30,9 @@ class IsAttendant(IsManager):
         has_permission = super().has_permission(request, view)
         if not has_permission:
             profile = getattr(request.user, 'profile', None)
-            return bool(profile and profile.role == Profile.ROLE.attendant)
+            return bool(
+                profile and profile.is_active
+                and profile.role == Profile.ROLE.attendant)
         return has_permission
 
 
@@ -36,5 +42,7 @@ class IsGuest(IsAttendant):
         has_permission = super().has_permission(request, view)
         if not has_permission:
             profile = getattr(request.user, 'profile', None)
-            return bool(profile and profile.role == Profile.ROLE.guest)
+            return bool(
+                profile and profile.is_active
+                and profile.role == Profile.ROLE.guest)
         return has_permission
