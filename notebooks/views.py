@@ -186,7 +186,7 @@ class SheetListByProfileView(generics.ListAPIView):
         return qs
 
 
-class SheetBuyerView(views.APIView):
+class SheetManagerProfileView(views.APIView):
 
     permission_classes = [
         IsAuthenticated,
@@ -205,8 +205,8 @@ class SheetBuyerView(views.APIView):
     def delete(self, request, version, sheet_id, profile_id):  # skipcq
         try:
             sheet = Sheet.objects.get(pk=sheet_id, customer=request.user)
+            sheet.buyers.remove(profile_id)
         except Sheet.DoesNotExist:
             raise NotFound
-        sheet.buyers.remove(profile_id)
         response = Response([], status=HTTP_204_NO_CONTENT)
         return response
