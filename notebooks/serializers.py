@@ -122,7 +122,7 @@ class SheetReadSerializer(serializers.ModelSerializer):
         model = Sheet
         read_only_fields = Sheet.get_fields()
         exclude = [
-            'buyers'
+            'profiles'
         ]
 
 
@@ -136,7 +136,7 @@ class SheetByProfileSerializer(serializers.ModelSerializer):
         model = Sheet
         read_only_fields = Sheet.get_fields()
         exclude = [
-            'buyers'
+            'profiles'
         ]
 
 
@@ -150,5 +150,5 @@ class SheetProfileAddSerializer(serializers.Serializer):
 
     def create(self, validated_data):
         sheet = validated_data['sheet']
-        sheet.buyers.add(validated_data['profile'])
+        sheet.profiles.add(validated_data['profile'])
         return validated_data

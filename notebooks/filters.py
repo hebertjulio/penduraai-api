@@ -25,7 +25,7 @@ class SheetFilterSet(filters.FilterSet):
     def filter_by_merchant(cls, queryset, user, profile):
         where = {'customer': user}
         if not profile.is_owner:
-            where.update({'buyers': profile})
+            where.update({'profiles': profile})
         queryset = queryset.filter(**where)
         queryset = queryset.order_by('merchant__name')
         return queryset

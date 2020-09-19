@@ -177,7 +177,7 @@ class SheetListByProfileView(generics.ListAPIView):
             return Sheet.objects.none()
         profile_id = self.kwargs[self.lookup_url_kwarg]
         can_buy = Case(When(
-            buyers__id=profile_id, then=Value(True)),
+            profiles__id=profile_id, then=Value(True)),
             default=Value(False),
             output_field=BooleanField()
         )
@@ -205,7 +205,7 @@ class SheetManagerProfileView(views.APIView):
     def delete(self, request, version, sheet_id, profile_id):  # skipcq
         try:
             sheet = Sheet.objects.get(pk=sheet_id, customer=request.user)
-            sheet.buyers.remove(profile_id)
+            sheet.profiles.remove(profile_id)
         except Sheet.DoesNotExist:
             raise NotFound
         response = Response([], status=HTTP_204_NO_CONTENT)

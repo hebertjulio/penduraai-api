@@ -70,7 +70,7 @@ class ProfileCanBuyValidator:
         request = serializer_field.context['request']
         profile = request.user.profile
         if not profile.is_owner:
-            qs = value.merchantsheets.filter(buyers__id=profile.id)
+            qs = value.merchantsheets.filter(profiles__id=profile.id)
             if not qs.exists():
                 message = _('You cannot buy from this merchant.')
                 raise serializers.ValidationError(message)
