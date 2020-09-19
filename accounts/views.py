@@ -69,7 +69,10 @@ class ProfileListView(rw_generics.ListCreateAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        return user.userprofiles.all()
+        if not user.is_authenticated:
+            return Profile.objects.none()
+        qs = user.userprofiles.all()
+        return qs
 
 
 class ProfileConfirmView(rw_generics.CreateAPIView):

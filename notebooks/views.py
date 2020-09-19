@@ -1,4 +1,4 @@
-from django.db.models import Q
+from django.db.models import Q, Case, When, Value, BooleanField
 
 from rest_framework.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT
 from rest_framework import generics, views
@@ -18,7 +18,7 @@ from .models import Record, Sheet
 from .serializers import (
     RecordReadSerializer, RecordCreateSerializer, RecordConfirmSerializer,
     SheetReadSerializer, SheetCreateSerializer, SheetConfirmSerializer,
-    SheetProfileAddSerializer, SheetUpdateSerializer
+    SheetProfileAddSerializer, SheetUpdateSerializer, SheetByProfileSerializer
 )
 
 
@@ -43,6 +43,8 @@ class RecordListView(rw_generics.ListCreateAPIView):
 
     def get_queryset(self):
         user = self.request.user
+        if not user.is_authenticated:
+            return Record.objects.none()
         profile = user.profile
         if profile.is_owner:
             where = Q(sheet__merchant=user) | Q(sheet__customer=user)
@@ -108,6 +110,9 @@ class SheetListView(rw_generics.ListCreateAPIView):
         return permissions + [IsManager()]
 
     def get_queryset(self):
+        user = self.request.user
+        if not user.is_authenticated:
+            return Sheet.objects.none()
         qs = Sheet.objects.balance_qs()
         return qs
 
@@ -154,6 +159,31 @@ class SheetDetailView(rw_generics.RetrieveUpdateAPIView):
     def perform_destroy(self, instance):
         instance.is_active = False
         instance.save()
+
+
+class SheetListByProfileView(generics.ListAPIView):
+
+    serializer_class = SheetByProfileSerializer
+    lookup_url_kwarg = 'profile_id'
+
+    permission_classes = [
+        IsAuthenticated,
+        IsManager
+    ]
+
+    def get_queryset(self):
+        user = self.request.user
+        if not user.is_authenticated:
+            return Sheet.objects.none()
+        profile_id = self.kwargs[self.lookup_url_kwarg]
+        can_buy = Case(When(
+            buyers__id=profile_id, then=Value(True)),
+            default=Value(False),
+            output_field=BooleanField()
+        )
+        qs = user.customersheets.filter(is_active=True)
+        qs = qs.annotate(can_buy=can_buy)
+        return qs
 
 
 class SheetBuyerView(views.APIView):

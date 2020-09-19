@@ -126,6 +126,20 @@ class SheetReadSerializer(serializers.ModelSerializer):
         ]
 
 
+class SheetByProfileSerializer(serializers.ModelSerializer):
+
+    merchant = UserRelatedField(read_only=True)
+    customer = UserRelatedField(read_only=True)
+    can_buy = serializers.BooleanField(read_only=True)
+
+    class Meta:
+        model = Sheet
+        read_only_fields = Sheet.get_fields()
+        exclude = [
+            'buyers'
+        ]
+
+
 class SheetProfileAddSerializer(serializers.Serializer):
 
     sheet = SheetRelatedField(
