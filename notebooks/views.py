@@ -18,7 +18,7 @@ from .models import Record, Sheet
 from .serializers import (
     RecordReadSerializer, RecordCreateSerializer, RecordConfirmSerializer,
     SheetReadSerializer, SheetCreateSerializer, SheetConfirmSerializer,
-    SheetProfileAddSerializer, SheetUpdateSerializer, SheetByProfileSerializer
+    SheetProfileAddSerializer, SheetUpdateSerializer
 )
 
 
@@ -163,7 +163,7 @@ class SheetDetailView(rw_generics.RetrieveUpdateAPIView):
 
 class SheetListByProfileView(generics.ListAPIView):
 
-    serializer_class = SheetByProfileSerializer
+    serializer_class = SheetReadSerializer
     lookup_url_kwarg = 'profile_id'
 
     permission_classes = [

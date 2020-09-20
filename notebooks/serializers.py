@@ -114,23 +114,10 @@ class SheetReadSerializer(serializers.ModelSerializer):
     transaction = serializers.UUIDField(read_only=True)
     merchant = UserRelatedField(read_only=True)
     customer = UserRelatedField(read_only=True)
+    can_buy = serializers.BooleanField(read_only=True)
 
     balance = serializers.DecimalField(
         read_only=True, max_digits=10, decimal_places=2)
-
-    class Meta:
-        model = Sheet
-        read_only_fields = Sheet.get_fields()
-        exclude = [
-            'profiles'
-        ]
-
-
-class SheetByProfileSerializer(serializers.ModelSerializer):
-
-    merchant = UserRelatedField(read_only=True)
-    customer = UserRelatedField(read_only=True)
-    can_buy = serializers.BooleanField(read_only=True)
 
     class Meta:
         model = Sheet
