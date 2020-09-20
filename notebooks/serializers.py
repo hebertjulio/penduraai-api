@@ -64,8 +64,8 @@ class RecordReadSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Record
-        fields = '__all__'
         read_only_fields = Record.get_fields()
+        fields = '__all__'
 
 
 class SheetCreateSerializer(serializers.ModelSerializer):
@@ -113,7 +113,6 @@ class SheetReadSerializer(serializers.ModelSerializer):
     transaction = serializers.UUIDField(read_only=True)
     merchant = UserRelatedField(read_only=True)
     customer = UserRelatedField(read_only=True)
-    can_buy = serializers.BooleanField(read_only=True)
 
     balance = serializers.DecimalField(
         read_only=True, max_digits=10, decimal_places=2)
@@ -121,6 +120,4 @@ class SheetReadSerializer(serializers.ModelSerializer):
     class Meta:
         model = Sheet
         read_only_fields = Sheet.get_fields()
-        exclude = [
-            'profiles'
-        ]
+        fields = '__all__'

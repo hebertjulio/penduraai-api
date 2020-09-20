@@ -1,6 +1,4 @@
-from django.db.models import (
-    Q, Case, When, Value, BooleanField, DecimalField, Sum, F
-)
+from django.db.models import Q, Case, When, DecimalField, Sum, F
 
 from rest_framework.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT
 from rest_framework import generics, views
@@ -103,6 +101,7 @@ class SheetListView(rw_generics.ListCreateAPIView):
 
     write_serializer_class = SheetCreateSerializer
     read_serializer_class = SheetReadSerializer
+
     filterset_class = SheetFilterSet
 
     def get_permissions(self):
@@ -182,36 +181,6 @@ class SheetDetailView(rw_generics.RetrieveUpdateAPIView):
     def perform_destroy(self, instance):
         instance.is_active = False
         instance.save()
-
-
-class SheetListProfileView(generics.ListAPIView):
-
-    serializer_class = SheetReadSerializer
-    lookup_url_kwarg = 'profile_id'
-
-    permission_classes = [
-        IsAuthenticated,
-        IsManager
-    ]
-
-    def get_queryset(self):
-        user = self.request.user
-        if not user.is_authenticated:
-            return Sheet.objects.none()
-
-        profile_id = self.kwargs[self.lookup_url_kwarg]
-
-        can_buy = Case(When(
-            profiles__id=profile_id, then=Value(True)),
-            default=Value(False),
-            output_field=BooleanField()
-        )
-
-        qs = user.customersheets.filter(
-            is_active=True, customer__userprofiles__id=profile_id)
-        qs = qs.select_related('merchant', 'customer')
-        qs = qs.annotate(can_buy=can_buy)
-        return qs
 
 
 class SheetManageProfileView(views.APIView):

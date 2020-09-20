@@ -31,10 +31,6 @@ urlpatterns = [
         views.SheetDetailView.as_view(),
         name='sheet_detail'),
     path(
-        'sheets/profile/<int:profile_id>',
-        views.SheetListProfileView.as_view(),
-        name='sheet_list_profile'),
-    path(
         'sheets/<int:sheet_id>/profile/<int:profile_id>',
         views.SheetManageProfileView.as_view(),
         name='sheet_manage_profile'),
