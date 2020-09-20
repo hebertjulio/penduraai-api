@@ -5,8 +5,6 @@ from django.core.validators import MinValueValidator
 from model_utils.models import TimeStampedModel
 from model_utils import Choices
 
-from .querysets import SheetQuerySet
-
 
 class Record(TimeStampedModel):
 
@@ -105,8 +103,6 @@ class Sheet(TimeStampedModel):
 
     def __repr__(self):
         return 'Sheet %s' % self.id
-
-    objects = SheetQuerySet.as_manager()
 
     class Meta:
         verbose_name = _('sheet')

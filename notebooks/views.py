@@ -1,4 +1,6 @@
-from django.db.models import Q, Case, When, Value, BooleanField
+from django.db.models import (
+    Q, Case, When, Value, BooleanField, DecimalField, Sum, F
+)
 
 from rest_framework.status import HTTP_201_CREATED, HTTP_204_NO_CONTENT
 from rest_framework import generics, views
@@ -113,7 +115,28 @@ class SheetListView(rw_generics.ListCreateAPIView):
         user = self.request.user
         if not user.is_authenticated:
             return Sheet.objects.none()
-        qs = Sheet.objects.balance_qs()
+
+        balance = F('credit_sum') - F('debt_sum')
+
+        credit_sum = Sum(Case(When(
+            Q(sheetrecords__operation='credit') &
+            Q(sheetrecords__is_active=True),
+            then=F('sheetrecords__value')),
+            default=0, output_field=DecimalField())
+        )
+
+        debt_sum = Sum(Case(When(
+            Q(sheetrecords__operation='debt') &
+            Q(sheetrecords__is_active=True),
+            then=F('sheetrecords__value')),
+            default=0, output_field=DecimalField())
+        )
+
+        qs = user.customersheets.all()
+        qs = qs.select_related('merchant', 'customer')
+        qs = qs.annotate(
+            credit_sum=credit_sum, debt_sum=debt_sum,
+            balance=balance)
         return qs
 
 
@@ -172,17 +195,21 @@ class SheetListProfileView(generics.ListAPIView):
     ]
 
     def get_queryset(self):
-        profile_id = self.kwargs[self.lookup_url_kwarg]
         user = self.request.user
         if not user.is_authenticated:
             return Sheet.objects.none()
+
+        profile_id = self.kwargs[self.lookup_url_kwarg]
+
         can_buy = Case(When(
             profiles__id=profile_id, then=Value(True)),
             default=Value(False),
             output_field=BooleanField()
         )
+
         qs = user.customersheets.filter(
             is_active=True, customer__userprofiles__id=profile_id)
+        qs = qs.select_related('merchant', 'customer')
         qs = qs.annotate(can_buy=can_buy)
         return qs
 
