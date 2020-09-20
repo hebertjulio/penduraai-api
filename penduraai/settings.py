@@ -44,7 +44,7 @@ INSTALLED_APPS = [
     'django_filters',
     'silk',
     'accounts',
-    'authentications',
+    'auths',
     'notebooks',
     'bridges',
 ]
@@ -151,7 +151,7 @@ REST_FRAMEWORK = {
         'accounts.permissions.IsGuest',
     ],
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'authentications.authentication.JWTAuthentication',
+        'auths.authentication.JWTAuthentication',
     ],
     'DEFAULT_PARSER_CLASSES': [
         'rest_framework.parsers.JSONParser',

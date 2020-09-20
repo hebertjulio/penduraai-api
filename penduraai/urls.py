@@ -27,7 +27,7 @@ urlpatterns = [
             'accounts.urls', namespace='accounts')),
     path(
         '<str:version>/', include(
-            'authentications.urls', namespace='authentications')),
+            'auths.urls', namespace='auths')),
     path(
         '<str:version>/', include(
             'notebooks.urls', namespace='notebooks')),

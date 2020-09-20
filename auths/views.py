@@ -5,14 +5,14 @@ from rest_framework_simplejwt.views import (
 )
 
 
-class LoginView(TokenObtainPairView):
+class TokenObtainPairView(TokenObtainPairView):
 
     permission_classes = [
         HasAPIKey
     ]
 
 
-class LoginRefreshView(TokenRefreshView):
+class TokenRefreshView(TokenRefreshView):
 
     permission_classes = [
         HasAPIKey
