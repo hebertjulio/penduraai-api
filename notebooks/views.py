@@ -18,7 +18,7 @@ from .models import Record, Sheet
 from .serializers import (
     RecordReadSerializer, RecordCreateSerializer, RecordConfirmSerializer,
     SheetReadSerializer, SheetCreateSerializer, SheetConfirmSerializer,
-    SheetProfileAddSerializer, SheetUpdateSerializer
+    SheetUpdateSerializer
 )
 
 
@@ -161,7 +161,7 @@ class SheetDetailView(rw_generics.RetrieveUpdateAPIView):
         instance.save()
 
 
-class SheetListByProfileView(generics.ListAPIView):
+class SheetListProfileView(generics.ListAPIView):
 
     serializer_class = SheetReadSerializer
     lookup_url_kwarg = 'profile_id'
@@ -187,27 +187,26 @@ class SheetListByProfileView(generics.ListAPIView):
         return qs
 
 
-class SheetManagerProfileView(views.APIView):
+class SheetManageProfileView(views.APIView):
 
     permission_classes = [
         IsAuthenticated,
         IsManager
     ]
 
-    def post(self, request, version, sheet_id, profile_id):  # skipcq
-        data = {'sheet': sheet_id, 'profile': profile_id}
-        context = {'request': request}
-        serializer = SheetProfileAddSerializer(data=data, context=context)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        response = Response(serializer.data, status=HTTP_201_CREATED)
-        return response
-
-    def delete(self, request, version, sheet_id, profile_id):  # skipcq
+    @classmethod
+    def get_object(cls, user, sheet_id):
         try:
-            sheet = Sheet.objects.get(pk=sheet_id, customer=request.user)
-            sheet.profiles.remove(profile_id)
+            return user.customersheets.get(id=sheet_id)
         except Sheet.DoesNotExist:
             raise NotFound
-        response = Response([], status=HTTP_204_NO_CONTENT)
-        return response
+
+    def post(self, request, version, sheet_id, profile_id):
+        sheet = self.get_object(request.user, sheet_id)
+        sheet.profiles.add(profile_id)
+        return Response([], status=HTTP_201_CREATED)
+
+    def delete(self, request, version, sheet_id, profile_id):
+        sheet = self.get_object(request.user, sheet_id)
+        sheet.profiles.remove(profile_id)
+        return Response([], status=HTTP_204_NO_CONTENT)

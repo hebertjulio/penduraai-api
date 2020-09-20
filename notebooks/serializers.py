@@ -2,7 +2,6 @@ from rest_framework import serializers
 
 from accounts.relations import UserRelatedField, ProfileRelatedField
 from accounts.fields import CurrentProfileDefault
-from accounts.validators import ProfileBelongUserValidator
 
 from bridges.decorators import create_transaction
 
@@ -10,9 +9,9 @@ from .relations import SheetRelatedField
 from .models import Record, Sheet
 
 from .validators import (
-    SheetBelongCustomerValidator, ProfileCanBuyValidator,
-    CustomerOfMerchantValidator, UserAlreadyCustomerValidator,
-    CustomerYourselfValidator, EmployeeOfMerchantValidator
+    ProfileCanBuyValidator, CustomerOfMerchantValidator,
+    UserAlreadyCustomerValidator, CustomerYourselfValidator,
+    EmployeeOfMerchantValidator
 )
 
 
@@ -125,17 +124,3 @@ class SheetReadSerializer(serializers.ModelSerializer):
         exclude = [
             'profiles'
         ]
-
-
-class SheetProfileAddSerializer(serializers.Serializer):
-
-    sheet = SheetRelatedField(
-        validators=[SheetBelongCustomerValidator()])
-
-    profile = ProfileRelatedField(
-        validators=[ProfileBelongUserValidator()])
-
-    def create(self, validated_data):
-        sheet = validated_data['sheet']
-        sheet.profiles.add(validated_data['profile'])
-        return validated_data
