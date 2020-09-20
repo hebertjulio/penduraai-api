@@ -172,16 +172,17 @@ class SheetListByProfileView(generics.ListAPIView):
     ]
 
     def get_queryset(self):
+        profile_id = self.kwargs[self.lookup_url_kwarg]
         user = self.request.user
         if not user.is_authenticated:
             return Sheet.objects.none()
-        profile_id = self.kwargs[self.lookup_url_kwarg]
         can_buy = Case(When(
             profiles__id=profile_id, then=Value(True)),
             default=Value(False),
             output_field=BooleanField()
         )
-        qs = user.customersheets.filter(is_active=True)
+        qs = user.customersheets.filter(
+            is_active=True, customer__userprofiles__id=profile_id)
         qs = qs.annotate(can_buy=can_buy)
         return qs
 
