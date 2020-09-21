@@ -38,30 +38,6 @@ class CustomerOfMerchantValidator:
             raise serializers.ValidationError(message)
 
 
-class EmployeeOfMerchantValidator:
-
-    requires_context = True
-
-    def __call__(self, value, serializer_field):
-        request = serializer_field.context['request']
-        qs = request.user.userprofiles.filter(id=value.id)
-        if not qs.exists():
-            message = _('You aren\'t employee of merchant.')
-            raise serializers.ValidationError(message)
-
-
-class SheetBelongCustomerValidator:
-
-    requires_context = True
-
-    def __call__(self, value, serializer_field):
-        request = serializer_field.context['request']
-        qs = request.user.customersheets.filter(id=value.id)
-        if not qs.exists():
-            message = _('This sheet does not belong to you.')
-            raise serializers.ValidationError(message)
-
-
 class ProfileCanBuyValidator:
 
     requires_context = True

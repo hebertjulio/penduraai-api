@@ -10,8 +10,7 @@ from .models import Record, Sheet
 
 from .validators import (
     ProfileCanBuyValidator, CustomerOfMerchantValidator,
-    UserAlreadyCustomerValidator, CustomerYourselfValidator,
-    EmployeeOfMerchantValidator
+    UserAlreadyCustomerValidator, CustomerYourselfValidator
 )
 
 
@@ -20,8 +19,7 @@ class RecordCreateSerializer(serializers.ModelSerializer):
     merchant = serializers.HiddenField(
         default=serializers.CurrentUserDefault())
 
-    attendant = ProfileRelatedField(
-        validators=[EmployeeOfMerchantValidator()])
+    attendant = serializers.HiddenField(default=CurrentProfileDefault())
 
     @create_transaction(expire=1800, scope='record')
     def create(self, validated_data):
