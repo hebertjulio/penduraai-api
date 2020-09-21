@@ -71,6 +71,8 @@ class SheetCreateSerializer(serializers.ModelSerializer):
     merchant = serializers.HiddenField(
         default=serializers.CurrentUserDefault())
 
+    profiles = serializers.HiddenField(default=[])
+
     @create_transaction(expire=1800, scope='sheet')
     def create(self, validated_data):
         return validated_data
@@ -86,8 +88,8 @@ class SheetConfirmSerializer(serializers.ModelSerializer):
 
     merchant = UserRelatedField(
         validators=[
-            UserAlreadyCustomerValidator(), CustomerYourselfValidator()],
-        default=serializers.CurrentUserDefault())
+            UserAlreadyCustomerValidator(),
+            CustomerYourselfValidator()])
 
     customer = serializers.HiddenField(
         default=serializers.CurrentUserDefault())
