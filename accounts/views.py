@@ -11,6 +11,7 @@ from bridges.decorators import use_transaction
 
 from .permissions import IsOwner, IsManager
 from .models import Profile
+from .filters import ProfileFilterSet
 
 from .serializers import (
     UserReadSerializer, UserCreateSerializer, UserUpdateSerializer,
@@ -57,9 +58,7 @@ class ProfileListView(rw_generics.ListCreateAPIView):
         IsAuthenticated
     ]
 
-    filterset_fields = [
-        'role', 'is_active'
-    ]
+    filterset_class = ProfileFilterSet
 
     def get_permissions(self):
         permissions = [IsAuthenticated()]
@@ -132,8 +131,14 @@ class ProfileUnlockView(views.APIView):
 
 class ProfileRolesView(views.APIView):
 
+    permission_classes = [
+        IsAuthenticated
+    ]
+
     def get(self, request, version):
-        roles = [{'id': k, 'name': v} for k, v in sorted(Profile.ROLE)]
+        roles = [
+            {'id': k, 'name': v} for k, v in sorted(Profile.ROLE)
+            if k != Profile.ROLE.owner]
         return Response(roles, HTTP_200_OK)
 
 
