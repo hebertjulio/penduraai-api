@@ -129,6 +129,10 @@ class SheetListView(rw_generics.ListCreateAPIView):
 
         qs = Sheet.objects.filter(Q(merchant=user) | Q(customer=user))
         qs = qs.select_related('merchant', 'customer')
+
+        if user.profile.is_guest:
+            qs = qs.filter(profiles__id=user.profile.id)
+
         qs = qs.annotate(
             credit_sum=credit_sum, debt_sum=debt_sum,
             balance=balance)
