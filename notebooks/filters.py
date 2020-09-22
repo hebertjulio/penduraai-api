@@ -1,7 +1,5 @@
 from django_filters import rest_framework as filters
 
-from .models import Sheet
-
 
 class SheetFilterSet(filters.FilterSet):
 
@@ -11,34 +9,15 @@ class SheetFilterSet(filters.FilterSet):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    def is_active_filter(self, queryset, name, value):
+    def is_active_filter(self, queryset, name, value):  # skipcq
         qs = queryset.filter(is_active=value)
         return qs
 
     def by_filter(self, queryset, name, value):  # skipcq
-        user = self.request.user
-        by_filter = {
-            'merchant': self.by_merchant,
-            'customer': self.by_customer
-        }.get(value, lambda *args: Sheet.objects.none())
-        queryset = by_filter(queryset, user, user.profile)
-        return queryset
-
-    @classmethod
-    def by_merchant(cls, queryset, user, profile):
-        where = {'customer': user}
-        if not profile.is_owner:
-            where.update({'profiles__id': profile.id})
-        queryset = queryset.filter(**where)
-        queryset = queryset.order_by('merchant__name')
-        return queryset
-
-    @classmethod
-    def by_customer(cls, queryset, user, profile):
-        if not profile.is_guest:
-            queryset = queryset.filter(merchant=user)
-            queryset = queryset.order_by('customer__name')
-        return queryset
+        value = 'merchant' if value == 'customer' else 'customer'
+        qs = queryset.filter(**{value: self.request.user})
+        qs = qs.order_by(value + '__name')
+        return qs
 
     class Meta:
         fields = [

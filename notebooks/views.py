@@ -127,7 +127,7 @@ class SheetListView(rw_generics.ListCreateAPIView):
             default=0, output_field=DecimalField())
         )
 
-        qs = user.customersheets.all()
+        qs = Sheet.objects.filter(Q(merchant=user) | Q(customer=user))
         qs = qs.select_related('merchant', 'customer')
         qs = qs.annotate(
             credit_sum=credit_sum, debt_sum=debt_sum,
