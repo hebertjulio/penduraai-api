@@ -1,9 +1,9 @@
 from django.urls import reverse, resolve
 
-from .. import views
+from . import views
 
 
-class TestUrlResolve:
+class TestsUrlResolve:
 
     def test_resolve_user_list(self):
         kwargs = {'version': 'v1'}

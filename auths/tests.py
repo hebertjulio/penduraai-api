@@ -1,9 +1,9 @@
 from django.urls import reverse, resolve
 
-from .. import views
+from . import views
 
 
-class TestUrlResolve:
+class TestsUrlResolve:
 
     def test_resolve_token_obtain_pair(self):
         kwargs = {'version': 'v1'}

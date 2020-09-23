@@ -1,9 +1,9 @@
 from django.urls import reverse, resolve
 
-from .. import views
+from . import views
 
 
-class TestUrlResolve:
+class TestsUrlResolve:
 
     def test_resolve_record_confirm(self):
         kwargs = {'version': 'v1', 'transaction_id': 'uuid'}
