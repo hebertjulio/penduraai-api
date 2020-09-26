@@ -3,6 +3,7 @@ from django.db.models import Model
 from functools import wraps, partial
 
 from .db import Transaction
+from .services import send_ws_message
 
 
 def create_transaction(func=None, expire=None, scope=None):
@@ -41,5 +42,6 @@ def use_transaction(func=None, lookup_url_kwarg=None):
         self.transaction.exist(raise_exception=True)
         result = func(self, request, *args, **kwargs)
         self.transaction.delete()
+        send_ws_message(transaction_id, 'CONFIRMED')
         return result
     return wapper

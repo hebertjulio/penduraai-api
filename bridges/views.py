@@ -4,6 +4,7 @@ from rest_framework_api_key.permissions import HasAPIKey
 
 from .serializers import TransactionReadSerializer
 from .db import Transaction
+from .services import send_ws_message
 
 
 class TransactionDetailView(generics.RetrieveDestroyAPIView):
@@ -23,3 +24,4 @@ class TransactionDetailView(generics.RetrieveDestroyAPIView):
 
     def perform_destroy(self, instance):
         instance.delete()
+        send_ws_message(transaction.id, 'REJECTED')
