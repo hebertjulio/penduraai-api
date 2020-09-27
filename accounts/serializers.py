@@ -6,7 +6,7 @@ from rest_framework_simplejwt.settings import api_settings
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import AuthenticationFailed
 
-from bridges.decorators import create_transaction
+from bridges.services import create_transaction
 
 from .validators import ProfileOwnerRoleValidator
 from .models import User, Profile
@@ -73,8 +73,9 @@ class ProfileCreateSerializer(serializers.ModelSerializer):
     user = serializers.HiddenField(
         default=serializers.CurrentUserDefault())
 
-    @create_transaction(expire=1800, scope='profile')
     def create(self, validated_data):
+        transaction = create_transaction(validated_data, 86400, 'profile')
+        validated_data.update({'transaction': transaction.id})
         return validated_data
 
     class Meta:

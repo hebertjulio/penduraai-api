@@ -3,7 +3,7 @@ from rest_framework import serializers
 from accounts.relations import UserRelatedField, ProfileRelatedField
 from accounts.fields import CurrentProfileDefault
 
-from bridges.decorators import create_transaction
+from bridges.services import create_transaction
 
 from .relations import SheetRelatedField
 from .models import Record, Sheet
@@ -21,8 +21,9 @@ class RecordCreateSerializer(serializers.ModelSerializer):
 
     attendant = serializers.HiddenField(default=CurrentProfileDefault())
 
-    @create_transaction(expire=1800, scope='record')
     def create(self, validated_data):
+        transaction = create_transaction(validated_data, 900, 'record')
+        validated_data.update({'transaction': transaction.id})
         return validated_data
 
     class Meta:
@@ -73,8 +74,9 @@ class SheetCreateSerializer(serializers.ModelSerializer):
 
     profiles = serializers.HiddenField(default=[])
 
-    @create_transaction(expire=1800, scope='sheet')
     def create(self, validated_data):
+        transaction = create_transaction(validated_data, 900, 'sheet')
+        validated_data.update({'transaction': transaction.id})
         return validated_data
 
     class Meta:
