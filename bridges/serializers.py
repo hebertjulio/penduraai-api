@@ -1,9 +1,11 @@
 from rest_framework import serializers
 
+from .models import Transaction
 
-class TransactionReadSerializer(serializers.Serializer):
 
-    id = serializers.CharField(read_only=True)
-    expire = serializers.IntegerField(read_only=True)
-    data = serializers.JSONField(read_only=True)
-    scope = serializers.CharField(read_only=True)
+class TransactionReadSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Transaction
+        read_only_fields = Transaction.get_fields()
+        fields = '__all__'

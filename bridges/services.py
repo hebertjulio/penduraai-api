@@ -1,19 +1,25 @@
+from datetime import timedelta
+
 from django.db.models import Model
+from django.utils import timezone
 
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 
-from .db import Transaction
+from .models import Transaction
 
 
 def create_transaction(data, expire, scope):
-    transaction = Transaction()
-    transaction.scope = scope
-    transaction.expire = expire
-    transaction.data = {
+    now = timezone.now()
+    expire_in = now + timedelta(seconds=expire)
+    data = {
         k: v.id if isinstance(v, Model) else v
         for k, v in data.items()
     }
+    transaction = Transaction.objects.create(
+        scope=scope, expire_in=expire_in,
+        data=data
+    )
     return transaction
 
 

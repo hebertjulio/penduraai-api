@@ -1,7 +1,7 @@
 from channels.exceptions import StopConsumer
 from channels.consumer import AsyncConsumer
 
-from .db import Transaction
+from .models import Transaction
 
 
 class BaseConsumer(AsyncConsumer):
@@ -43,8 +43,7 @@ class TransactionConsumer(BaseConsumer):
 
     async def websocket_connect(self, event):
         try:
-            transaction = Transaction(event['transaction_id'])
-            transaction.exist(raise_exception=True)
+            transaction = Transaction.objects.get(pk=event['transaction_id'])
             await self.accept()
             await self.channel_layer.group_add(
                 event['transaction_id'], self.channel_name)
