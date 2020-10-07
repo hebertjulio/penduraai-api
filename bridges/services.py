@@ -1,21 +1,22 @@
 from datetime import timedelta
-
-from django.db.models import Model
-from django.utils import timezone
+from json import dumps
 
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
+from django.db.models import Model
+from django.utils import timezone
 
 from .models import Transaction
+from .encoders import DecimalEncoder
 
 
 def create_transaction(data, expire, scope):
     now = timezone.now()
     expire_in = now + timedelta(seconds=expire)
-    data = {
+    data = dumps({
         k: v.id if isinstance(v, Model) else v
         for k, v in data.items()
-    }
+    }, cls=DecimalEncoder)
     transaction = Transaction.objects.create(
         scope=scope, expire_in=expire_in,
         data=data
