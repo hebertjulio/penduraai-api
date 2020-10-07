@@ -2,7 +2,7 @@ from uuid import uuid4
 
 from django.db import models
 from django.utils.translation import gettext_lazy as _
-
+from django.utils import timezone
 from model_utils.models import TimeStampedModel
 from model_utils import Choices
 
@@ -32,6 +32,26 @@ class Transaction(TimeStampedModel):
 
     def __repr__(self):
         return str(self.id)
+
+    def expired(self, raise_exception=False):
+        expired = timezone.now() > self.expire_in
+        if expired and raise_exception:
+            raise self.Expired
+        return expired
+
+    def usaged(self, raise_exception=False):
+        usaged = -1 >= self.usage >= self.max_usage
+        if usaged and raise_exception:
+            raise self.Usaged
+        return usaged
+
+    class Expired(Exception):
+        def __init__(self):
+            super().__init__(_('Transaction expired.'))
+
+    class Usaged(Exception):
+        def __init__(self):
+            super().__init__(_('Transaction usaged.'))
 
     class Meta:
         verbose_name = _('transaction')

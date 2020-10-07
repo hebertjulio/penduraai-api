@@ -45,14 +45,19 @@ class TransactionConsumer(BaseConsumer):
 
     async def websocket_connect(self, event):
         try:
-            await sync_to_async(
+            transaction = await sync_to_async(
                 Transaction.objects.get)(pk=event['transaction_id'])
+            transaction.expired(raise_exception=True)
+            transaction.usaged(raise_exception=True)
+        except (
+                Transaction.DoesNotExist,
+                Transaction.Usaged, Transaction.Expired):
+            await self.reject()
+            await self.close()
+        else:
             await self.accept()
             await self.channel_layer.group_add(
                 event['transaction_id'], self.channel_name)
-        except Transaction.DoesNotExist:
-            await self.reject()
-            await self.close()
 
     async def websocket_send(self, event):
         if 'text' in event:
