@@ -16,7 +16,8 @@ class Transaction(TimeStampedModel):
     )
 
     id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
-    scope = models.CharField(_('scope'), choices=SCOPE, max_length=50, db_index=True)
+    scope = models.CharField(
+        _('scope'), choices=SCOPE, max_length=50, db_index=True)
     data = models.TextField(_('data'), default='{}', blank=True)
     expire_in = models.DateTimeField(_('expire in'), db_index=True)
     max_usage = models.SmallIntegerField(_('max usage'), default=1)
