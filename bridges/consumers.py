@@ -1,3 +1,5 @@
+from asgiref.sync import sync_to_async
+
 from channels.exceptions import StopConsumer
 from channels.consumer import AsyncConsumer
 
@@ -43,7 +45,8 @@ class TransactionConsumer(BaseConsumer):
 
     async def websocket_connect(self, event):
         try:
-            transaction = Transaction.objects.get(pk=event['transaction_id'])
+            await sync_to_async(
+                Transaction.objects.get)(pk=event['transaction_id'])
             await self.accept()
             await self.channel_layer.group_add(
                 event['transaction_id'], self.channel_name)
